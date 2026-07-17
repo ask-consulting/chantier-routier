@@ -1,0 +1,117 @@
+// Prisma schema — road worksite management API.
+// Datasource: PostgreSQL (Supabase-managed in the free-tier deployment).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorksiteStatus {
+  upcoming
+  in_progress
+  completed
+  suspended
+}
+
+enum ExpenseType {
+  labor
+  materials
+  equipment
+  subcontracting
+  other
+}
+
+/// Tenant boundary. Every business row is isolated by organizationId.
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  worksites Worksite[]
+  workers   Worker[]
+
+  @@map("organization")
+}
+
+model Worksite {
+  id               String         @id @default(uuid())
+  organizationId   String
+  code             String
+  name             String
+  client           String?
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  status           WorksiteStatus @default(upcoming)
+  totalBudget      Decimal?       @db.Decimal(14, 2)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  timesheets   Timesheet[]
+  expenses     Expense[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@map("worksite")
+}
+
+model Worker {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  qualification  String?
+  hourlyRate     Decimal  @db.Decimal(10, 2)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  timesheets   Timesheet[]
+
+  @@index([organizationId])
+  @@map("worker")
+}
+
+model Timesheet {
+  id          String   @id @default(uuid())
+  worksiteId  String
+  workerId    String
+  date        DateTime @db.Date
+  hoursWorked Decimal  @db.Decimal(6, 2)
+  present     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  worksite Worksite @relation(fields: [worksiteId], references: [id], onDelete: Cascade)
+  worker   Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@unique([workerId, worksiteId, date])
+  @@index([worksiteId])
+  @@map("timesheet")
+}
+
+model Expense {
+  id          String      @id @default(uuid())
+  worksiteId  String
+  type        ExpenseType @default(other)
+  label       String
+  amount      Decimal     @db.Decimal(14, 2)
+  date        DateTime    @db.Date
+  supplier    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  worksite Worksite @relation(fields: [worksiteId], references: [id], onDelete: Cascade)
+
+  @@index([worksiteId])
+  @@map("expense")
+}
