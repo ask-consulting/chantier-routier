@@ -42,6 +42,8 @@ services:
       CORS_ORIGINS: http://localhost:3000
       # Inside the compose network the database is reachable via the "db" service name.
       DATABASE_URL: postgresql://chantier:chantier@db:5432/chantier?schema=public
+      # No pooler locally, so the direct URL is the same connection.
+      DIRECT_URL: postgresql://chantier:chantier@db:5432/chantier?schema=public
     ports:
       - "8080:8080"
 

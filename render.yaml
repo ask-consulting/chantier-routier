@@ -1,0 +1,34 @@
+# Render Blueprint — deploys the back-end API (apps/api) as a Docker web service.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Setup: on Render, New > Blueprint, connect this repo. Render reads this file.
+# Then fill the secret env vars (DATABASE_URL, DIRECT_URL, CORS_ORIGINS) in the
+# dashboard — they are marked `sync: false` so they are NOT stored in git.
+#
+# The container applies pending Prisma migrations on boot (see Dockerfile.prod
+# CMD: `prisma migrate deploy && node dist/main.js`).
+
+services:
+  - type: web
+    name: chantier-api
+    runtime: docker
+    repo: https://github.com/ask-consulting/chantier-routier
+    plan: free
+    region: frankfurt            # closest free region to France/Maghreb
+    dockerfilePath: ./apps/api/Dockerfile.prod
+    dockerContext: .             # build from the monorepo root
+    healthCheckPath: /health
+    autoDeploy: true             # redeploy on push to the deployed branch
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render injects PORT automatically; the app reads process.env.PORT.
+      # Runtime DB connection (use the Supabase POOLER url here).
+      - key: DATABASE_URL
+        sync: false
+      # Direct DB connection for migrations (use the Supabase DIRECT url here).
+      - key: DIRECT_URL
+        sync: false
+      # Comma-separated allowed origins (e.g. your Vercel web URL).
+      - key: CORS_ORIGINS
+        sync: false
