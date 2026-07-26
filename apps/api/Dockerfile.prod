@@ -1,0 +1,51 @@
+# Production image for the NestJS API inside the pnpm monorepo.
+# Build context is the repository root (see docker-compose.yml).
+# For local hot-reload development, use Dockerfile.dev instead.
+
+# ---------- builder ----------
+FROM node:22-alpine AS builder
+
+# Prisma needs OpenSSL to fetch/run its query engine.
+RUN apk add --no-cache openssl
+ENV PNPM_HOME=/root/.local/share/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+
+WORKDIR /app
+
+# Copy workspace manifests first for better layer caching.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+
+RUN pnpm install --frozen-lockfile
+
+# Copy sources needed to build the API.
+COPY packages/shared packages/shared
+COPY apps/api apps/api
+
+# Build the shared package, generate the Prisma client, then compile the API.
+RUN pnpm --filter @chantier/shared build \
+ && pnpm --filter @chantier/api build
+
+# ---------- runner ----------
+FROM node:22-alpine AS runner
+
+RUN apk add --no-cache openssl
+ENV PNPM_HOME=/root/.local/share/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+
+ENV NODE_ENV=production
+WORKDIR /app
+
+# Bring the fully-installed & built workspace over. pnpm's symlink layout is
+# preserved because the directory structure is identical.
+COPY --from=builder /app ./
+
+WORKDIR /app/apps/api
+
+EXPOSE 8080
+
+# Apply pending migrations, then launch the server.
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/main.js"]
