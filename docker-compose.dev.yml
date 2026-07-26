@@ -12,7 +12,7 @@ services:
   api:
     build:
       dockerfile: apps/api/Dockerfile.dev
-    image: chantier-api:dev
+    image: chantia-api:dev
     # Mount only source dirs — NOT node_modules — so the container keeps its own
     # Alpine/musl-native binaries (Prisma engine, esbuild) intact.
     volumes:

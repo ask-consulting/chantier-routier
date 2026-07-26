@@ -10,7 +10,7 @@
 
 services:
   - type: web
-    name: chantier-api
+    name: chantia-api
     runtime: docker
     repo: https://github.com/ask-consulting/chantier-routier
     plan: free

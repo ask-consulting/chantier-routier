@@ -9,7 +9,7 @@ Guide pas-à-pas pour déployer `apps/api` sur **Render** (Free) avec une base
 
 ## 1. Base de données Postgres (Supabase)
 
-1. Créer un compte [Supabase](https://supabase.com) + un projet (ex. `chantier-test`).
+1. Créer un compte [Supabase](https://supabase.com) + un projet (ex. `chantia-test`).
 2. Dans **Project Settings → Database → Connection string**, récupérer deux URLs :
    - **Pooler** (Transaction, port `6543`) → servira de `DATABASE_URL` (runtime).
    - **Direct** (Session, port `5432`) → servira de `DIRECT_URL` (migrations).
@@ -23,7 +23,7 @@ Guide pas-à-pas pour déployer `apps/api` sur **Render** (Free) avec une base
 
 1. Créer un compte [Render](https://render.com) connecté à GitHub.
 2. **New → Blueprint**, sélectionner le dépôt `chantier-routier`.
-3. Render lit `render.yaml` et propose le service `chantier-api` (Docker,
+3. Render lit `render.yaml` et propose le service `chantia-api` (Docker,
    `apps/api/Dockerfile.prod`, health check `/health`).
 4. Renseigner les variables secrètes (marquées `sync: false`) :
    - `DATABASE_URL` = URL **pooler** Supabase
@@ -36,10 +36,10 @@ Guide pas-à-pas pour déployer `apps/api` sur **Render** (Free) avec une base
 ## 3. Vérifier
 
 ```bash
-curl https://chantier-api.onrender.com/health          # → {"status":"ok"}
-# Swagger : https://chantier-api.onrender.com/api
+curl https://chantia-api.onrender.com/health          # → {"status":"ok"}
+# Swagger : https://chantia-api.onrender.com/api
 curl -H "x-organization-id: b62107ee-2174-463f-9365-1fa967cc1925" \
-     https://chantier-api.onrender.com/worksites       # → {"items":[],...}
+     https://chantia-api.onrender.com/worksites       # → {"items":[],...}
 ```
 
 ## 4. Déploiements suivants

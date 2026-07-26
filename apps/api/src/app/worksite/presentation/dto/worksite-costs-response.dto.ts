@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IWorksiteCosts } from '@chantier/shared';
+import { IWorksiteCosts } from '@chantia/shared';
 
 export class WorksiteCostsResponseDto implements IWorksiteCosts {
   @ApiProperty() worksiteId: string;

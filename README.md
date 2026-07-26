@@ -1,4 +1,4 @@
-# Chantier Routier — Gestion de chantiers routiers
+# Chantia — Gestion de chantiers routiers
 
 > Application (web + mobile) de gestion de chantiers routiers.
 > MVP : gestion de projet (création, dépenses, planning), gestion des ouvriers et pointage.
@@ -45,7 +45,7 @@ apps/
 ├── web/      # Next.js (direction & conducteur)
 └── mobile/   # Expo (terrain, hors-ligne)
 packages/
-└── shared/   # @chantier/shared — types, enums, calculs métier purs (réutilisés API + web + mobile)
+└── shared/   # @chantia/shared — types, enums, calculs métier purs (réutilisés API + web + mobile)
 ```
 
 Démarrer l'API en local : `pnpm api` (voir `docs/06-api-conventions-ddd-cqrs.md`).

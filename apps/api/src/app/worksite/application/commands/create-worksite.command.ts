@@ -1,4 +1,4 @@
-import { ICreateWorksite } from '@chantier/shared';
+import { ICreateWorksite } from '@chantia/shared';
 
 export class CreateWorksiteCommand {
   constructor(

@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IWorksiteCosts } from '@chantier/shared';
+import { IWorksiteCosts } from '@chantia/shared';
 import { SearchResult } from '@shared/domain/search.types';
 import { CreateWorksiteCommand } from '../../application/commands/create-worksite.command';
 import { GetWorksiteByIdQuery } from '../../application/queries/get-worksite-by-id.query';

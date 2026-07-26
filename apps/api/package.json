@@ -1,5 +1,5 @@
 {
-  "name": "@chantier/api",
+  "name": "@chantia/api",
   "version": "0.1.0",
   "private": true,
   "description": "Back-end API (NestJS + Fastify + Prisma, DDD/CQRS architecture)",
@@ -16,7 +16,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@chantier/shared": "workspace:*",
+    "@chantia/shared": "workspace:*",
     "@fastify/cookie": "^11.0.2",
     "@fastify/static": "^8.0.0",
     "@nestjs/common": "^11.0.1",

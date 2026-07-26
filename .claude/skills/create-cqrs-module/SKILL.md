@@ -23,14 +23,14 @@ read it first when in doubt.
 2. Keep the 4 layers and the dependency direction: `presentation → application → domain ← infrastructure`.
 3. Inject repositories **by Symbol token** (`@Inject(<ENTITY>_REPOSITORY_PORT)`), wired in the module.
 4. Domain entities: rich object with a `constructor` + `static create(props)`. **No** NestJS/Prisma imports in `domain/`.
-5. Shared transport interfaces + enums go in `packages/shared` (`@chantier/shared`), re-exported from its `index.ts`.
+5. Shared transport interfaces + enums go in `packages/shared` (`@chantia/shared`), re-exported from its `index.ts`.
 6. **Pure business calculations go in `packages/shared`**, never inline in a handler. The handler calls them.
 7. Add a Prisma model to `apps/api/prisma/schema.prisma` (`@@map` to snake_case table, index `organizationId`).
 8. Response DTOs expose a `static fromDomain(entity)`. Request DTOs use `class-validator` + `@ApiProperty`.
 
 ## Steps
 
-1. **Prisma**: add the `model <Entity>` (+ any enum) to `schema.prisma`. Run `pnpm --filter @chantier/api prisma:generate`.
+1. **Prisma**: add the `model <Entity>` (+ any enum) to `schema.prisma`. Run `pnpm --filter @chantia/api prisma:generate`.
 2. **Shared** (`packages/shared/src/`): add `interfaces/<entity>.interface.ts` (`I<Entity>`, `ICreate<Entity>`) and any enum in `enums/`; export from `index.ts`.
 3. **domain/entities/`<entity>.entity.ts`**: class + `static create`.
 4. **domain/ports/`<entity>-repository.port.ts`**: interface + `export const <ENTITY>_REPOSITORY_PORT = Symbol(...)`.
@@ -40,7 +40,7 @@ read it first when in doubt.
 8. **presentation/**: `create-<entity>.dto.ts`, `get-<entities>.dto.ts`, `<entity>-response.dto.ts`, `paginated-<entity>-response.dto.ts`, controller.
 9. **`<module>.module.ts`**: import `CqrsModule` + `PrismaModule`, register handlers + `{ provide: <ENTITY>_REPOSITORY_PORT, useClass: <Entity>Repository }`, declare the controller.
 10. **Wire** the module into `apps/api/src/app/app.module.ts`.
-11. **Verify**: `pnpm --filter @chantier/api typecheck`.
+11. **Verify**: `pnpm --filter @chantia/api typecheck`.
 
 ## Reference templates
 

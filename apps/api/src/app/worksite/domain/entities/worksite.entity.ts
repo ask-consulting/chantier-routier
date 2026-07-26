@@ -1,4 +1,4 @@
-import { WorksiteStatus } from '@chantier/shared';
+import { WorksiteStatus } from '@chantia/shared';
 
 /** Worksite aggregate root. */
 export class Worksite {
