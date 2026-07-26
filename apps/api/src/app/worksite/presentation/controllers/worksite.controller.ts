@@ -40,11 +40,13 @@ export class WorksiteController {
   @ApiOperation({ summary: 'List worksites for the organization' })
   @ApiResponse({ status: 200, type: PaginatedWorksiteResponseDto })
   async findAll(
-    @Headers('x-organization-id') organizationId: string,
+    // Unnamed @Headers() so Nest/Swagger doesn't auto-generate a second
+    // `x-organization-id` parameter on top of the class-level @ApiHeader.
+    @Headers() headers: Record<string, string | undefined>,
     @Query() dto: GetWorksitesDto,
   ): Promise<PaginatedWorksiteResponseDto> {
     const result = await this.queryBus.execute<GetWorksitesQuery, SearchResult<Worksite>>(
-      new GetWorksitesQuery(this.requireOrg(organizationId), {
+      new GetWorksitesQuery(this.requireOrg(headers['x-organization-id']), {
         page: dto.page,
         limit: dto.limit,
         paginated: dto.paginated,
@@ -65,11 +67,13 @@ export class WorksiteController {
   @ApiOperation({ summary: 'Create a worksite' })
   @ApiResponse({ status: 201, type: WorksiteResponseDto })
   async create(
-    @Headers('x-organization-id') organizationId: string,
+    // Unnamed @Headers() so Nest/Swagger doesn't auto-generate a second
+    // `x-organization-id` parameter on top of the class-level @ApiHeader.
+    @Headers() headers: Record<string, string | undefined>,
     @Body() dto: CreateWorksiteDto,
   ): Promise<WorksiteResponseDto> {
     const worksite = await this.commandBus.execute<CreateWorksiteCommand, Worksite>(
-      new CreateWorksiteCommand(this.requireOrg(organizationId), dto),
+      new CreateWorksiteCommand(this.requireOrg(headers['x-organization-id']), dto),
     );
     return WorksiteResponseDto.fromDomain(worksite);
   }

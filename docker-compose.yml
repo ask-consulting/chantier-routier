@@ -1,0 +1,49 @@
+# Local stack for the back-end API.
+# Usage: docker compose up --build
+#
+#   db  — PostgreSQL 16 (data persisted in the `chantier_db_data` volume)
+#   api — NestJS/Fastify API. On boot it runs `prisma migrate deploy`
+#         (applies every migration under apps/api/prisma/migrations),
+#         then starts the server on :8080.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: chantier-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chantier
+      POSTGRES_PASSWORD: chantier
+      POSTGRES_DB: chantier
+    # Host port 5433 (5432 is often already taken by another local Postgres).
+    ports:
+      - "5433:5432"
+    volumes:
+      - chantier_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chantier -d chantier"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.prod
+    image: chantier-api:prod
+    container_name: chantier-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: "8080"
+      NODE_ENV: production
+      CORS_ORIGINS: http://localhost:3000
+      # Inside the compose network the database is reachable via the "db" service name.
+      DATABASE_URL: postgresql://chantier:chantier@db:5432/chantier?schema=public
+    ports:
+      - "8080:8080"
+
+volumes:
+  chantier_db_data:
