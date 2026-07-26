@@ -1,7 +1,7 @@
 # Local stack for the back-end API.
 # Usage: docker compose up --build
 #
-#   db  — PostgreSQL 16 (data persisted in the `chantier_db_data` volume)
+#   db  — PostgreSQL 16 (data persisted in the `chantia_db_data` volume)
 #   api — NestJS/Fastify API. On boot it runs `prisma migrate deploy`
 #         (applies every migration under apps/api/prisma/migrations),
 #         then starts the server on :8080.
@@ -9,19 +9,19 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: chantier-db
+    container_name: chantia-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: chantier
-      POSTGRES_PASSWORD: chantier
-      POSTGRES_DB: chantier
+      POSTGRES_USER: chantia
+      POSTGRES_PASSWORD: chantia
+      POSTGRES_DB: chantia
     # Host port 5433 (5432 is often already taken by another local Postgres).
     ports:
       - "5433:5432"
     volumes:
-      - chantier_db_data:/var/lib/postgresql/data
+      - chantia_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chantier -d chantier"]
+      test: ["CMD-SHELL", "pg_isready -U chantia -d chantia"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -30,8 +30,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile.prod
-    image: chantier-api:prod
-    container_name: chantier-api
+    image: chantia-api:prod
+    container_name: chantia-api
     restart: unless-stopped
     depends_on:
       db:
@@ -41,9 +41,11 @@ services:
       NODE_ENV: production
       CORS_ORIGINS: http://localhost:3000
       # Inside the compose network the database is reachable via the "db" service name.
-      DATABASE_URL: postgresql://chantier:chantier@db:5432/chantier?schema=public
+      DATABASE_URL: postgresql://chantia:chantia@db:5432/chantia?schema=public
+      # No pooler locally, so the direct URL is the same connection.
+      DIRECT_URL: postgresql://chantia:chantia@db:5432/chantia?schema=public
     ports:
       - "8080:8080"
 
 volumes:
-  chantier_db_data:
+  chantia_db_data:

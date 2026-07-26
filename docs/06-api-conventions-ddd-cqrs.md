@@ -75,7 +75,7 @@ presentation ──► application ──► domain ◄── infrastructure
 
 ## 6. Calculs métier partagés
 
-Les calculs **purs et testables** vivent dans `packages/shared` (`@chantier/shared`), pas
+Les calculs **purs et testables** vivent dans `packages/shared` (`@chantia/shared`), pas
 dans l'API. L'API les **appelle** depuis un query handler ; le mobile les **réutilise**
 pour recalculer hors-ligne. Exemple : `calculateActualCost()` dans
 `packages/shared/src/costs/worksite-costs.ts`, appelé par `GetWorksiteCostsHandler`.
@@ -101,8 +101,8 @@ nom d'entité et des champs. Voir le module `worksite` comme référence vivante
 ## 10. Commandes utiles
 
 ```bash
-pnpm --filter @chantier/api dev            # API en watch (prisma generate + nest start)
-pnpm --filter @chantier/api prisma:migrate # créer/appliquer une migration
-pnpm --filter @chantier/api typecheck
-pnpm --filter @chantier/shared test        # tests des calculs métier
+pnpm --filter @chantia/api dev            # API en watch (prisma generate + nest start)
+pnpm --filter @chantia/api prisma:migrate # créer/appliquer une migration
+pnpm --filter @chantia/api typecheck
+pnpm --filter @chantia/shared test        # tests des calculs métier
 ```

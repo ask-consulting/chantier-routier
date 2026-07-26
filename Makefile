@@ -1,4 +1,4 @@
-# Chantier Routier — commandes utiles (API + Postgres via Docker).
+# Chantia — commandes utiles (API + Postgres via Docker).
 # Lance `make` ou `make help` pour la liste.
 
 # --- Variables ---------------------------------------------------------------
@@ -7,9 +7,9 @@ COMPOSE_DEV  := docker compose -f docker-compose.yml -f docker-compose.dev.yml
 API_DIR      := apps/api
 API_URL      := http://localhost:8080
 ORG_ID       := b62107ee-2174-463f-9365-1fa967cc1925   # organisation "ELLOUZE construction"
-DB_CONTAINER := chantier-db
-DB_USER      := chantier
-DB_NAME      := chantier
+DB_CONTAINER := chantia-db
+DB_USER      := chantia
+DB_NAME      := chantia
 PNPM         := pnpm
 
 .DEFAULT_GOAL := help
@@ -122,11 +122,11 @@ db-orgs: ## Liste les organisations
 # --- Développement (hors Docker) ---------------------------------------------
 .PHONY: dev
 dev: ## Lance l'API en local avec hot-reload (nécessite Postgres: make up-db)
-	$(PNPM) --filter @chantier/api dev
+	$(PNPM) --filter @chantia/api dev
 
 .PHONY: shell
 shell: ## Ouvre un shell dans le conteneur de l'API
-	docker exec -it chantier-api sh
+	docker exec -it chantia-api sh
 
 # --- Qualité -----------------------------------------------------------------
 .PHONY: test

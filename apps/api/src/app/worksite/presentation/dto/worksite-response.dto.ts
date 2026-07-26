@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IWorksite, WorksiteStatus } from '@chantier/shared';
+import { IWorksite, WorksiteStatus } from '@chantia/shared';
 import { Worksite } from '../../domain/entities/worksite.entity';
 
 export class WorksiteResponseDto implements IWorksite {

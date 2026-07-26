@@ -1,5 +1,5 @@
 import { Worksite as PrismaWorksite, Prisma } from '@prisma/client';
-import { WorksiteStatus } from '@chantier/shared';
+import { WorksiteStatus } from '@chantia/shared';
 import { Worksite } from '../../domain/entities/worksite.entity';
 
 export class WorksiteMapper {

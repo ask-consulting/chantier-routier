@@ -17,7 +17,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@chantier/shared':
+      '@chantia/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@fastify/cookie':

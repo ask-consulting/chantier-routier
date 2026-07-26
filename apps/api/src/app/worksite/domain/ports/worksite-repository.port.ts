@@ -1,4 +1,4 @@
-import { ExpenseCost, TimesheetCost } from '@chantier/shared';
+import { ExpenseCost, TimesheetCost } from '@chantia/shared';
 import { SearchParams, SearchResult } from '@shared/domain/search.types';
 import { Worksite } from '../entities/worksite.entity';
 

@@ -43,7 +43,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Chantier Routier API')
+    .setTitle('Chantia API')
     .setDescription('Road worksite management REST API')
     .setVersion('0.1.0')
     .addBearerAuth()

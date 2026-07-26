@@ -1,5 +1,5 @@
 {
-  "name": "chantier-routier",
+  "name": "chantia",
   "private": true,
   "version": "0.1.0",
   "description": "Gestion de chantiers routiers — monorepo (web + mobile + shared)",
@@ -13,9 +13,9 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "api": "pnpm --filter @chantier/api dev",
-    "web": "pnpm --filter @chantier/web dev",
-    "mobile": "pnpm --filter @chantier/mobile start",
+    "api": "pnpm --filter @chantia/api dev",
+    "web": "pnpm --filter @chantia/web dev",
+    "mobile": "pnpm --filter @chantia/mobile start",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {

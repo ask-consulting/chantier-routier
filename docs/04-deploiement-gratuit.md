@@ -59,7 +59,7 @@
 
 ### Phase 0 — Comptes (tout gratuit)
 - [ ] Créer un compte **GitHub** et le dépôt monorepo.
-- [ ] Créer un compte **Supabase** + 1 projet `chantier-test`.
+- [ ] Créer un compte **Supabase** + 1 projet `chantia-test`.
 - [ ] Créer un compte **Vercel** (connecté à GitHub).
 - [ ] Créer un compte **Expo** (EAS).
 - [ ] (Option) Compte **Firebase** pour App Distribution.
@@ -67,7 +67,7 @@
 ### Phase 1 — Back-end (API NestJS + Supabase)
 - [ ] Projet Supabase créé ; récupérer `DATABASE_URL` (pooler + directe).
 - [ ] Modèle de données dans `apps/api/prisma/schema.prisma` (voir `03-architecture.md`).
-- [ ] `pnpm --filter @chantier/api prisma:migrate` pour créer les tables.
+- [ ] `pnpm --filter @chantia/api prisma:migrate` pour créer les tables.
 - [ ] Déployer l'API sur **Render** (Web Service, build depuis le monorepo, `DATABASE_URL` en secret).
 - [ ] Activer **Row Level Security** Supabase + policies par `organizationId` et rôle.
 - [ ] Créer le **bucket Storage** pour les photos de factures.
