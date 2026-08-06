@@ -86,11 +86,33 @@ pour recalculer hors-ligne. Exemple : `calculateActualCost()` dans
   format `{ field, code, message }`).
 - Ressource absente → `ResourceNotFoundException` (HTTP 404), levée dans les handlers.
 
-## 8. Multi-tenant
+## 8. Multi-tenant et autorisation
 
-Chaque ligne métier porte un `organizationId`. Tant que le module Auth n'existe pas,
-l'`organizationId` transite par le header `x-organization-id` (placeholder). À terme il
-viendra du contexte d'authentification (JWT + Supabase Auth) et le RLS Postgres fera foi.
+Chaque ligne métier porte un `organizationId`. Il vient **du token d'accès vérifié**,
+jamais de la requête (le header `x-organization-id` était un placeholder, il a été
+supprimé) :
+
+```ts
+@Get()
+@RequirePermissions(Permission.WORKSITE_READ)
+async findAll(@CurrentUser('organizationId') organizationId: string) { … }
+```
+
+Un **filet de sécurité** double cette discipline : une extension Prisma injecte
+automatiquement `organizationId` dans toute requête visant une table qui porte cette
+colonne, dès lors que l'appelant est authentifié. Oublier le filtre n'est donc plus une
+fuite. Les repositories injectent le client filtré via `@Inject(TENANT_PRISMA)` — voir
+`08-identity-module.md` §4 bis pour la règle exacte et ses deux limites.
+
+Deux règles qui en découlent, à appliquer dans **tout** nouveau module :
+
+- Une route se garde par la **capacité** qu'elle exige (`@RequirePermissions`), pas par
+  la liste des rôles qui la détiennent. La matrice vit dans `@chantia/shared`.
+- Une permission donne le **verbe**, pas le **périmètre** : filtrer les lignes par tenant
+  (et par appelant quand c'est « les siennes ») reste le travail du query handler. Une
+  ressource d'un autre tenant renvoie `404`, pas `403`.
+
+Détail complet : `08-identity-module.md`.
 
 ## 9. Générer un nouveau module
 

@@ -27,6 +27,23 @@ read it first when in doubt.
 6. **Pure business calculations go in `packages/shared`**, never inline in a handler. The handler calls them.
 7. Add a Prisma model to `apps/api/prisma/schema.prisma` (`@@map` to snake_case table, index `organizationId`).
 8. Response DTOs expose a `static fromDomain(entity)`. Request DTOs use `class-validator` + `@ApiProperty`.
+9. **Tenant + authorization** (see `docs/08-identity-module.md`):
+   - `organizationId` comes from `@CurrentUser('organizationId')` — **never** from a
+     header, a body or a query param. There is no `x-organization-id`.
+   - Guard every route with `@RequirePermissions(Permission.<RESOURCE>_<ACTION>)`, not
+     with `@Roles(...)`. Add the permission to `Permission` and to `ROLE_PERMISSIONS`
+     in `packages/shared/src/access/` first, and cover the new row with a spec.
+   - A permission grants the verb, not the scope: `findById`-style queries must take
+     the `organizationId` and throw `ResourceNotFoundException` (404, never 403) when
+     the row belongs to another tenant.
+   - Mark a route `@Public()` only when it genuinely needs no caller. A `@Public()`
+     route runs with no tenant context, so the automatic filter does **not** apply
+     there — never expose tenant data from one.
+   - Repositories inject the tenant-filtered client: `@Inject(TENANT_PRISMA)
+     private readonly prisma: TenantPrismaClient`, not `PrismaService`. A model with an
+     `organizationId` is then filtered automatically; one without it (reached through a
+     parent, like `Timesheet`) is not — root queries on such a table must filter through
+     the relation by hand.
 
 ## Steps
 
