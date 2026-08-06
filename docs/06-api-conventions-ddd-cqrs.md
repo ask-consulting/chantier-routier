@@ -114,6 +114,13 @@ Deux règles qui en découlent, à appliquer dans **tout** nouveau module :
 
 Détail complet : `08-identity-module.md`.
 
+## 8 bis. Nommage en base
+
+La base parle `snake_case` (tables au pluriel, colonnes, contraintes préfixées
+`pk_`/`fk_`/`uq_`/`ix_`), le code parle `camelCase` ; Prisma fait le pont via `@@map` et
+`@map`. Voir `10-conventions-base-de-donnees.md`, avec la check-list du nouveau modèle
+et la marche à suivre pour renommer sans perdre de données.
+
 ## 9. Générer un nouveau module
 
 Utiliser la skill Claude Code **`create-cqrs-module`** (voir

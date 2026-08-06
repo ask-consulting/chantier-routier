@@ -114,9 +114,9 @@ api-studio: ## Ouvre Prisma Studio (UI base de données)
 api-psql: ## Ouvre un shell psql sur la base
 	docker exec -it $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME)
 api-db-orgs: ## Liste les organisations (schéma identity)
-	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT id, name, currency FROM identity.organization;'
+	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT id, name, currency FROM identity.organizations;'
 api-db-users: ## Liste les comptes (sans les hashs)
-	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT email, role, active, "lastLoginAt" FROM identity.app_user ORDER BY email;'
+	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT email, role, active, last_login_at FROM identity.app_users ORDER BY email;'
 api-health: ## Vérifie que l'API répond
 	curl -s $(API_URL)/health && echo
 api-login: ## Récupère un access token — make api-login EMAIL=… PASSWORD=…

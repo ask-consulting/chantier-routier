@@ -17,7 +17,7 @@ colonne discriminante. On a retenu la troisième : **une seule base, une colonne
 | Requêtes transverses | Les stats produit restent un simple `GROUP BY`. |
 | Risque | Une erreur de filtre expose les données d'autrui — d'où tout ce qui suit. |
 
-Le tenant lui-même vit dans `identity.organization`. Toutes les autres tables le
+Le tenant lui-même vit dans `identity.organizations`. Toutes les autres tables le
 référencent par un **UUID opaque**, sans clé étrangère traversant le contexte Identity
 (voir `08-identity-module.md` §1).
 

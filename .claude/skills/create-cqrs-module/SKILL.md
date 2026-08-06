@@ -25,7 +25,10 @@ read it first when in doubt.
 4. Domain entities: rich object with a `constructor` + `static create(props)`. **No** NestJS/Prisma imports in `domain/`.
 5. Shared transport interfaces + enums go in `packages/shared` (`@chantia/shared`), re-exported from its `index.ts`.
 6. **Pure business calculations go in `packages/shared`**, never inline in a handler. The handler calls them.
-7. Add a Prisma model to `apps/api/prisma/schema.prisma` (`@@map` to snake_case table, index `organizationId`).
+7. Add a Prisma model to `apps/api/prisma/schema.prisma` following
+   `docs/10-conventions-base-de-donnees.md`: `@@map` to a **plural snake_case** table,
+   `@map("snake_case")` on every column, named constraints (`pk_` / `fk_` / `uq_` /
+   `ix_`), `@db.Uuid` on ids, explicit `onDelete`, and `organizationId` + its index.
 8. Response DTOs expose a `static fromDomain(entity)`. Request DTOs use `class-validator` + `@ApiProperty`.
 9. **Tenant + authorization** (see `docs/08-identity-module.md`):
    - `organizationId` comes from `@CurrentUser('organizationId')` — **never** from a
