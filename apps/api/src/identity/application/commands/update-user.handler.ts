@@ -37,11 +37,20 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
       throw new ResourceNotFoundException('User', userId);
     }
 
-    const losesAdmin = data.role !== undefined && data.role !== UserRole.ADMIN;
     const isDeactivated = data.active === false;
+    /** The target ends up without the admin role — demoted, whatever it held before. */
+    const losesAdmin = data.role !== undefined && data.role !== UserRole.ADMIN;
+    /** Any self-inflicted role change, in either direction. Resending the same role is a no-op. */
+    const changesOwnRole = data.role !== undefined && data.role !== user.role;
 
-    if (userId === actorId && (isDeactivated || losesAdmin)) {
-      throw new SelfTargetedActionException(isDeactivated ? 'deactivate' : 'demote');
+    // Nobody edits their own role, not even upwards. Phrasing this as "cannot
+    // demote yourself" would only hold while `USER_MANAGE` belongs to admins
+    // alone: granting it to another role would silently turn this route into
+    // self-promotion. The rule must not depend on the permission matrix.
+    if (userId === actorId && (isDeactivated || changesOwnRole)) {
+      throw new SelfTargetedActionException(
+        isDeactivated ? 'deactivate' : 'change the role of',
+      );
     }
 
     if (user.role === UserRole.ADMIN && user.active && (losesAdmin || isDeactivated)) {
