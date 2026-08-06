@@ -24,19 +24,17 @@ export class UserRepository implements UserRepositoryPort {
     return row ? UserMapper.toDomain(row) : null;
   }
 
-  async search(organizationId: string, params: SearchParams): Promise<SearchResult<User>> {
+  async search(params: SearchParams): Promise<SearchResult<User>> {
     const { skip, take, page } = getPrismaPagination(params);
+    // No tenant clause here: the extension adds it to both queries below, and
+    // it wins over anything a caller-supplied filter might try to say.
     const { where, orderBy } = buildPrismaSearchQuery(params, 'lastName', {
       searchableFields: ['firstName', 'lastName', 'email'],
     });
 
-    // The tenant filter is applied last so a caller-supplied filter cannot
-    // widen the query beyond their own organization.
-    const finalWhere = { ...where, organizationId };
-
     const [rows, total] = await Promise.all([
-      this.prisma.user.findMany({ where: finalWhere, orderBy, skip, take }),
-      this.prisma.user.count({ where: finalWhere }),
+      this.prisma.user.findMany({ where, orderBy, skip, take }),
+      this.prisma.user.count({ where }),
     ]);
 
     return {
@@ -47,9 +45,9 @@ export class UserRepository implements UserRepositoryPort {
     };
   }
 
-  async countActiveAdmins(organizationId: string): Promise<number> {
+  async countActiveAdmins(): Promise<number> {
     return this.prisma.user.count({
-      where: { organizationId, role: UserRole.ADMIN, active: true },
+      where: { role: UserRole.ADMIN, active: true },
     });
   }
 

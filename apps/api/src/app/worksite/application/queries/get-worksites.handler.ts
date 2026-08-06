@@ -16,6 +16,6 @@ export class GetWorksitesHandler implements IQueryHandler<GetWorksitesQuery> {
   ) {}
 
   async execute(query: GetWorksitesQuery): Promise<SearchResult<Worksite>> {
-    return this.repository.search(query.organizationId, query.params);
+    return this.repository.search(query.params);
   }
 }

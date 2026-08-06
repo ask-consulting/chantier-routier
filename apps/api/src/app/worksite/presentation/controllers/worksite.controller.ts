@@ -15,6 +15,11 @@ import { PaginatedWorksiteResponseDto } from '../dto/paginated-worksite-response
 import { WorksiteCostsResponseDto } from '../dto/worksite-costs-response.dto';
 import { WorksiteResponseDto } from '../dto/worksite-response.dto';
 
+/**
+ * Reads carry no tenant parameter: the Prisma layer scopes them to the caller's
+ * organization from the verified token (see docs/09-multi-tenant.md). Only the
+ * write below names it, because the aggregate itself has to hold one.
+ */
 @ApiTags('Worksites')
 @ApiBearerAuth()
 @Controller('worksites')
@@ -28,14 +33,9 @@ export class WorksiteController {
   @RequirePermissions(Permission.WORKSITE_READ)
   @ApiOperation({ summary: 'List worksites for the organization' })
   @ApiResponse({ status: 200, type: PaginatedWorksiteResponseDto })
-  async findAll(
-    // The tenant comes from the verified access token — it can no longer be
-    // chosen by the caller, which is what makes the isolation real.
-    @CurrentUser('organizationId') organizationId: string,
-    @Query() dto: GetWorksitesDto,
-  ): Promise<PaginatedWorksiteResponseDto> {
+  async findAll(@Query() dto: GetWorksitesDto): Promise<PaginatedWorksiteResponseDto> {
     const result = await this.queryBus.execute<GetWorksitesQuery, SearchResult<Worksite>>(
-      new GetWorksitesQuery(organizationId, {
+      new GetWorksitesQuery({
         page: dto.page,
         limit: dto.limit,
         paginated: dto.paginated,
@@ -57,6 +57,10 @@ export class WorksiteController {
   @ApiOperation({ summary: 'Create a worksite' })
   @ApiResponse({ status: 201, type: WorksiteResponseDto })
   async create(
+    // The one place the tenant is still named: `Worksite` carries an
+    // `organizationId`, so the aggregate cannot be built without it. The
+    // extension overwrites it with the token's value regardless, so a wrong
+    // value here cannot plant a row in someone else's organization.
     @CurrentUser('organizationId') organizationId: string,
     @Body() dto: CreateWorksiteDto,
   ): Promise<WorksiteResponseDto> {
@@ -70,12 +74,9 @@ export class WorksiteController {
   @RequirePermissions(Permission.WORKSITE_READ)
   @ApiOperation({ summary: 'Get a worksite by id' })
   @ApiResponse({ status: 200, type: WorksiteResponseDto })
-  async findOne(
-    @CurrentUser('organizationId') organizationId: string,
-    @Param('id') id: string,
-  ): Promise<WorksiteResponseDto> {
+  async findOne(@Param('id') id: string): Promise<WorksiteResponseDto> {
     const worksite = await this.queryBus.execute<GetWorksiteByIdQuery, Worksite>(
-      new GetWorksiteByIdQuery(organizationId, id),
+      new GetWorksiteByIdQuery(id),
     );
     return WorksiteResponseDto.fromDomain(worksite);
   }
@@ -85,12 +86,9 @@ export class WorksiteController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Compute budget vs actual cost for a worksite' })
   @ApiResponse({ status: 200, type: WorksiteCostsResponseDto })
-  async costs(
-    @CurrentUser('organizationId') organizationId: string,
-    @Param('id') id: string,
-  ): Promise<WorksiteCostsResponseDto> {
+  async costs(@Param('id') id: string): Promise<WorksiteCostsResponseDto> {
     const costs = await this.queryBus.execute<GetWorksiteCostsQuery, IWorksiteCosts>(
-      new GetWorksiteCostsQuery(organizationId, id),
+      new GetWorksiteCostsQuery(id),
     );
     return WorksiteCostsResponseDto.fromDomain(costs);
   }

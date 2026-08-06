@@ -27,12 +27,13 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
   ) {}
 
   async execute(command: UpdateUserCommand): Promise<User> {
-    const { organizationId, userId, data, actorId } = command;
+    const { userId, data, actorId } = command;
 
+    // Tenant-scoped by the Prisma layer, so an account of another organization
+    // is reported as missing rather than forbidden — "403" would confirm that
+    // the id exists somewhere.
     const user = await this.users.findById(userId);
-    // A user of another tenant is reported as missing rather than forbidden:
-    // "403" would confirm that the id exists somewhere.
-    if (!user || user.organizationId !== organizationId) {
+    if (!user) {
       throw new ResourceNotFoundException('User', userId);
     }
 
@@ -45,8 +46,9 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
 
     if (user.role === UserRole.ADMIN && user.active && (losesAdmin || isDeactivated)) {
       // Losing the last admin would leave the organization with nobody able to
-      // create accounts or restore access.
-      if ((await this.users.countActiveAdmins(organizationId)) <= 1) {
+      // create accounts or restore access. The count is scoped to the caller's
+      // organization like every other query.
+      if ((await this.users.countActiveAdmins()) <= 1) {
         throw new LastAdminException();
       }
     }

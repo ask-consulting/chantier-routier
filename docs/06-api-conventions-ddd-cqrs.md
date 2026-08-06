@@ -88,31 +88,35 @@ pour recalculer hors-ligne. Exemple : `calculateActualCost()` dans
 
 ## 8. Multi-tenant et autorisation
 
-Chaque ligne métier porte un `organizationId`. Il vient **du token d'accès vérifié**,
-jamais de la requête (le header `x-organization-id` était un placeholder, il a été
-supprimé) :
+Chaque ligne métier porte un `organizationId`, qui vient **du token d'accès vérifié**,
+jamais de la requête (le header `x-organization-id` était un bouchon, il a été supprimé).
+
+Mais il n'apparaît **pas** dans les handlers : une extension Prisma l'injecte dans toute
+requête visant une table qui porte la colonne, dès lors que l'appelant est authentifié.
+Les repositories consomment le client filtré via `@Inject(TENANT_PRISMA)`.
 
 ```ts
-@Get()
-@RequirePermissions(Permission.WORKSITE_READ)
-async findAll(@CurrentUser('organizationId') organizationId: string) { … }
+// Lecture — aucun tenant nulle part : le filtre est appliqué en dessous.
+async execute(query: GetWorksiteByIdQuery): Promise<Worksite> {
+  const worksite = await this.repository.findById(query.id);
+  if (!worksite) throw new ResourceNotFoundException('Worksite', query.id);
+  return worksite;
+}
+
+// Création — le tenant est nommé, parce que l'agrégat porte la colonne.
+async create(@CurrentUser('organizationId') organizationId: string, @Body() dto: CreateWorksiteDto) { … }
 ```
 
-Un **filet de sécurité** double cette discipline : une extension Prisma injecte
-automatiquement `organizationId` dans toute requête visant une table qui porte cette
-colonne, dès lors que l'appelant est authentifié. Oublier le filtre n'est donc plus une
-fuite. Les repositories injectent le client filtré via `@Inject(TENANT_PRISMA)` — voir
-`08-identity-module.md` §4 bis pour la règle exacte et ses deux limites.
+Trois règles à appliquer dans **tout** nouveau module :
 
-Deux règles qui en découlent, à appliquer dans **tout** nouveau module :
-
+- Le repository injecte `TENANT_PRISMA`, pas `PrismaService`.
 - Une route se garde par la **capacité** qu'elle exige (`@RequirePermissions`), pas par
   la liste des rôles qui la détiennent. La matrice vit dans `@chantia/shared`.
-- Une permission donne le **verbe**, pas le **périmètre** : filtrer les lignes par tenant
-  (et par appelant quand c'est « les siennes ») reste le travail du query handler. Une
-  ressource d'un autre tenant renvoie `404`, pas `403`.
+- Une permission donne le **verbe**, pas le **périmètre** : le tenant est pris en charge
+  par l'extension, mais restreindre les lignes à l'appelant lui-même (« ses » pointages)
+  reste le travail du query handler. Une ressource introuvable renvoie `404`, pas `403`.
 
-Détail complet : `08-identity-module.md`.
+Détail complet : `09-multi-tenant.md`.
 
 ## 8 bis. Nommage en base
 

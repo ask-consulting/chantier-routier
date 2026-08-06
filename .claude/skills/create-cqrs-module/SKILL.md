@@ -30,23 +30,24 @@ read it first when in doubt.
    `@map("snake_case")` on every column, named constraints (`pk_` / `fk_` / `uq_` /
    `ix_`), `@db.Uuid` on ids, explicit `onDelete`, and `organizationId` + its index.
 8. Response DTOs expose a `static fromDomain(entity)`. Request DTOs use `class-validator` + `@ApiProperty`.
-9. **Tenant + authorization** (see `docs/08-identity-module.md`):
-   - `organizationId` comes from `@CurrentUser('organizationId')` — **never** from a
-     header, a body or a query param. There is no `x-organization-id`.
+9. **Tenant + authorization** (see `docs/09-multi-tenant.md`):
+   - Repositories inject the tenant-filtered client — `@Inject(TENANT_PRISMA)
+     private readonly prisma: TenantPrismaClient` — never `PrismaService`. A model
+     carrying `organizationId` is then filtered automatically.
+   - **Reads take no tenant at all**: no query field, no `@CurrentUser('organizationId')`,
+     no `organizationId` in a repository signature. A row of another tenant is simply
+     not found, so `if (!row) throw new ResourceNotFoundException(...)` is the whole
+     check — `404`, never `403`.
+   - **Writes name it once**: the aggregate carries the column, so a create command
+     takes `@CurrentUser('organizationId')`. The extension overwrites it with the
+     token's value anyway.
    - Guard every route with `@RequirePermissions(Permission.<RESOURCE>_<ACTION>)`, not
      with `@Roles(...)`. Add the permission to `Permission` and to `ROLE_PERMISSIONS`
      in `packages/shared/src/access/` first, and cover the new row with a spec.
-   - A permission grants the verb, not the scope: `findById`-style queries must take
-     the `organizationId` and throw `ResourceNotFoundException` (404, never 403) when
-     the row belongs to another tenant.
-   - Mark a route `@Public()` only when it genuinely needs no caller. A `@Public()`
-     route runs with no tenant context, so the automatic filter does **not** apply
-     there — never expose tenant data from one.
-   - Repositories inject the tenant-filtered client: `@Inject(TENANT_PRISMA)
-     private readonly prisma: TenantPrismaClient`, not `PrismaService`. A model with an
-     `organizationId` is then filtered automatically; one without it (reached through a
-     parent, like `Timesheet`) is not — root queries on such a table must filter through
-     the relation by hand.
+   - A permission grants the verb, not the scope: narrowing rows to the caller's own
+     data ("his" timesheets) is still the query handler's job.
+   - Mark a route `@Public()` only when it genuinely needs no caller — a public route
+     runs with no tenant context, so the filter does not apply there.
 
 ## Steps
 
@@ -56,7 +57,7 @@ read it first when in doubt.
 4. **domain/ports/`<entity>-repository.port.ts`**: interface + `export const <ENTITY>_REPOSITORY_PORT = Symbol(...)`.
 5. **application/**: one `*.command.ts`+`*.handler.ts` per write op, one `*.query.ts`+`*.handler.ts` per read op.
 6. **infrastructure/mappers/`<entity>.mapper.ts`**: `toDomain` / `toPersistence` (convert Prisma `Decimal` via `.toNumber()`).
-7. **infrastructure/repositories/`<entity>.repository.ts`**: implements the port, uses `PrismaService`, `buildPrismaSearchQuery` + `getPrismaPagination` for `list`.
+7. **infrastructure/repositories/`<entity>.repository.ts`**: implements the port, injects `TENANT_PRISMA` (see HARD RULE 9), `buildPrismaSearchQuery` + `getPrismaPagination` for `list`. No tenant clause in the `where` — the extension adds it.
 8. **presentation/**: `create-<entity>.dto.ts`, `get-<entities>.dto.ts`, `<entity>-response.dto.ts`, `paginated-<entity>-response.dto.ts`, controller.
 9. **`<module>.module.ts`**: import `CqrsModule` + `PrismaModule`, register handlers + `{ provide: <ENTITY>_REPOSITORY_PORT, useClass: <Entity>Repository }`, declare the controller.
 10. **Wire** the module into `apps/api/src/app/app.module.ts`.

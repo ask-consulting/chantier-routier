@@ -119,7 +119,7 @@ export class AuthController {
     // Read from the database rather than from the token: the profile may have
     // changed since it was issued, and this is the route a client polls to find out.
     const user = await this.queryBus.execute<GetUserByIdQuery, User>(
-      new GetUserByIdQuery(caller.organizationId, caller.id),
+      new GetUserByIdQuery(caller.id),
     );
     return CurrentUserResponseDto.fromDomain(user);
   }

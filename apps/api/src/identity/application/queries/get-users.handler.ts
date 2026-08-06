@@ -16,6 +16,6 @@ export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
   ) {}
 
   execute(query: GetUsersQuery): Promise<SearchResult<User>> {
-    return this.users.search(query.organizationId, query.params);
+    return this.users.search(query.params);
   }
 }

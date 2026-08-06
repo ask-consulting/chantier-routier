@@ -17,17 +17,16 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
     private readonly prisma: TenantPrismaClient,
   ) {}
 
-  async search(organizationId: string, params: SearchParams): Promise<SearchResult<Worksite>> {
+  async search(params: SearchParams): Promise<SearchResult<Worksite>> {
     const { skip, take, page } = getPrismaPagination(params);
+    // No tenant clause here: the extension adds it to both queries below.
     const { where, orderBy } = buildPrismaSearchQuery(params, 'createdAt', {
       searchableFields: ['name', 'code', 'client'],
     });
 
-    const finalWhere = { ...where, organizationId };
-
     const [rows, total] = await Promise.all([
-      this.prisma.worksite.findMany({ where: finalWhere, orderBy, skip, take }),
-      this.prisma.worksite.count({ where: finalWhere }),
+      this.prisma.worksite.findMany({ where, orderBy, skip, take }),
+      this.prisma.worksite.count({ where }),
     ]);
 
     return {

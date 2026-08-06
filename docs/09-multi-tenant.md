@@ -39,62 +39,54 @@ Le client ne choisit jamais son tenant : il n'y a **aucun paramètre** pour le d
 ni header, ni query, ni corps de requête. Un header `x-organization-id` a existé comme
 bouchon avant l'authentification ; il a été supprimé, et il ne doit pas revenir.
 
-Dans un contrôleur :
+Il n'apparaît d'ailleurs plus dans les contrôleurs de lecture : le filtre est appliqué
+plus bas, dans la couche Prisma (§3). Seules les **créations** le nomment encore, parce
+que l'agrégat lui-même porte la colonne :
 
 ```ts
-@Get()
-@RequirePermissions(Permission.WORKSITE_READ)
-async findAll(@CurrentUser('organizationId') organizationId: string) { … }
+@Post()
+@RequirePermissions(Permission.WORKSITE_MANAGE)
+async create(@CurrentUser('organizationId') organizationId: string, @Body() dto: CreateWorksiteDto) { … }
 ```
 
-## 3. Les deux couches de protection
+## 3. Une seule couche : le filtre automatique
 
-### Couche 1 — le filtre explicite dans les handlers
-
-Les query handlers passent `organizationId` au repository, et vérifient l'appartenance
-sur les lectures par id :
+Le cloisonnement est appliqué **au niveau Prisma**, par une extension de client. Les
+handlers n'en portent aucune trace : ils ne reçoivent pas d'`organizationId`, ne le
+comparent pas, ne le passent pas aux repositories.
 
 ```ts
-const worksite = await this.repository.findById(query.id);
-if (!worksite || worksite.organizationId !== query.organizationId) {
-  throw new ResourceNotFoundException('Worksite', query.id);
+async execute(query: GetWorksiteByIdQuery): Promise<Worksite> {
+  const worksite = await this.repository.findById(query.id);
+  if (!worksite) {
+    throw new ResourceNotFoundException('Worksite', query.id);
+  }
+  return worksite;
 }
 ```
 
+Un chantier d'un autre tenant n'est pas *rejeté* : il n'est **pas trouvé**. Le 404 tombe
+de lui-même.
+
 > **404, jamais 403.** Un `403` sur une ressource d'un autre tenant confirmerait que
 > l'id existe — donc qu'un concurrent est client. L'absence est la seule réponse qui
-> n'apprend rien.
+> n'apprend rien. Ici c'est gratuit : la ligne est réellement invisible.
 
-### Couche 2 — le filtre automatique (extension Prisma)
+**Une responsabilité, un endroit.** Une version antérieure doublait le filtre d'une
+comparaison explicite dans chaque handler (`worksite.organizationId !== …`). Elle ne se
+déclenchait jamais — l'extension avait déjà écarté la ligne — mais imposait de faire
+transiter le tenant du contrôleur jusqu'au handler, soit une trentaine de références
+pour un seul module. Supprimée : les handlers ne portent plus que des règles métier.
 
-La couche 1 marche… jusqu'au jour où quelqu'un oublie. Une **extension Prisma** injecte
-donc le filtre toute seule. C'est l'équivalent des `SQLFilter` de Doctrine
-(`$em->getFilters()->enable('tenant')`), que Prisma n'offre pas en natif — le mécanisme
-sous-jacent est `$extends({ query: { $allModels: { $allOperations } } })`.
+**Ce qui subsiste en écriture.** Un `Worksite` *porte* un `organizationId` : c'est une
+donnée de l'agrégat, pas un filtre. La création le nomme donc encore
+(`@CurrentUser('organizationId')` → `CreateWorksiteCommand`). L'extension l'écrase avec
+la valeur du token de toute façon, si bien qu'une valeur erronée ne peut pas planter une
+ligne dans une autre organisation.
 
-**La règle :**
-
-| Situation | Comportement |
-|---|---|
-| La table a une colonne `organizationId` **et** l'appelant est authentifié | filtre injecté |
-| La table n'a pas la colonne | table tenant-agnostique, laissée telle quelle |
-| Aucun token (login, register, refresh) | pas de filtre |
-
-La liste des modèles concernés est **dérivée du schéma** au démarrage
-(`Prisma.dmmf.datamodel.models`), jamais écrite à la main : une liste manuelle serait
-exactement l'oubli qu'on cherche à supprimer. Ajouter un modèle portant la colonne
-suffit — il est filtré au prochain `prisma generate`, sans rien déclarer.
-
-**Ce qui est couvert :**
-
-- `where` — `findMany`, `findFirst`, `findUnique`, `count`, `aggregate`, `groupBy`,
-  `update`, `updateMany`, `delete`, `deleteMany`, `upsert`.
-- `data` — `create`, `createMany`, et le volet `create` de `upsert`.
-
-**Le token gagne toujours.** Une charge utile qui désigne un autre tenant est écrasée,
-pas honorée : aucune requête ne peut planter une ligne hors de son organisation. Et un
-`updateMany({ where: {} })` ne devient pas « modifie tout » — il ne touche que les
-lignes du tenant.
+**Le prix à payer, dit franchement.** Si quelqu'un injecte `PrismaService` au lieu de
+`TENANT_PRISMA` dans un futur repository, plus rien en aval ne rattrape l'erreur. C'est
+le rôle du nom du jeton d'injection, de la relecture, et de la check-list du §8.
 
 ## 4. La mécanique
 
@@ -242,9 +234,10 @@ l'extension — sans autre changement de code.
 1. Le modèle Prisma porte `organizationId` + `@@index([organizationId])` → il est
    cloisonné automatiquement.
 2. Le repository injecte `@Inject(TENANT_PRISMA)`, pas `PrismaService`.
-3. Le contrôleur prend le tenant via `@CurrentUser('organizationId')` — **jamais** d'un
-   paramètre de requête.
-4. Les lectures par id vérifient l'appartenance et renvoient `404`.
+3. Les lectures ne prennent **aucun** tenant : ni en paramètre de requête, ni depuis le
+   token. Une création le prend via `@CurrentUser('organizationId')`, jamais autrement.
+4. Les lectures par id se contentent de `if (!row) throw ResourceNotFound` : une ligne
+   d'un autre tenant n'est pas trouvée, le `404` tombe tout seul.
 5. `@Public()` uniquement si la route n'a vraiment besoin d'aucun appelant : elle
    tournera sans filtre.
 

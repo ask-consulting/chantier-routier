@@ -48,12 +48,9 @@ export class UserController {
   @RequirePermissions(Permission.USER_READ)
   @ApiOperation({ summary: 'List the accounts of the organization' })
   @ApiResponse({ status: 200, type: PaginatedUserResponseDto })
-  async findAll(
-    @CurrentUser('organizationId') organizationId: string,
-    @Query() dto: GetUsersDto,
-  ): Promise<PaginatedUserResponseDto> {
+  async findAll(@Query() dto: GetUsersDto): Promise<PaginatedUserResponseDto> {
     const result = await this.queryBus.execute<GetUsersQuery, SearchResult<User>>(
-      new GetUsersQuery(organizationId, {
+      new GetUsersQuery({
         page: dto.page,
         limit: dto.limit,
         paginated: dto.paginated,
@@ -89,13 +86,8 @@ export class UserController {
   @RequirePermissions(Permission.USER_READ)
   @ApiOperation({ summary: 'Get one account' })
   @ApiResponse({ status: 200, type: UserResponseDto })
-  async findOne(
-    @CurrentUser('organizationId') organizationId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<UserResponseDto> {
-    const user = await this.queryBus.execute<GetUserByIdQuery, User>(
-      new GetUserByIdQuery(organizationId, id),
-    );
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponseDto> {
+    const user = await this.queryBus.execute<GetUserByIdQuery, User>(new GetUserByIdQuery(id));
     return UserResponseDto.fromDomain(user);
   }
 
@@ -110,7 +102,7 @@ export class UserController {
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     const user = await this.commandBus.execute<UpdateUserCommand, User>(
-      new UpdateUserCommand(caller.organizationId, id, dto, caller.id),
+      new UpdateUserCommand(id, dto, caller.id),
     );
     return UserResponseDto.fromDomain(user);
   }
@@ -128,6 +120,6 @@ export class UserController {
     @CurrentUser() caller: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
-    await this.commandBus.execute(new DeleteUserCommand(caller.organizationId, id, caller.id));
+    await this.commandBus.execute(new DeleteUserCommand(id, caller.id));
   }
 }

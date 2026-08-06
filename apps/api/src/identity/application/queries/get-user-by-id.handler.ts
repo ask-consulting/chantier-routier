@@ -16,8 +16,10 @@ export class GetUserByIdHandler implements IQueryHandler<GetUserByIdQuery> {
   ) {}
 
   async execute(query: GetUserByIdQuery): Promise<User> {
+    // Scoped to the caller's organization by the Prisma layer: an account of
+    // another tenant reads as absent, which is also the answer that leaks least.
     const user = await this.users.findById(query.userId);
-    if (!user || user.organizationId !== query.organizationId) {
+    if (!user) {
       throw new ResourceNotFoundException('User', query.userId);
     }
     return user;

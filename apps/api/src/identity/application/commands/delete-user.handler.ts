@@ -27,22 +27,20 @@ export class DeleteUserHandler implements ICommandHandler<DeleteUserCommand> {
   ) {}
 
   async execute(command: DeleteUserCommand): Promise<void> {
-    const { organizationId, userId, actorId } = command;
+    const { userId, actorId } = command;
 
     if (userId === actorId) {
       throw new SelfTargetedActionException('delete');
     }
 
+    // Tenant-scoped by the Prisma layer — another organization's account is
+    // simply not found.
     const user = await this.users.findById(userId);
-    if (!user || user.organizationId !== organizationId) {
+    if (!user) {
       throw new ResourceNotFoundException('User', userId);
     }
 
-    if (
-      user.role === UserRole.ADMIN &&
-      user.active &&
-      (await this.users.countActiveAdmins(organizationId)) <= 1
-    ) {
+    if (user.role === UserRole.ADMIN && user.active && (await this.users.countActiveAdmins()) <= 1) {
       throw new LastAdminException();
     }
 
