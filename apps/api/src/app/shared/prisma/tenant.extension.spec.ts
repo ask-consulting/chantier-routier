@@ -74,4 +74,71 @@ describe('TenantContext', () => {
       expect(context.current()).toBe('org-1');
     });
   });
+
+  it('keeps runUnscoped suspended for the whole of an async block', async () => {
+    const context = new TenantContext();
+    await context.run(async () => {
+      context.set('org-1');
+      await context.runUnscoped(async () => {
+        await new Promise((resolve) => setImmediate(resolve));
+        // Would already be back to 'org-1' if the restore used a `finally`.
+        expect(context.current()).toBeNull();
+      });
+      expect(context.current()).toBe('org-1');
+    });
+  });
+});
+
+describe('TenantContext.disable / enable', () => {
+  it('suspends and resumes the filter imperatively', () => {
+    const context = new TenantContext();
+    context.run(() => {
+      context.set('org-1');
+      expect(context.isEnabled()).toBe(true);
+
+      context.disable();
+      expect(context.current()).toBeNull();
+      expect(context.isEnabled()).toBe(false);
+
+      context.enable();
+      expect(context.current()).toBe('org-1');
+      expect(context.isEnabled()).toBe(true);
+    });
+  });
+
+  it('stays suspended across async boundaries until enable()', async () => {
+    const context = new TenantContext();
+    await context.run(async () => {
+      context.set('org-1');
+      context.disable();
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(context.current()).toBeNull();
+      context.enable();
+      expect(context.current()).toBe('org-1');
+    });
+  });
+
+  it('does not leak a forgotten disable() into another request', async () => {
+    const context = new TenantContext();
+
+    // First request disables and never re-enables.
+    await context.run(async () => {
+      context.set('org-1');
+      context.disable();
+      await new Promise((resolve) => setImmediate(resolve));
+    });
+
+    // The next request gets a fresh store, so the filter is back on.
+    context.run(() => {
+      context.set('org-2');
+      expect(context.current()).toBe('org-2');
+    });
+  });
+
+  it('is a no-op outside a request, where nothing is scoped anyway', () => {
+    const context = new TenantContext();
+    context.disable();
+    context.enable();
+    expect(context.current()).toBeNull();
+  });
 });

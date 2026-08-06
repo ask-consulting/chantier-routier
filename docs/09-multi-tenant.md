@@ -134,18 +134,49 @@ seconde connexion, ce qui compte derrière un pooler free tier.
 
 ## 5. Activer / désactiver
 
-**Globalement** — `MULTI_TENANT_ENABLED=false`. Pour un script de migration ou de
-l'outillage support. Actif par défaut : couper l'isolation doit être un acte volontaire,
-jamais la conséquence d'une variable d'environnement absente.
+Deux granularités, pour deux besoins différents.
 
-**Le temps d'un appel** — l'équivalent du `disableFilter()` de Doctrine :
+### Dans le code — `disable()` / `enable()`
+
+L'équivalent direct du `$em->getFilters()->disable('tenant')` de Doctrine, pour un
+besoin ponctuel :
 
 ```ts
-const all = await tenantContext.runUnscoped(() => prisma.worksite.findMany());
+tenantContext.disable();
+const toutesOrganisations = await prisma.worksite.findMany();
+tenantContext.enable();
 ```
 
-Sous forme de callback, pour que la fenêtre non filtrée reste bornée et visible au point
-d'appel plutôt que dépendante d'un `enable` symétrique qu'on oublie de rappeler.
+Pour la lecture transverse assumée : tâches de maintenance, outillage support,
+statistiques produit.
+
+**Portée : la requête en cours, et elle seule.** Le store étant créé par requête, un
+`enable()` oublié — ou une exception entre les deux — laisse la suite de *cette*
+requête non filtrée, sans jamais pouvoir affecter une autre. C'est ce qui rend la
+paire impérative acceptable ici.
+
+`isEnabled()` dit où on en est, si un code de bibliothèque doit s'en assurer.
+
+Variante sûre quand le bloc peut lever :
+
+```ts
+const tout = await tenantContext.runUnscoped(() => prisma.worksite.findMany());
+```
+
+> Attention si tu réimplémentes ce genre de garde ailleurs : restaurer l'état dans un
+> `finally` **ne marche pas** avec un callback asynchrone — le `finally` se déclenche
+> au retour de la promesse, pas à sa résolution, et remet le filtre en plein vol.
+> `runUnscoped` exécute donc le callback dans un store enfant, ce qui couvre toute la
+> continuation asynchrone. Un test le vérifie.
+
+### Pour tout le processus — `MULTI_TENANT_ENABLED=false`
+
+Un cran au-dessus : un script de migration lancé en CLI, où il n'y a de toute façon
+aucune requête HTTP ni aucun tenant. Actif par défaut — couper l'isolation doit être un
+acte volontaire, jamais la conséquence d'une variable d'environnement absente.
+
+Dans une API qui tourne, préfère toujours `disable()`/`enable()` : la fenêtre non
+filtrée reste bornée à une requête au lieu de valoir pour tout le serveur.
 
 ## 6. Les deux limites, assumées
 
