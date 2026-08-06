@@ -44,6 +44,10 @@ services:
       DATABASE_URL: postgresql://chantia:chantia@db:5432/chantia?schema=public
       # No pooler locally, so the direct URL is the same connection.
       DIRECT_URL: postgresql://chantia:chantia@db:5432/chantia?schema=public
+      # Local-only signing secret. Production gets its own from Render
+      # (see render.yaml) — never reuse this value outside a dev machine.
+      JWT_ACCESS_SECRET: local-development-only-not-a-real-secret-6f2b9c
+      JWT_ISSUER: chantia-identity
     ports:
       - "8080:8080"
 
