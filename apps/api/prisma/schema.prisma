@@ -1,8 +1,19 @@
 // Prisma schema — road worksite management API.
 // Datasource: PostgreSQL (Supabase-managed in the free-tier deployment).
+//
+// Two Postgres schemas, on purpose:
+//   - "identity" — the Identity bounded context (organizations, accounts, sessions).
+//     Self-contained and extractable into its own service: `pg_dump -n identity`.
+//   - "public"   — the business domain (worksites, workers, timesheets, expenses).
+//
+// NO foreign key crosses that boundary. Business rows reference `organizationId`
+// (and `User.workerId` references a worker) as opaque UUIDs, exactly as they would
+// across a network call. Referential integrity across contexts is the application's
+// job, not the database's. See docs/08-identity-module.md.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
@@ -12,13 +23,102 @@ datasource db {
   // Direct (non-pooled) connection used for migrations. Locally / on a single
   // database, set it to the same value as DATABASE_URL.
   directUrl = env("DIRECT_URL")
+  schemas   = ["identity", "public"]
 }
+
+// ---------------------------------------------------------------------------
+// Identity context — owns tenants, accounts and refresh sessions.
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  admin
+  site_manager
+  foreman
+  worker
+
+  @@schema("identity")
+}
+
+/// Tenant registry. Source of truth for organizations; business rows only carry
+/// the id. Lives in the identity context because sign-up creates it.
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  @@map("organization")
+  @@schema("identity")
+}
+
+/// A login account. Distinct from `Worker`: a worker is an HR record that may
+/// have no account at all (no smartphone on site), and an account may belong to
+/// office staff with no worker record.
+model User {
+  id             String    @id @default(uuid())
+  organizationId String
+  /// Login identifier, stored lower-cased. Globally unique: a user belongs to
+  /// exactly one organization, so login needs no tenant selector.
+  email          String    @unique
+  /// Encoded as `scrypt$N$r$p$salt$key` — never leaves the identity context.
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           UserRole  @default(worker)
+  active         Boolean   @default(true)
+  /// Soft reference to `public.worker.id` — deliberately NOT a foreign key, so
+  /// the identity context stays extractable. Nulled by the application when the
+  /// worker is deleted.
+  workerId       String?   @unique
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@index([organizationId])
+  @@map("app_user")
+  @@schema("identity")
+}
+
+/// One row per issued refresh token. Tokens are opaque and stored hashed, so a
+/// database leak cannot be replayed. Rotated on every refresh; presenting an
+/// already-rotated token revokes the whole family (reuse detection).
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  /// SHA-256 of the opaque token. The token itself is never persisted.
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  /// Id of the token this one was rotated into — the audit trail of a family.
+  replacedBy String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_token")
+  @@schema("identity")
+}
+
+// ---------------------------------------------------------------------------
+// Business context — worksites and field data.
+// ---------------------------------------------------------------------------
 
 enum WorksiteStatus {
   upcoming
   in_progress
   completed
   suspended
+
+  @@schema("public")
 }
 
 enum ExpenseType {
@@ -27,24 +127,13 @@ enum ExpenseType {
   equipment
   subcontracting
   other
-}
 
-/// Tenant boundary. Every business row is isolated by organizationId.
-model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  currency  String   @default("EUR")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  worksites Worksite[]
-  workers   Worker[]
-
-  @@map("organization")
+  @@schema("public")
 }
 
 model Worksite {
   id               String         @id @default(uuid())
+  /// Soft reference to `identity.organization.id` — no foreign key by design.
   organizationId   String
   code             String
   name             String
@@ -59,17 +148,18 @@ model Worksite {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  timesheets   Timesheet[]
-  expenses     Expense[]
+  timesheets Timesheet[]
+  expenses   Expense[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
   @@map("worksite")
+  @@schema("public")
 }
 
 model Worker {
   id             String   @id @default(uuid())
+  /// Soft reference to `identity.organization.id` — no foreign key by design.
   organizationId String
   name           String
   qualification  String?
@@ -78,11 +168,11 @@ model Worker {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  timesheets   Timesheet[]
+  timesheets Timesheet[]
 
   @@index([organizationId])
   @@map("worker")
+  @@schema("public")
 }
 
 model Timesheet {
@@ -101,21 +191,23 @@ model Timesheet {
   @@unique([workerId, worksiteId, date])
   @@index([worksiteId])
   @@map("timesheet")
+  @@schema("public")
 }
 
 model Expense {
-  id          String      @id @default(uuid())
-  worksiteId  String
-  type        ExpenseType @default(other)
-  label       String
-  amount      Decimal     @db.Decimal(14, 2)
-  date        DateTime    @db.Date
-  supplier    String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String      @id @default(uuid())
+  worksiteId String
+  type       ExpenseType @default(other)
+  label      String
+  amount     Decimal     @db.Decimal(14, 2)
+  date       DateTime    @db.Date
+  supplier   String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   worksite Worksite @relation(fields: [worksiteId], references: [id], onDelete: Cascade)
 
   @@index([worksiteId])
   @@map("expense")
+  @@schema("public")
 }

@@ -17,7 +17,7 @@ export class GetWorksiteCostsHandler implements IQueryHandler<GetWorksiteCostsQu
 
   async execute(query: GetWorksiteCostsQuery): Promise<IWorksiteCosts> {
     const worksite = await this.repository.findById(query.worksiteId);
-    if (!worksite) {
+    if (!worksite || worksite.organizationId !== query.organizationId) {
       throw new ResourceNotFoundException('Worksite', query.worksiteId);
     }
 

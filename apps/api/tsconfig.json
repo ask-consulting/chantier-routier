@@ -19,6 +19,7 @@
       "@config/*": ["src/config/*"],
       "@shared/*": ["src/app/shared/*"],
       "@worksite/*": ["src/app/worksite/*"],
+      "@identity/*": ["src/identity/*"],
       "@src/*": ["src/*"]
     },
     "skipLibCheck": true,

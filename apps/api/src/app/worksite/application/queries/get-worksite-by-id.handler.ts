@@ -17,7 +17,9 @@ export class GetWorksiteByIdHandler implements IQueryHandler<GetWorksiteByIdQuer
 
   async execute(query: GetWorksiteByIdQuery): Promise<Worksite> {
     const worksite = await this.repository.findById(query.id);
-    if (!worksite) {
+    // Another tenant's worksite is reported as missing, not forbidden: a 403
+    // would confirm the id exists and leak that a competitor is a customer.
+    if (!worksite || worksite.organizationId !== query.organizationId) {
       throw new ResourceNotFoundException('Worksite', query.id);
     }
     return worksite;
