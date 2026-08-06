@@ -15,11 +15,18 @@ export class RegisterDto implements IRegisterRequest {
   email: string;
 
   /**
-   * No `@MinLength` here: the minimum is configurable
-   * (`IdentityConfig.minPasswordLength`) and enforced by the handler, so the
-   * rule has one definition rather than one per DTO.
+   * No validation decorators for the policy itself: it is configurable
+   * (`IdentityConfig.minPasswordLength`) and lives in `@chantia/shared`, enforced
+   * by the handler — one definition rather than one per DTO.
    */
-  @ApiProperty({ format: 'password', minLength: 10 })
+  @ApiProperty({
+    format: 'password',
+    minLength: 10,
+    description:
+      'At least 10 characters with an uppercase letter, a lowercase letter, a digit and a ' +
+      'special character. Rejected if it is a common password or contains your own name, ' +
+      'email or organisation name.',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)

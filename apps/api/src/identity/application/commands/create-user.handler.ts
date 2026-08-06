@@ -1,10 +1,10 @@
+import { checkPasswordPolicy } from '@chantia/shared';
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'node:crypto';
 import { IdentityConfig } from '../../config/identity.config';
 import { User } from '../../domain/entities/user.entity';
-import { isPasswordStrongEnough } from '../../domain/policies/password-policy';
 import {
   PASSWORD_HASHER_PORT,
   PasswordHasherPort,
@@ -36,8 +36,15 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
   async execute(command: CreateUserCommand): Promise<User> {
     const { organizationId, data } = command;
 
-    if (!isPasswordStrongEnough(data.password, this.config.minPasswordLength)) {
-      throw new WeakPasswordException(this.config.minPasswordLength);
+    const violations = checkPasswordPolicy(data.password, {
+      minLength: this.config.minPasswordLength,
+      // The organisation name is left out: fetching it would cost a read on
+      // every account creation, and the blocklist already carries the trade's
+      // obvious words.
+      forbiddenTerms: [data.email, data.firstName, data.lastName],
+    });
+    if (violations.length > 0) {
+      throw new WeakPasswordException(violations, this.config.minPasswordLength);
     }
 
     const email = User.normalizeEmail(data.email);

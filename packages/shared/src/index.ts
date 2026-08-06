@@ -6,6 +6,9 @@ export * from './enums/permission.enums';
 // Authorization (role → permissions matrix, shared by API, web and mobile)
 export * from './access/role-permissions';
 
+// Password policy — same rules server-side and in the sign-up form
+export * from './security/password-policy';
+
 // Interfaces (shared transport contracts API <-> web <-> mobile)
 export * from './interfaces/worksite.interface';
 export * from './interfaces/organization.interface';

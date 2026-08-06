@@ -9,8 +9,15 @@ export class ChangePasswordDto implements IChangePassword {
   @MaxLength(255)
   currentPassword: string;
 
-  /** Minimum length comes from `IdentityConfig.minPasswordLength` — see `RegisterDto`. */
-  @ApiProperty({ format: 'password', minLength: 10 })
+  /** Policy enforced by the handler — see `RegisterDto` and docs/08-identity-module.md §7. */
+  @ApiProperty({
+    format: 'password',
+    minLength: 10,
+    description:
+      'At least 10 characters with an uppercase letter, a lowercase letter, a digit and a ' +
+      'special character. Rejected if it is a common password or contains your own name, ' +
+      'email or organisation name.',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)

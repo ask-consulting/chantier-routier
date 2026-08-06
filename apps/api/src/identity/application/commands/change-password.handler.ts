@@ -1,8 +1,8 @@
+import { checkPasswordPolicy } from '@chantia/shared';
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IdentityConfig } from '../../config/identity.config';
-import { isPasswordStrongEnough } from '../../domain/policies/password-policy';
 import {
   PASSWORD_HASHER_PORT,
   PasswordHasherPort,
@@ -53,8 +53,12 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
       throw new InvalidCredentialsException();
     }
 
-    if (!isPasswordStrongEnough(data.newPassword, this.config.minPasswordLength)) {
-      throw new WeakPasswordException(this.config.minPasswordLength);
+    const violations = checkPasswordPolicy(data.newPassword, {
+      minLength: this.config.minPasswordLength,
+      forbiddenTerms: [user.email, user.firstName, user.lastName],
+    });
+    if (violations.length > 0) {
+      throw new WeakPasswordException(violations, this.config.minPasswordLength);
     }
 
     const passwordHash = await this.passwordHasher.hash(data.newPassword);

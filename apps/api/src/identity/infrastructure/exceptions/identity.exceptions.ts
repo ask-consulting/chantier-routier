@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { PasswordRule } from '@chantia/shared';
 
 /**
  * Wrong email *or* wrong password — deliberately the same error for both.
@@ -91,18 +92,36 @@ export class SelfTargetedActionException extends HttpException {
   }
 }
 
+const PASSWORD_RULE_MESSAGES: Record<PasswordRule, (minLength: number) => string> = {
+  [PasswordRule.MIN_LENGTH]: (min) => `Password must be at least ${min} characters long`,
+  [PasswordRule.UPPERCASE]: () => 'Password must contain an uppercase letter',
+  [PasswordRule.LOWERCASE]: () => 'Password must contain a lowercase letter',
+  [PasswordRule.DIGIT]: () => 'Password must contain a digit',
+  [PasswordRule.SPECIAL]: () => 'Password must contain a special character',
+  [PasswordRule.COMMON]: () =>
+    'Password is too common — adding a digit or a symbol to a well-known password is not enough',
+  [PasswordRule.CONTEXTUAL]: () =>
+    'Password must not contain your name, your email or your organisation name',
+};
+
+/**
+ * Reports **every** unmet rule at once, in the same `{ field, code, message }`
+ * shape the global `ValidationPipe` produces. A form can therefore mark all the
+ * failing criteria in one round-trip instead of revealing them one at a time,
+ * and the `code` is an i18n key the client translates itself.
+ */
 export class WeakPasswordException extends HttpException {
-  constructor(minLength: number) {
+  constructor(violations: PasswordRule[], minLength: number) {
+    const errors = violations.map((rule) => ({
+      field: 'password',
+      code: `form.errors.password.${rule}`,
+      message: PASSWORD_RULE_MESSAGES[rule](minLength),
+    }));
+
     super(
       {
-        message: `Password must be at least ${minLength} characters long`,
-        errors: [
-          {
-            field: 'password',
-            code: 'form.errors.password.minLength',
-            message: `Password must be at least ${minLength} characters long`,
-          },
-        ],
+        message: errors[0]?.message ?? 'Password does not meet the security policy',
+        errors,
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST,
       },

@@ -158,6 +158,8 @@ n'ont tout simplement pas de paramètre pour en désigner une autre.
 
 ## 7. Mots de passe
 
+### Hachage
+
 `scrypt` de la bibliothèque standard Node — aucun module natif à compiler, ce qui
 garde l'image Docker et le build free-tier Render simples. Mémoire-dur, donc plus
 résistant au crackage GPU que PBKDF2.
@@ -166,9 +168,68 @@ Encodage : `scrypt$N$r$p$sel$clé`. Le hash est **auto-descriptif** : augmenter 
 coût plus tard reste rétro-compatible, chaque ancien mot de passe se vérifie avec
 ses propres paramètres.
 
-Longueur minimale seulement (`MIN_PASSWORD_LENGTH`, 10 par défaut), pas de règle de
-composition : « une majuscule, un chiffre » pousse vers `Password1!` tout en
-réduisant l'espace de recherche. C'est la recommandation NIST 800-63B et ANSSI.
+### Politique d'acceptation
+
+Quatre règles de composition, une longueur minimale, et deux listes :
+
+| Règle | Code d'erreur |
+|---|---|
+| Au moins `MIN_PASSWORD_LENGTH` caractères (10 par défaut) | `minLength` |
+| Une majuscule | `uppercase` |
+| Une minuscule | `lowercase` |
+| Un chiffre | `digit` |
+| Un caractère spécial (ni lettre, ni chiffre, ni espace) | `special` |
+| Absent des 10 000 mots de passe les plus utilisés | `common` |
+| Ne contient ni l'email, ni le nom, ni le nom de l'organisation | `contextual` |
+
+Le code voyage tel quel jusqu'au client sous la forme
+`form.errors.password.<règle>` — c'est une clé d'internationalisation, le front la
+traduit. **Toutes** les violations sont renvoyées d'un coup, pour qu'un formulaire
+puisse marquer tous les critères manquants en un aller-retour.
+
+La politique vit dans `@chantia/shared` (`security/password-policy.ts`) : le
+formulaire web appliquera exactement les mêmes règles en direct, sans redupliquer
+les expressions régulières.
+
+### Pourquoi les deux listes
+
+Les règles de composition seules sont faibles, et c'est documenté :
+
+| | longueur seule | composition seule | politique complète |
+|---|---|---|---|
+| `Password1:` | accepté | accepté | **refusé** (`common`) |
+| `P@ssw0rd12` | accepté | accepté | **refusé** (`common`) |
+| `Ellouze2026!` | accepté | accepté | **refusé** (`contextual`) |
+| `motdepasse123` | accepté | refusé | refusé |
+| `Kf7#tuileRouge` | accepté | accepté | accepté |
+
+La comparaison ne porte pas sur la chaîne entière mais sur sa **racine** : on
+rogne les chiffres et la ponctuation aux extrémités, et on annule le leet-speak.
+Ajouter un `!` à la fin d'un mot de passe courant — exactement ce que les règles
+de composition apprennent à faire — ne suffit donc pas à passer.
+
+### Ce que ça coûte, et ce que ça ne couvre pas
+
+- **Les phrases de passe longues sont refusées.** `correct horse battery staple`
+  n'a ni majuscule, ni chiffre, ni caractère spécial. C'est le prix assumé des
+  règles de composition. Les exempter au-delà de 20 caractères est une option
+  écartée pour l'instant, à rouvrir si les utilisateurs se plaignent.
+- **La liste est anglophone.** SecLists ne contient pas `motdepasse` ni
+  `chantier` ; un complément français est ajouté à la main dans
+  `common-passwords.ts`. Le correctif propre serait un corpus français.
+- **Un mot de passe en écriture sans casse** (arabe, chinois) ne peut jamais
+  satisfaire les règles de majuscule et minuscule.
+- **Rien de tout cela ne protège du devinage en ligne.** Seule la limitation de
+  débit le fait, et elle n'existe toujours pas (§9).
+
+### Régénérer la liste
+
+```bash
+curl -sL https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt \
+  | tr 'A-Z' 'a-z' | awk 'length($0) >= 4' | sort -u > /tmp/top.txt
+# puis reformer packages/shared/src/security/common-passwords.ts
+# (une seule chaîne jointe par \n, cf. l'en-tête du fichier)
+```
 
 ## 8. Variables d'environnement
 

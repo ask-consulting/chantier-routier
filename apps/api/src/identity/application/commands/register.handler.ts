@@ -2,11 +2,10 @@ import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'node:crypto';
-import { UserRole } from '@chantia/shared';
+import { UserRole, checkPasswordPolicy } from '@chantia/shared';
 import { IdentityConfig } from '../../config/identity.config';
 import { Organization } from '../../domain/entities/organization.entity';
 import { User } from '../../domain/entities/user.entity';
-import { isPasswordStrongEnough } from '../../domain/policies/password-policy';
 import {
   ORGANIZATION_REPOSITORY_PORT,
   OrganizationRepositoryPort,
@@ -52,8 +51,13 @@ export class RegisterHandler implements ICommandHandler<RegisterCommand> {
   async execute(command: RegisterCommand): Promise<IssuedSession> {
     const { data, userAgent } = command;
 
-    if (!isPasswordStrongEnough(data.password, this.config.minPasswordLength)) {
-      throw new WeakPasswordException(this.config.minPasswordLength);
+    const violations = checkPasswordPolicy(data.password, {
+      minLength: this.config.minPasswordLength,
+      // The four words an attacker targeting this sign-up would try first.
+      forbiddenTerms: [data.email, data.firstName, data.lastName, data.organizationName],
+    });
+    if (violations.length > 0) {
+      throw new WeakPasswordException(violations, this.config.minPasswordLength);
     }
 
     const email = User.normalizeEmail(data.email);
