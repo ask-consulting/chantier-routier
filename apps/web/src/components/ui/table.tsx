@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn';
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
     <div className="overflow-x-auto rounded-surface border border-border bg-surface-raised">
-      <table className={cn('w-full text-left text-sm', className)} {...props} />
+      <table className={cn('w-full text-start text-sm', className)} {...props} />
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function TH({ className, numeric, ...props }: ThHTMLAttributes<HTMLTableC
   return (
     <th
       scope="col"
-      className={cn('px-4 py-2.5 font-medium', numeric && 'text-right', className)}
+      className={cn('px-4 py-2.5 font-medium', numeric && 'text-end', className)}
       {...props}
     />
   );
@@ -57,7 +57,7 @@ export function TD({
         'px-4 py-3',
         // Lining figures, so digits sit in columns down the page and two amounts
         // can be compared at a glance.
-        numeric && 'text-right tabular-nums',
+        numeric && 'text-end tabular-nums',
         className,
       )}
       {...props}

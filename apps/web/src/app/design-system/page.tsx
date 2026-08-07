@@ -21,7 +21,9 @@ import {
 } from '@/components/ui';
 import type { Tone } from '@/components/ui/badge';
 import * as Icons from '@/lib/icons';
-import { WORKSITE_STATUS, formatAmount, varianceTone } from '@/lib/domain-display';
+import { WORKSITE_STATUS_TONE, formatAmount, varianceTone } from '@/lib/domain-display';
+import { useLocale, useTranslations } from 'next-intl';
+import type { Locale } from '@/i18n/config';
 
 /**
  * The living reference for the design system.
@@ -61,6 +63,11 @@ function Section({ title, note, children }: { title: string; note?: string; chil
 }
 
 export default function DesignSystemPage() {
+  // The design-system pages are internal tooling and stay in French, but the
+  // components they demonstrate must be exercised with real translated data.
+  const tStatus = useTranslations('worksiteStatus');
+  const locale = useLocale() as Locale;
+
   return (
     <div className="flex flex-col gap-10">
       <header>
@@ -181,11 +188,15 @@ export default function DesignSystemPage() {
         <Snippet>{`import { Badge } from '@/components/ui';
 import { WORKSITE_STATUS } from '@/lib/domain-display';
 
-const status = WORKSITE_STATUS[worksite.status];
-<Badge tone={status.tone} dot>{status.label}</Badge>
+const tStatus = useTranslations('worksiteStatus');
 
-// Le ton vient toujours d'une table du domaine, jamais écrit en dur :
-// une couleur de statut se change à un seul endroit.`}</Snippet>
+<Badge tone={WORKSITE_STATUS_TONE[worksite.status]} dot>
+  {tStatus(worksite.status)}
+</Badge>
+
+// Le ton vient de domain-display.ts, le libellé de messages/*.json.
+// Une couleur est une décision de design, un mot est une traduction :
+// les deux ne vivent pas au même endroit.`}</Snippet>
       </Section>
 
       <Section
@@ -199,8 +210,8 @@ const status = WORKSITE_STATUS[worksite.status];
             </CardHeader>
             <CardBody className="flex flex-wrap gap-2">
               {Object.values(WorksiteStatus).map((status) => (
-                <Badge key={status} tone={WORKSITE_STATUS[status].tone} dot>
-                  {WORKSITE_STATUS[status].label}
+                <Badge key={status} tone={WORKSITE_STATUS_TONE[status]} dot>
+                  {tStatus(status)}
                 </Badge>
               ))}
             </CardBody>
@@ -282,11 +293,11 @@ const status = WORKSITE_STATUS[worksite.status];
                 <TD className="font-mono text-xs text-fg-muted">{row.code}</TD>
                 <TD className="font-medium">{row.name}</TD>
                 <TD>
-                  <Badge tone={WORKSITE_STATUS[row.status].tone} dot>
-                    {WORKSITE_STATUS[row.status].label}
+                  <Badge tone={WORKSITE_STATUS_TONE[row.status]} dot>
+                    {tStatus(row.status)}
                   </Badge>
                 </TD>
-                <TD numeric>{formatAmount(row.budget)}</TD>
+                <TD numeric>{formatAmount(row.budget, locale)}</TD>
                 <TD numeric>
                   <span
                     className={
@@ -297,7 +308,7 @@ const status = WORKSITE_STATUS[worksite.status];
                           : 'text-fg-muted'
                     }
                   >
-                    {formatAmount(row.variance)}
+                    {formatAmount(row.variance, locale)}
                   </span>
                 </TD>
               </TRow>
@@ -317,7 +328,7 @@ const status = WORKSITE_STATUS[worksite.status];
     {rows.map((row) => (
       <TRow key={row.id}>
         <TD className="font-medium">{row.name}</TD>
-        <TD numeric>{formatAmount(row.budget)}</TD>
+        <TD numeric>{formatAmount(row.budget, locale)}</TD>
       </TRow>
     ))}
   </tbody>

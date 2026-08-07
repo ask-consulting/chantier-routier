@@ -1,36 +1,32 @@
 import { WorksiteStatus } from '@chantia/shared';
 import type { Tone } from '@/components/ui/badge';
+import { intlLocale, type Locale } from '@/i18n/config';
 
 /**
- * How the domain reads on screen: French label, and the tone that carries its
- * meaning.
+ * How the domain reads on screen.
  *
- * One table per enum, in one file. A status changing colour, or a role being
- * renamed, is a single edit — not a hunt through every page that happens to
- * render one. The API stays in English (see docs/06); the translation to French
- * lives here, at the edge.
+ * The **tone** lives here; the **label** lives in `messages/*.json` under
+ * `worksiteStatus.*`. That split is the point: a colour is a design decision and
+ * belongs with the code, a wording is a translation and belongs with the other
+ * translations. Keeping the French label here would have meant a second place to
+ * edit for every new language.
  */
 
-export interface Display {
-  label: string;
-  tone: Tone;
-}
-
-export const WORKSITE_STATUS: Record<WorksiteStatus, Display> = {
-  [WorksiteStatus.UPCOMING]: { label: 'À venir', tone: 'neutral' },
+export const WORKSITE_STATUS_TONE: Record<WorksiteStatus, Tone> = {
+  [WorksiteStatus.UPCOMING]: 'neutral',
   // Info, not success: a worksite in progress is the normal state, not an
   // achievement. Keeping green for "completed" is what makes green mean something.
-  [WorksiteStatus.IN_PROGRESS]: { label: 'En cours', tone: 'info' },
-  [WorksiteStatus.COMPLETED]: { label: 'Terminé', tone: 'success' },
+  [WorksiteStatus.IN_PROGRESS]: 'info',
+  [WorksiteStatus.COMPLETED]: 'success',
   // Signal rather than danger: a suspended worksite needs attention, it is not
   // a failure. Danger stays for what is irreversible or broken.
-  [WorksiteStatus.SUSPENDED]: { label: 'Suspendu', tone: 'signal' },
+  [WorksiteStatus.SUSPENDED]: 'signal',
 };
 
 /*
- * `USER_ROLE` lands with the authentication work: `UserRole` lives in
- * `@chantia/shared` on the `release/auth` line, not here. The table belongs in
- * this file when the two merge — one place for every domain-to-tone mapping.
+ * `USER_ROLE_TONE` lands with the authentication work: `UserRole` lives in
+ * `@chantia/shared` on the `release/auth` line, not here. Its labels are already
+ * written, under `userRole.*` in both message files.
  */
 
 /**
@@ -46,20 +42,31 @@ export function varianceTone(variance: number | null): Tone {
   return variance > 0 ? 'success' : 'danger';
 }
 
-const EUR = new Intl.NumberFormat('fr-FR', {
-  style: 'currency',
-  currency: 'EUR',
-  maximumFractionDigits: 0,
-});
-
-/** An em dash for a missing amount — never `0 €`, which is a real figure. */
-export function formatAmount(value: number | null | undefined): string {
-  return value === null || value === undefined ? '—' : EUR.format(value);
+/**
+ * Money and dates, formatted for the reading language.
+ *
+ * Arabic resolves to `ar-MA-u-nu-latn` — Latin digits. Eastern Arabic numerals
+ * are correct for the Middle East but are not what Maghreb business writing
+ * uses, and a French-speaking site manager reading the same table would lose it
+ * entirely. See `i18n/config.ts`.
+ */
+export function formatAmount(value: number | null | undefined, locale: Locale): string {
+  // An em dash for a missing amount — never `0 €`, which is a real figure.
+  if (value === null || value === undefined) {
+    return '—';
+  }
+  return new Intl.NumberFormat(intlLocale(locale), {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-export function formatDate(value: string | null | undefined): string {
+export function formatDate(value: string | null | undefined, locale: Locale): string {
   if (!value) {
     return '—';
   }
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(value));
+  return new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: 'medium' }).format(
+    new Date(value),
+  );
 }

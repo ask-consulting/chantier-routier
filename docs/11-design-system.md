@@ -407,7 +407,23 @@ export const RollerIcon = createLucideIcon('Roller', [
 ]);
 ```
 
-## 12. Reste à faire
+## 12. Bilinguisme
+
+Le front parle français et arabe, donc **de droite à gauche aussi**. Deux règles
+qui touchent chaque composant :
+
+- **Propriétés logiques, jamais directionnelles** : `ms-`/`me-` au lieu de
+  `ml-`/`mr-`, `ps-`/`pe-` au lieu de `pl-`/`pr-`, `text-start`/`text-end` au lieu
+  de `text-left`/`text-right`. L'audit de migration n'a trouvé que quatre classes
+  à corriger — parce que le système est bâti sur `flex` et `gap`. Ça ne le restera
+  que si la règle est suivie.
+- **Les libellés vivent dans `messages/*.json`**, les tons dans
+  `domain-display.ts`. Une couleur est une décision de design, un mot est une
+  traduction.
+
+Détail complet : `12-internationalisation.md`.
+
+## 13. Reste à faire
 
 - Composants de saisie au-delà de `Field` : `Select`, `Textarea`, `Checkbox`.
 - Navigation : barre latérale, fil d'Ariane, onglets.

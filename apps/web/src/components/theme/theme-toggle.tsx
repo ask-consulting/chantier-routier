@@ -1,14 +1,19 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/cn';
 import { ThemeDarkIcon, ThemeLightIcon, ThemeSystemIcon } from '@/lib/icons';
 import { useTheme, type ThemePreference } from './theme-provider';
 
-const OPTIONS: { value: ThemePreference; label: string; Icon: typeof ThemeLightIcon }[] = [
-  { value: 'light', label: 'Thème clair', Icon: ThemeLightIcon },
-  { value: 'system', label: 'Thème système', Icon: ThemeSystemIcon },
-  { value: 'dark', label: 'Thème sombre', Icon: ThemeDarkIcon },
-];
+const OPTIONS = [
+  { value: 'light', labelKey: 'themeLight', Icon: ThemeLightIcon },
+  { value: 'system', labelKey: 'themeSystem', Icon: ThemeSystemIcon },
+  { value: 'dark', labelKey: 'themeDark', Icon: ThemeDarkIcon },
+] as const satisfies readonly {
+  value: ThemePreference;
+  labelKey: string;
+  Icon: typeof ThemeLightIcon;
+}[];
 
 /**
  * Three states rather than a switch: "follow the system" is a distinct choice
@@ -16,14 +21,15 @@ const OPTIONS: { value: ThemePreference; label: string; Icon: typeof ThemeLightI
  */
 export function ThemeToggle() {
   const { preference, setPreference } = useTheme();
+  const t = useTranslations('settings');
 
   return (
     <div
       role="radiogroup"
-      aria-label="Thème"
+      aria-label={t('theme')}
       className="inline-flex rounded-control border border-border bg-surface-raised p-0.5"
     >
-      {OPTIONS.map(({ value, label, Icon }) => {
+      {OPTIONS.map(({ value, labelKey, Icon }) => {
         const active = preference === value;
         return (
           <button
@@ -32,8 +38,8 @@ export function ThemeToggle() {
             role="radio"
             aria-checked={active}
             // The icons are decorative; this is what a screen reader announces.
-            aria-label={label}
-            title={label}
+            aria-label={t(labelKey)}
+            title={t(labelKey)}
             onClick={() => setPreference(value)}
             className={cn(
               'flex size-7 items-center justify-center rounded-[0.25rem] transition-colors',
