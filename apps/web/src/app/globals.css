@@ -34,13 +34,20 @@
   --blue-900: #172554;
   --blue-950: #10193a;
 
-  /* Signal — amber. Kept rare on purpose, so it still means "look here". */
-  --amber-50: #fffbeb;
-  --amber-100: #fef3c7;
-  --amber-400: #fbbf24;
-  --amber-600: #d97706;
-  --amber-700: #b45309;
-  --amber-950: #2c1a04;
+  /* Signal — construction orange, not amber.
+   *
+   * Amber (#d97706) reads muddy next to the blue and does not belong to this
+   * trade: cones, barriers and beacons are orange. The saturation is the whole
+   * point — a signal colour that looks tired does not signal.
+   *
+   * `600` is for fills only. Text needs `700`, which clears AA on white; `600`
+   * does not (3.6:1). */
+  --orange-50: #fff7ed;
+  --orange-100: #ffedd5;
+  --orange-400: #fb923c;
+  --orange-600: #ea580c;
+  --orange-700: #c2410c;
+  --orange-950: #2b1104;
 
   /* Success — green. Completed worksites, on-budget figures. */
   --green-50: #f0fdf4;
@@ -97,9 +104,9 @@
   --primary-subtle: var(--blue-50);
   --primary-on-subtle: var(--blue-700);
 
-  --signal: var(--amber-600);
-  --signal-subtle: var(--amber-50);
-  --signal-on-subtle: var(--amber-700);
+  --signal: var(--orange-600);
+  --signal-subtle: var(--orange-50);
+  --signal-on-subtle: var(--orange-700);
 
   --success: var(--green-600);
   --success-subtle: var(--green-50);
@@ -144,9 +151,9 @@
   --primary-subtle: var(--blue-950);
   --primary-on-subtle: var(--blue-200);
 
-  --signal: var(--amber-400);
-  --signal-subtle: var(--amber-950);
-  --signal-on-subtle: var(--amber-400);
+  --signal: var(--orange-400);
+  --signal-subtle: var(--orange-950);
+  --signal-on-subtle: var(--orange-400);
 
   --success: var(--green-400);
   --success-subtle: var(--green-950);
