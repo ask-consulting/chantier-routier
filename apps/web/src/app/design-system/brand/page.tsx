@@ -152,7 +152,7 @@ export default function BrandPage() {
               'Sinon un lecteur d’écran annonce « Chantia » deux fois. Le composant Logo le fait déjà pour vous.',
             ],
           ].map(([title, body]) => (
-            <div key={title} className="border-l-2 border-border pl-3">
+            <div key={title} className="border-s-2 border-border ps-3">
               <p className="font-medium text-fg">{title}</p>
               <p className="mt-0.5 text-fg-muted">{body}</p>
             </div>
