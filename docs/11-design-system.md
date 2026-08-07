@@ -128,16 +128,126 @@ français vit ici, au bord.
 
 ## 7. Les composants
 
-| Composant | Notes |
-|---|---|
-| `Button` | `primary` / `secondary` / `ghost` / `danger`. **Un seul primaire par vue.** `type="button"` par défaut : sans ça, un bouton dans un formulaire le soumet. |
-| `Badge` | pastille de ton, avec point optionnel |
-| `Card` | + `CardHeader`, `CardTitle`, `CardBody` |
-| `Alert` | message en ligne, `role="alert"` sur `danger` et `signal` |
-| `Field` | champ étiqueté, câblé pour l'accessibilité |
-| `Table` | + `THead`, `TH`, `TRow`, `TD`. Défile horizontalement tout seul, pour que la page ne le fasse pas. `numeric` aligne à droite en chiffres tabulaires. |
-| `Skeleton` | garde la mise en page à sa taille finale, contrairement à un spinner |
-| `EmptyState` | avec une action : un état vide sans issue est un cul-de-sac |
+Tous dans `src/components/ui/`, tous exposent `className` en dernier pour qu'un
+appelant puisse ajuster sans forker. Référence vivante avec extraits copiables :
+**`/design-system`**.
+
+### `Button`
+
+```tsx
+<Button variant="primary">Enregistrer</Button>   // un seul par vue
+<Button variant="secondary">Annuler</Button>     // le défaut
+<Button variant="ghost">Filtrer</Button>         // action discrète
+<Button variant="danger">Supprimer</Button>      // irréversible
+<Button size="sm" />                             // 32 px au lieu de 40
+```
+
+`type="button"` par défaut, et c'est important : sans ça, un bouton dans un
+formulaire le soumet, ce qui transforme « Annuler » en « Enregistrer » à la
+première touche Entrée. Mettre `type="submit"` explicitement quand c'est voulu.
+
+**Un seul bouton primaire par vue.** C'est ainsi que l'œil trouve l'action
+principale ; deux primaires et il n'en trouve aucune.
+
+### `Badge`
+
+```tsx
+const status = WORKSITE_STATUS[worksite.status];
+<Badge tone={status.tone} dot>{status.label}</Badge>
+```
+
+Le ton vient **toujours** d'une table de `domain-display.ts`, jamais écrit en dur
+à l'appel : une couleur de statut se change alors à un seul endroit.
+
+`dot` ajoute une pastille pleine — la couleur n'est jamais le seul canal.
+
+### `Alert`
+
+```tsx
+<Alert tone="danger">Impossible de charger les chantiers.</Alert>
+<Alert tone="signal">Ce chantier dépasse 90 % de son budget.</Alert>
+```
+
+`danger` et `signal` portent `role="alert"` : annoncés sans attendre le focus.
+Les autres tons sont `role="status"`.
+
+C'est un message **de la vue**, pas un toast : il reste tant que la situation
+qu'il décrit dure.
+
+### `Field`
+
+```tsx
+<Field label="Code chantier" placeholder="RN7-2026" hint="Unique dans l'organisation." />
+<Field label="Mot de passe" type="password" error={errors.password} />
+```
+
+L'étiquette liée, `aria-invalid` et `aria-describedby` sont câblés par le
+composant — personne ne s'en souvient au vingtième formulaire. L'erreur remplace
+l'aide.
+
+L'API renvoie **toutes** les violations d'un coup (cf. `08-identity-module.md`
+§7), donc un mot de passe refusé pour quatre raisons les affiche toutes.
+
+### `Card`
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Coûts du chantier</CardTitle>
+    <Button variant="ghost" size="sm">Exporter</Button>
+  </CardHeader>
+  <CardBody>…</CardBody>
+</Card>
+```
+
+`CardHeader` écarte son contenu aux deux extrémités : titre à gauche, action à
+droite, sans classe supplémentaire.
+
+### `Table`
+
+```tsx
+<Table>
+  <THead><tr><TH>Nom</TH><TH numeric>Budget</TH></tr></THead>
+  <tbody>
+    {rows.map((row) => (
+      <TRow key={row.id}>
+        <TD className="font-medium">{row.name}</TD>
+        <TD numeric>{formatAmount(row.budget)}</TD>
+      </TRow>
+    ))}
+  </tbody>
+</Table>
+```
+
+`numeric` aligne à droite en **chiffres tabulaires** : les chiffres se rangent en
+colonnes et deux montants se comparent d'un coup d'œil.
+
+Le tableau **défile horizontalement tout seul**, pour que la page ne le fasse
+jamais : une colonne de budget poussée hors écran ne doit pas emporter la
+navigation avec elle.
+
+### `Skeleton` et `EmptyState`
+
+```tsx
+{isPending && <Skeleton className="h-12" />}
+
+<EmptyState
+  title="Aucun pointage cette semaine"
+  description="Les pointages saisis sur le terrain apparaîtront ici."
+  action={<Button variant="secondary">Saisir un pointage</Button>}
+/>
+```
+
+`Skeleton` à la **hauteur finale** de ce qu'il remplace : préféré à un rotateur
+parce que rien ne saute quand les données arrivent.
+
+`EmptyState` prend **toujours** une action : un état vide sans issue est un
+cul-de-sac.
+
+### `Snippet`
+
+Bloc de code pour les pages du design system. Défile dans sa propre boîte, même
+règle que `Table`.
 
 ## 8. Pièges rencontrés
 

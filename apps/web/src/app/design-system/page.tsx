@@ -12,6 +12,7 @@ import {
   EmptyState,
   Field,
   Skeleton,
+  Snippet,
   TD,
   TH,
   THead,
@@ -153,6 +154,14 @@ export default function DesignSystemPage() {
             </Button>
           </CardBody>
         </Card>
+        <Snippet>{`import { Button } from '@/components/ui';
+
+<Button variant="primary">Enregistrer</Button>   // un seul par vue
+<Button variant="secondary">Annuler</Button>     // le défaut
+<Button variant="ghost">Filtrer</Button>         // action discrète
+<Button variant="danger">Supprimer</Button>      // irréversible
+<Button size="sm" />                             // 32 px au lieu de 40
+<Button type="submit" />                         // sinon type="button" par défaut`}</Snippet>
       </Section>
 
       <Section
@@ -168,6 +177,14 @@ export default function DesignSystemPage() {
             ))}
           </CardBody>
         </Card>
+        <Snippet>{`import { Badge } from '@/components/ui';
+import { WORKSITE_STATUS } from '@/lib/domain-display';
+
+const status = WORKSITE_STATUS[worksite.status];
+<Badge tone={status.tone} dot>{status.label}</Badge>
+
+// Le ton vient toujours d'une table du domaine, jamais écrit en dur :
+// une couleur de statut se change à un seul endroit.`}</Snippet>
       </Section>
 
       <Section
@@ -209,6 +226,14 @@ export default function DesignSystemPage() {
           <Alert tone="success">Chantier créé.</Alert>
           <Alert tone="danger">Impossible de charger les chantiers : le serveur est injoignable.</Alert>
         </div>
+        <Snippet>{`import { Alert } from '@/components/ui';
+
+<Alert tone="danger">Impossible de charger les chantiers.</Alert>
+<Alert tone="signal">Ce chantier dépasse 90 % de son budget.</Alert>
+
+// « danger » et « signal » portent role="alert" : annoncés sans attendre le
+// focus. Les autres sont role="status". C'est un message de la vue, pas un
+// toast — il reste tant que la situation dure.`}</Snippet>
       </Section>
 
       <Section
@@ -225,6 +250,14 @@ export default function DesignSystemPage() {
             />
           </CardBody>
         </Card>
+        <Snippet>{`import { Field } from '@/components/ui';
+
+<Field label="Code chantier" placeholder="RN7-2026" hint="Unique dans l'organisation." />
+<Field label="Mot de passe" type="password" error={errors.password} />
+
+// L'étiquette, aria-invalid et aria-describedby sont câblés par le composant.
+// L'erreur remplace l'aide. L'API renvoie toutes les violations d'un coup :
+// {errors.map((e) => <Field key={e.code} error={e.message} … />)}`}</Snippet>
       </Section>
 
       <Section title="Tableau" note="Les montants sont alignés à droite en chiffres tabulaires, pour être comparés d’un coup d’œil.">
@@ -270,6 +303,50 @@ export default function DesignSystemPage() {
             ))}
           </tbody>
         </Table>
+        <Snippet>{`import { Table, THead, TH, TRow, TD } from '@/components/ui';
+
+<Table>
+  <THead>
+    <tr>
+      <TH>Nom</TH>
+      <TH numeric>Budget</TH>
+    </tr>
+  </THead>
+  <tbody>
+    {rows.map((row) => (
+      <TRow key={row.id}>
+        <TD className="font-medium">{row.name}</TD>
+        <TD numeric>{formatAmount(row.budget)}</TD>
+      </TRow>
+    ))}
+  </tbody>
+</Table>
+
+// « numeric » aligne à droite en chiffres tabulaires : deux montants se
+// comparent d'un coup d'œil. Le tableau défile horizontalement tout seul,
+// pour que la page ne le fasse jamais.`}</Snippet>
+      </Section>
+
+      <Section title="Cartes" note="Le conteneur par défaut d’un bloc de contenu.">
+        <Card>
+          <CardHeader>
+            <CardTitle>Titre de la carte</CardTitle>
+            <span className="text-2xs text-fg-subtle">méta</span>
+          </CardHeader>
+          <CardBody className="text-sm text-fg-muted">Le contenu vit ici.</CardBody>
+        </Card>
+        <Snippet>{`import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui';
+
+<Card>
+  <CardHeader>
+    <CardTitle>Coûts du chantier</CardTitle>
+    <Button variant="ghost" size="sm">Exporter</Button>
+  </CardHeader>
+  <CardBody>…</CardBody>
+</Card>
+
+// CardHeader met son contenu aux deux extrémités : titre à gauche,
+// action à droite, sans classe supplémentaire.`}</Snippet>
       </Section>
 
       <Section title="États">
@@ -290,6 +367,18 @@ export default function DesignSystemPage() {
             action={<Button variant="secondary">Saisir un pointage</Button>}
           />
         </div>
+        <Snippet>{`import { Skeleton, EmptyState } from '@/components/ui';
+
+// Chargement : à la hauteur finale des lignes, pour que rien ne saute
+{isPending && <Skeleton className="h-12" />}
+
+<EmptyState
+  title="Aucun pointage cette semaine"
+  description="Les pointages saisis sur le terrain apparaîtront ici."
+  action={<Button variant="secondary">Saisir un pointage</Button>}
+/>
+
+// Toujours une action : un état vide sans issue est un cul-de-sac.`}</Snippet>
       </Section>
     </div>
   );

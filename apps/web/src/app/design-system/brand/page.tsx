@@ -1,7 +1,7 @@
 'use client';
 
 import { BrandIllustration, Logo, LogoMark } from '@/components/brand';
-import { Alert, Button, Card, CardBody, CardHeader, CardTitle } from '@/components/ui';
+import { Alert, Button, Card, CardBody, CardHeader, CardTitle, Snippet } from '@/components/ui';
 
 /**
  * How to use the mark. The living half of docs/11-design-system.md §11.
@@ -11,14 +11,6 @@ import { Alert, Button, Card, CardBody, CardHeader, CardTitle } from '@/componen
  */
 
 const SIZES = [16, 20, 24, 32, 48, 96] as const;
-
-function Snippet({ children }: { children: string }) {
-  return (
-    <pre className="overflow-x-auto rounded-control bg-surface-muted px-3 py-2 text-2xs leading-relaxed text-fg-muted">
-      <code>{children}</code>
-    </pre>
-  );
-}
 
 export default function BrandPage() {
   return (
