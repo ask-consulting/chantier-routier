@@ -3,6 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { THEME_INIT_SCRIPT } from '@/components/theme/theme-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { Logo } from '@/components/brand';
 
 export const metadata: Metadata = {
   title: 'Chantia',
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <header className="border-b border-border bg-surface-raised">
             <div className="mx-auto flex max-w-content items-center justify-between px-gutter py-3 lg:px-gutter-lg">
-              <span className="text-lg font-semibold tracking-tight">Chantia</span>
+              <Logo />
               <ThemeToggle />
             </div>
           </header>

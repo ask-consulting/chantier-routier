@@ -34,20 +34,21 @@
   --blue-900: #172554;
   --blue-950: #10193a;
 
-  /* Signal — construction orange, not amber.
+  /* Signal — construction yellow. The colour of a helmet, a barrier, a beacon.
    *
-   * Amber (#d97706) reads muddy next to the blue and does not belong to this
-   * trade: cones, barriers and beacons are orange. The saturation is the whole
-   * point — a signal colour that looks tired does not signal.
+   * Two wrong turns before this one, both worth recording: #d97706 (amber) is
+   * muddy and reads brown next to the blue; #ea580c (orange) is too red and
+   * drifts toward danger, which already owns red. The trade's colour is
+   * *brighter* than either.
    *
-   * `600` is for fills only. Text needs `700`, which clears AA on white; `600`
-   * does not (3.6:1). */
-  --orange-50: #fff7ed;
-  --orange-100: #ffedd5;
-  --orange-400: #fb923c;
-  --orange-600: #ea580c;
-  --orange-700: #c2410c;
-  --orange-950: #2b1104;
+   * `500` is for fills and the logo — never for text. On white it sits around
+   * 2:1, nowhere near AA. Text uses `700`. */
+  --yellow-50: #fffbeb;
+  --yellow-100: #fef3c7;
+  --yellow-400: #fbbf24;
+  --yellow-500: #f5a623;
+  --yellow-700: #b45309;
+  --yellow-950: #2c1a04;
 
   /* Success — green. Completed worksites, on-budget figures. */
   --green-50: #f0fdf4;
@@ -64,6 +65,14 @@
   --red-600: #b91c1c;
   --red-700: #991b1b;
   --red-950: #300f0f;
+
+  /* Brand — the logo's own two colours, taken from the reference drawing.
+   *
+   * Deliberately *not* the semantic tokens: a logo keeps its colours when the
+   * interface changes its mind, and it keeps them in both themes. `--signal`
+   * moved twice already; the mark must not move with it. */
+  --brand-ring: #2c3e50; /* gris ardoise de l'anneau */
+  --brand-shell: #ffc627; /* jaune du casque */
 
   /* Neutrals — slate, so greys sit under the blue rather than fighting it. */
   --slate-50: #f8fafc;
@@ -104,9 +113,9 @@
   --primary-subtle: var(--blue-50);
   --primary-on-subtle: var(--blue-700);
 
-  --signal: var(--orange-600);
-  --signal-subtle: var(--orange-50);
-  --signal-on-subtle: var(--orange-700);
+  --signal: var(--yellow-500);
+  --signal-subtle: var(--yellow-50);
+  --signal-on-subtle: var(--yellow-700);
 
   --success: var(--green-600);
   --success-subtle: var(--green-50);
@@ -151,9 +160,9 @@
   --primary-subtle: var(--blue-950);
   --primary-on-subtle: var(--blue-200);
 
-  --signal: var(--orange-400);
-  --signal-subtle: var(--orange-950);
-  --signal-on-subtle: var(--orange-400);
+  --signal: var(--yellow-400);
+  --signal-subtle: var(--yellow-950);
+  --signal-on-subtle: var(--yellow-400);
 
   --success: var(--green-400);
   --success-subtle: var(--green-950);
@@ -213,6 +222,9 @@
   --color-neutral-on-subtle: var(--neutral-on-subtle);
 
   --color-ring: var(--ring);
+
+  --color-brand-ring: var(--brand-ring);
+  --color-brand-shell: var(--brand-shell);
 
   /* Type scale. `tabular-nums` on figures is applied per-component, not here —
    * only columns of numbers want it. */
