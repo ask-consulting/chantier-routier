@@ -42,10 +42,20 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
     const { userId, data } = command;
 
     const user = await this.users.findById(userId);
-    // A missing user means the account was deleted mid-session; a user without a
-    // password never accepted their invitation and has nothing to prove. Both
-    // get the same answer as a wrong password.
-    if (!user?.passwordHash) {
+    // The caller holds a valid access token, so a missing user means the account
+    // was deleted mid-session: same answer as a wrong password.
+    if (!user) {
+      throw new InvalidCredentialsException();
+    }
+
+    // Unreachable today, and kept anyway. Every path that issues an access token
+    // requires a password — login and refresh both go through
+    // `canAuthenticate()`, register and accept-invitation set one first — and
+    // `withPasswordHash` cannot take null, so a hash never goes from set back to
+    // absent. But the field *is* nullable, so the compiler asks; answering with
+    // a non-null assertion would turn a future regression into a crash instead
+    // of a 401. Failing closed costs one line.
+    if (!user.passwordHash) {
       throw new InvalidCredentialsException();
     }
 
