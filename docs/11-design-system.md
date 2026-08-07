@@ -342,7 +342,72 @@ reconnaissable à sa couleur et à son casque.
 
 Référence vivante : **`/design-system/brand`**.
 
-## 11. Reste à faire
+## 11. Les icônes
+
+**Lucide** (`lucide-react`, MIT), réexporté sous des noms métier dans
+`src/lib/icons.ts`. Un composant n'importe **jamais** de `lucide-react`
+directement.
+
+```tsx
+import { WorksiteIcon, RollerIcon } from '@/lib/icons';
+
+<WorksiteIcon className="size-4 text-fg-muted" aria-hidden />
+<RollerIcon size={32} strokeWidth={1.5} />
+```
+
+Deux raisons, les mêmes que pour `domain-display.ts` :
+
+- Changer l'icône de « chantier » est **une ligne**, pas une chasse dans chaque
+  écran qui en affiche une.
+- **Le fichier est l'inventaire.** On voit d'un coup ce que le produit utilise
+  déjà — ce qui évite qu'une douzième icône soit importée pour dire ce que la
+  onzième dit déjà.
+
+Les icônes héritent de `currentColor` : elles suivent les jetons et les deux
+thèmes sans configuration. Toujours `aria-hidden` quand un libellé visible ou un
+`aria-label` voisin dit déjà la même chose.
+
+### Pourquoi Lucide et pas Tabler
+
+Tabler a trois fois plus d'icônes (5 130 contre 1 766) et de meilleurs engins —
+`bulldozer`, `crane`, `barrier-block`. Mais ce dont une application de gestion a
+besoin, ce sont quarante icônes d'**interface**, où les deux se valent. Lucide
+gagne sur le reste : un seul tracé par icône donc le poids le plus faible,
+grille stricte de 24 px, épaisseur paramétrable, et le meilleur paquet React.
+
+Si un engin manque un jour, `@tabler/icons-react` peut cohabiter — mieux que
+d'installer 5 130 icônes pour en utiliser quarante.
+
+### Les icônes maison
+
+Ni Lucide ni Tabler n'ont de **compacteur** ni de **pelleteuse** : c'est vérifié,
+Tabler s'arrête au bulldozer. `RollerIcon` et `BarrierIcon` sont donc dessinées à
+la main, selon les règles publiées par Lucide, pour qu'elles ne détonnent pas
+dans une barre latérale :
+
+| | |
+|---|---|
+| Toile | 24 × 24 |
+| Marge intérieure | 1 minimum |
+| Trait | 2, centré |
+| Jonctions et extrémités | rondes |
+| Rayon des angles | 2 (1 pour les petites formes) |
+| Remplissage | aucun — `fill="none"`, `stroke="currentColor"` |
+
+`createLucideIcon` produit un composant qui accepte exactement les mêmes
+propriétés que les autres (`size`, `color`, `strokeWidth`), donc rien ne
+distingue une icône maison à l'usage.
+
+```ts
+export const RollerIcon = createLucideIcon('Roller', [
+  ['circle', { cx: '7', cy: '15', r: '5', key: 'drum' }],
+  ['circle', { cx: '18', cy: '17', r: '3', key: 'wheel' }],
+  ['path', { d: 'M12 12h6a3 3 0 0 1 3 3', key: 'chassis' }],
+  ['path', { d: 'M13 12V8a1 1 0 0 1 1-1h3', key: 'cab' }],
+]);
+```
+
+## 12. Reste à faire
 
 - Composants de saisie au-delà de `Field` : `Select`, `Textarea`, `Checkbox`.
 - Navigation : barre latérale, fil d'Ariane, onglets.

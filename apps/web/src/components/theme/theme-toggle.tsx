@@ -1,12 +1,13 @@
 'use client';
 
 import { cn } from '@/lib/cn';
+import { ThemeDarkIcon, ThemeLightIcon, ThemeSystemIcon } from '@/lib/icons';
 import { useTheme, type ThemePreference } from './theme-provider';
 
-const OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
-  { value: 'light', label: 'Thème clair', icon: '☀' },
-  { value: 'system', label: 'Thème système', icon: '◐' },
-  { value: 'dark', label: 'Thème sombre', icon: '☾' },
+const OPTIONS: { value: ThemePreference; label: string; Icon: typeof ThemeLightIcon }[] = [
+  { value: 'light', label: 'Thème clair', Icon: ThemeLightIcon },
+  { value: 'system', label: 'Thème système', Icon: ThemeSystemIcon },
+  { value: 'dark', label: 'Thème sombre', Icon: ThemeDarkIcon },
 ];
 
 /**
@@ -22,26 +23,27 @@ export function ThemeToggle() {
       aria-label="Thème"
       className="inline-flex rounded-control border border-border bg-surface-raised p-0.5"
     >
-      {OPTIONS.map((option) => {
-        const active = preference === option.value;
+      {OPTIONS.map(({ value, label, Icon }) => {
+        const active = preference === value;
         return (
           <button
-            key={option.value}
+            key={value}
             type="button"
             role="radio"
             aria-checked={active}
             // The icons are decorative; this is what a screen reader announces.
-            aria-label={option.label}
-            title={option.label}
-            onClick={() => setPreference(option.value)}
+            aria-label={label}
+            title={label}
+            onClick={() => setPreference(value)}
             className={cn(
-              'flex size-7 items-center justify-center rounded-[0.25rem] text-sm transition-colors',
-              active
-                ? 'bg-primary-subtle text-primary-on-subtle'
-                : 'text-fg-subtle hover:text-fg',
+              'flex size-7 items-center justify-center rounded-[0.25rem] transition-colors',
+              active ? 'bg-primary-subtle text-primary-on-subtle' : 'text-fg-subtle hover:text-fg',
             )}
           >
-            <span aria-hidden>{option.icon}</span>
+            {/* Was `☀ ◐ ☾` — Unicode characters whose shape and weight depend on
+              * whichever font the OS picks, and which sit on the text baseline
+              * rather than centring. */}
+            <Icon className="size-4" aria-hidden />
           </button>
         );
       })}
