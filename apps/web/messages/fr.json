@@ -1,0 +1,72 @@
+{
+  "app": {
+    "name": "Chantia",
+    "description": "Gestion de chantiers routiers"
+  },
+  "nav": {
+    "worksites": "Chantiers",
+    "workers": "Ouvriers",
+    "timesheets": "Pointages",
+    "expenses": "Dépenses",
+    "users": "Comptes"
+  },
+  "settings": {
+    "theme": "Thème",
+    "themeLight": "Thème clair",
+    "themeDark": "Thème sombre",
+    "themeSystem": "Thème système",
+    "language": "Langue"
+  },
+  "common": {
+    "create": "Créer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "loading": "Chargement…",
+    "none": "—",
+    "total": "{count, plural, =0 {aucun} one {# au total} other {# au total}}"
+  },
+  "worksites": {
+    "title": "Chantiers",
+    "create": "Nouveau chantier",
+    "code": "Code",
+    "name": "Nom",
+    "client": "Client",
+    "status": "Statut",
+    "budget": "Budget",
+    "variance": "Écart",
+    "loadError": "Impossible de charger les chantiers : {reason}",
+    "unknownError": "erreur inconnue",
+    "emptyTitle": "Aucun chantier pour l’instant",
+    "emptyDescription": "Créez votre premier chantier pour suivre son budget et ses pointages."
+  },
+  "worksiteStatus": {
+    "upcoming": "À venir",
+    "in_progress": "En cours",
+    "completed": "Terminé",
+    "suspended": "Suspendu"
+  },
+  "userRole": {
+    "admin": "Administrateur",
+    "site_manager": "Conducteur de travaux",
+    "foreman": "Chef de chantier",
+    "worker": "Ouvrier"
+  },
+  "form": {
+    "errors": {
+      "password": {
+        "minLength": "Le mot de passe doit contenir au moins {min} caractères",
+        "uppercase": "Le mot de passe doit contenir une majuscule",
+        "lowercase": "Le mot de passe doit contenir une minuscule",
+        "digit": "Le mot de passe doit contenir un chiffre",
+        "special": "Le mot de passe doit contenir un caractère spécial",
+        "common": "Ce mot de passe est trop courant — ajouter un chiffre ou un symbole à un mot de passe connu ne suffit pas",
+        "contextual": "Le mot de passe ne doit pas contenir votre nom, votre email ni le nom de votre organisation"
+      }
+    }
+  }
+}
