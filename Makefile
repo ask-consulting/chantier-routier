@@ -13,7 +13,12 @@ MOBILE_DIR   := apps/mobile
 
 API_URL      := http://localhost:8080
 WEB_URL      := http://localhost:3000
-ORG_ID       := b62107ee-2174-463f-9365-1fa967cc1925   # organisation "ELLOUZE construction"
+
+# Identifiants pour les cibles de smoke-test (surchargeables : make api-login EMAIL=…)
+EMAIL        ?= admin@ellouze-construction.fr
+PASSWORD     ?=
+# Jeton d'accès, à passer aux cibles authentifiées : make api-worksites TOKEN=$(...)
+TOKEN        ?=
 
 DB_CONTAINER := chantia-db
 DB_USER      := chantia
@@ -105,15 +110,21 @@ api-studio: ## Ouvre Prisma Studio (UI base de données)
 	cd $(API_DIR) && $(PNPM) exec prisma studio
 
 ##@ API — Base de données & santé
-.PHONY: api-psql api-db-orgs api-health api-worksites
+.PHONY: api-psql api-db-orgs api-db-users api-health api-login api-worksites
 api-psql: ## Ouvre un shell psql sur la base
 	docker exec -it $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME)
-api-db-orgs: ## Liste les organisations
-	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT id, name, currency FROM organization;'
+api-db-orgs: ## Liste les organisations (schéma identity)
+	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT id, name, currency FROM identity.organizations;'
+api-db-users: ## Liste les comptes (sans les hashs)
+	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c 'SELECT email, role, active, last_login_at FROM identity.app_users ORDER BY email;'
 api-health: ## Vérifie que l'API répond
 	curl -s $(API_URL)/health && echo
-api-worksites: ## GET /worksites pour l'org ELLOUZE construction
-	curl -s -H "x-organization-id: $(ORG_ID)" $(API_URL)/worksites && echo
+api-login: ## Récupère un access token — make api-login EMAIL=… PASSWORD=…
+	@curl -s -X POST $(API_URL)/auth/login -H 'Content-Type: application/json' \
+		-d '{"email":"$(EMAIL)","password":"$(PASSWORD)"}' \
+		| python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("accessToken") or d)'
+api-worksites: ## GET /worksites — make api-worksites TOKEN=$$(make -s api-login PASSWORD=…)
+	curl -s -H "Authorization: Bearer $(TOKEN)" $(API_URL)/worksites && echo
 
 ##@ Web (front) — Next.js
 .PHONY: web-dev web-build web-start web-typecheck

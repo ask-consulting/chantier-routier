@@ -32,3 +32,11 @@ services:
       # Comma-separated allowed origins (e.g. your Vercel web URL).
       - key: CORS_ORIGINS
         sync: false
+      # HS256 secret signing the access tokens. `generateValue` lets Render mint
+      # it once and keep it out of git; the API refuses to boot without it.
+      # Rotating this value invalidates every live access token — users simply
+      # log in again.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: chantia-identity
