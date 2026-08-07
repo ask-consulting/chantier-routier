@@ -139,9 +139,17 @@ cout_reel(chantier) = cout_mo + Σ depense.montant
 
 ## 6. Sécurité
 
-- **Auth** : email/mot de passe + (option) OTP SMS pour ouvriers sans email.
-- **Multi-tenant** : isolation stricte par `org_id` (Row Level Security Supabase).
-- **RBAC** : permissions par rôle vérifiées côté serveur (jamais uniquement client).
+> **Implémenté** — voir `08-identity-module.md` pour le détail. Deux écarts par rapport
+> au plan initial ci-dessous : l'authentification est **maison** (contexte Identity,
+> JWT + refresh tokens rotatifs) plutôt que Supabase Auth, parce que la logique métier
+> vit déjà dans l'API NestJS ; et l'isolation multi-tenant est appliquée **dans les
+> handlers** plutôt que par RLS Postgres, l'API se connectant avec un rôle unique.
+
+- **Auth** : email/mot de passe (OTP SMS pour ouvriers sans email : non fait).
+- **Multi-tenant** : isolation stricte par `organizationId`, tiré du token d'accès
+  vérifié et appliqué par chaque query handler.
+- **RBAC** : permissions par rôle vérifiées côté serveur (jamais uniquement client) —
+  matrice `ROLE_PERMISSIONS` partagée entre API, web et mobile.
 - **HTTPS** partout, secrets via variables d'environnement.
 - **RGPD** : données personnelles ouvriers minimales, consentement, droit à l'effacement.
 - Sauvegardes BDD automatiques (fournies par Supabase/Neon).

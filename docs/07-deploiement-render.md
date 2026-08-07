@@ -36,10 +36,19 @@ Guide pas-à-pas pour déployer `apps/api` sur **Render** (Free) avec une base
 ## 3. Vérifier
 
 ```bash
-curl https://chantia-api.onrender.com/health          # → {"status":"ok"}
+API=https://chantia-api.onrender.com
+curl $API/health          # → {"status":"ok"}   (route publique)
 # Swagger : https://chantia-api.onrender.com/api
-curl -H "x-organization-id: b62107ee-2174-463f-9365-1fa967cc1925" \
-     https://chantia-api.onrender.com/worksites       # → {"items":[],...}
+
+# Toutes les autres routes exigent un jeton. `/auth/register` crée une organisation
+# ET son premier admin — c'est la seule façon d'entrer. (L'organisation seedée par
+# la migration n'a aucun compte : elle ne sert qu'aux données de démo locales.)
+TOKEN=$(curl -s -X POST $API/auth/register -H 'Content-Type: application/json' \
+  -d '{"organizationName":"Mon entreprise","email":"admin@exemple.fr",
+       "password":"une phrase de passe longue","firstName":"Ada","lastName":"Lovelace"}' \
+  | python3 -c 'import sys,json;print(json.load(sys.stdin)["accessToken"])')
+
+curl -H "Authorization: Bearer $TOKEN" $API/worksites   # → {"items":[],...}
 ```
 
 ## 4. Déploiements suivants
