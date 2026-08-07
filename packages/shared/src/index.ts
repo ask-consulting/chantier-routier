@@ -2,6 +2,7 @@
 export * from './enums/worksite.enums';
 export * from './enums/user.enums';
 export * from './enums/permission.enums';
+export * from './enums/locale.enums';
 
 // Authorization (role → permissions matrix, shared by API, web and mobile)
 export * from './access/role-permissions';

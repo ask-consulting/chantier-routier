@@ -16,8 +16,9 @@ import { IS_PUBLIC_KEY } from './public.decorator';
  * coming from a remote service, as long as the signing secret matches.
  *
  * The trade-off is that a revoked or demoted account stays valid until its
- * access token expires (15 min by default). Refresh tokens *are* checked against
- * the database, so the blast radius is one access-token lifetime.
+ * access token expires — 5 minutes by default, and that default is deliberately
+ * short *because* of this. Refresh tokens are checked against the database, so
+ * the blast radius is one access-token lifetime and no more.
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

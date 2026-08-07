@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IUser, Permission, UserRole, permissionsForRole } from '@chantia/shared';
+import { IUser, Locale, Permission, UserRole, permissionsForRole } from '@chantia/shared';
 import { User } from '../../domain/entities/user.entity';
 
 /**
@@ -16,6 +16,9 @@ export class UserResponseDto implements IUser {
   @ApiProperty({ enum: UserRole }) role: UserRole;
   @ApiProperty() active: boolean;
   @ApiProperty({ nullable: true }) workerId: string | null;
+  @ApiProperty({ enum: Locale }) locale: Locale;
+  @ApiProperty({ description: 'False while the invitation is still outstanding' })
+  hasPassword: boolean;
   @ApiProperty({ nullable: true }) lastLoginAt: string | null;
   @ApiProperty({ required: false }) createdAt?: string;
   @ApiProperty({ required: false }) updatedAt?: string;
@@ -30,6 +33,8 @@ export class UserResponseDto implements IUser {
     dto.role = user.role;
     dto.active = user.active;
     dto.workerId = user.workerId;
+    dto.locale = user.locale;
+    dto.hasPassword = user.hasPassword();
     dto.lastLoginAt = user.lastLoginAt?.toISOString() ?? null;
     dto.createdAt = user.createdAt?.toISOString();
     dto.updatedAt = user.updatedAt?.toISOString();

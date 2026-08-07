@@ -13,7 +13,8 @@
     "start:prod": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "bootstrap:admin": "node dist/scripts/bootstrap-admin.js"
   },
   "dependencies": {
     "@chantia/shared": "workspace:*",
