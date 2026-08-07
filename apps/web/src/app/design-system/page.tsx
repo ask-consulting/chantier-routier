@@ -20,6 +20,7 @@ import {
   Table,
 } from '@/components/ui';
 import type { Tone } from '@/components/ui/badge';
+import * as Icons from '@/lib/icons';
 import { WORKSITE_STATUS, formatAmount, varianceTone } from '@/lib/domain-display';
 
 /**
@@ -325,6 +326,47 @@ const status = WORKSITE_STATUS[worksite.status];
 // « numeric » aligne à droite en chiffres tabulaires : deux montants se
 // comparent d'un coup d'œil. Le tableau défile horizontalement tout seul,
 // pour que la page ne le fasse jamais.`}</Snippet>
+      </Section>
+
+      <Section
+        title="Icônes"
+        note="Lucide, réexporté sous des noms métier dans src/lib/icons.ts. Deux icônes maison complètent ce que la bibliothèque n’a pas."
+      >
+        <Card>
+          <CardBody className="flex flex-col gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              {(Object.entries(Icons) as [string, typeof Icons.WorksiteIcon][]).map(
+                ([name, Icon]) => (
+                  <div
+                    key={name}
+                    className="flex flex-col items-center gap-1.5 rounded-control border border-border px-2 py-3"
+                  >
+                    <Icon className="size-5 text-fg-muted" aria-hidden />
+                    <code className="text-2xs text-fg-subtle">{name.replace('Icon', '')}</code>
+                  </div>
+                ),
+              )}
+            </div>
+            <Alert tone="info">
+              <strong>RollerIcon</strong> et <strong>BarrierIcon</strong> sont dessinées à la
+              main : ni Lucide ni Tabler n’ont de compacteur ni de barrière de chantier. Elles
+              suivent les règles de Lucide — toile 24, marge 1, trait 2 centré, jonctions et
+              extrémités rondes, aucun remplissage — pour qu’elles ne détonnent pas.
+            </Alert>
+          </CardBody>
+        </Card>
+        <Snippet>{`import { WorksiteIcon, RollerIcon } from '@/lib/icons';
+
+<WorksiteIcon className="size-4 text-fg-muted" aria-hidden />
+<RollerIcon size={32} strokeWidth={1.5} />
+
+// Les icônes héritent de currentColor : elles suivent les jetons et les
+// deux thèmes sans rien configurer. Toujours aria-hidden quand un libellé
+// visible ou un aria-label voisin dit déjà la même chose.
+
+// Ajouter une icône : la réexporter dans lib/icons.ts sous un nom métier,
+// jamais l'importer de 'lucide-react' dans un composant. Le fichier est
+// l'inventaire — c'est ce qui évite trois icônes pour la même idée.`}</Snippet>
       </Section>
 
       <Section title="Cartes" note="Le conteneur par défaut d’un bloc de contenu.">
