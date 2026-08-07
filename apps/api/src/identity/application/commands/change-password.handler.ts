@@ -16,6 +16,7 @@ import {
   UserRepositoryPort,
 } from '../../domain/ports/user-repository.port';
 import {
+  AccountDisabledException,
   InvalidCredentialsException,
   WeakPasswordException,
 } from '../../infrastructure/exceptions/identity.exceptions';
@@ -52,6 +53,18 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
     // unlocked laptop, a stolen access token) from taking over the account.
     if (!(await this.passwordHasher.verify(data.currentPassword, user.passwordHash))) {
       throw new InvalidCredentialsException();
+    }
+
+    // A deactivated account keeps a valid access token until it expires — the
+    // documented cost of a stateless guard (docs/08 §3). Within that window it
+    // could otherwise change its own credentials, and an admin re-enabling the
+    // account later would not know the password had moved. Login and
+    // accept-invitation already refuse here; this was the odd one out.
+    //
+    // Checked *after* the password, like login: a disabled account is only
+    // revealed to somebody who already knows its credentials.
+    if (!user.active) {
+      throw new AccountDisabledException();
     }
 
     const violations = checkPasswordPolicy(data.newPassword, {

@@ -11,7 +11,19 @@ export interface IdentityConfig {
   /** HS256 signing secret. Verifiers must be configured with the same value. */
   accessTokenSecret: string;
   issuer: string;
-  /** Access-token lifetime, seconds. Short: it cannot be revoked before expiry. */
+  /**
+   * Access-token lifetime, seconds.
+   *
+   * Five minutes, and the number is load-bearing. The guard is stateless — it
+   * never reads the database — so a token is a photograph taken at issue time:
+   * a deactivated account, or one demoted from admin, keeps its old rights until
+   * the token expires. This value *is* that window.
+   *
+   * Fifteen minutes was too long to sit between deciding to revoke somebody and
+   * it taking effect. Shortening it costs one extra `/auth/refresh` every five
+   * minutes per active session — nothing at this scale — and buys back two
+   * thirds of the exposure without touching the architecture.
+   */
   accessTokenTtl: number;
   /** Refresh-token lifetime, seconds. Long: mobile stays logged in in the field. */
   refreshTokenTtl: number;
@@ -31,7 +43,7 @@ export interface IdentityConfig {
   allowSelfRegistration: boolean;
 }
 
-const FIFTEEN_MINUTES = 15 * 60;
+const FIVE_MINUTES = 5 * 60;
 const THIRTY_DAYS = 30 * 24 * 60 * 60;
 const SEVEN_DAYS = 7 * 24 * 60 * 60;
 
@@ -45,7 +57,7 @@ export default registerAs(
   (): IdentityConfig => ({
     accessTokenSecret: requireEnv('JWT_ACCESS_SECRET'),
     issuer: process.env.JWT_ISSUER ?? DEFAULT_JWT_ISSUER,
-    accessTokenTtl: positiveInt(process.env.JWT_ACCESS_TTL, FIFTEEN_MINUTES),
+    accessTokenTtl: positiveInt(process.env.JWT_ACCESS_TTL, FIVE_MINUTES),
     refreshTokenTtl: positiveInt(process.env.JWT_REFRESH_TTL, THIRTY_DAYS),
     minPasswordLength: positiveInt(process.env.MIN_PASSWORD_LENGTH, 10),
     invitationTtl: positiveInt(process.env.INVITATION_TTL, SEVEN_DAYS),

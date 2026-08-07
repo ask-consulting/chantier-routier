@@ -46,7 +46,7 @@ routes.
 | | Access token | Refresh token |
 |---|---|---|
 | Forme | JWT signé HS256 | chaîne aléatoire **opaque** (48 octets) |
-| Durée | 15 min (`JWT_ACCESS_TTL`) | 30 jours (`JWT_REFRESH_TTL`) |
+| Durée | **5 min** (`JWT_ACCESS_TTL`) | 30 jours (`JWT_REFRESH_TTL`) |
 | Stocké en base | non | **hash SHA-256 uniquement** |
 | Révocable | non, jusqu'à expiration | oui, immédiatement |
 
@@ -60,10 +60,26 @@ tourné** est la signature d'un vol : le client légitime serait passé au
 remplaçant. Comme on ne peut pas savoir lequel des deux est le voleur, **toute la
 famille est révoquée** et les deux doivent se reconnecter.
 
-**Compromis assumé** : un compte désactivé garde un access token valide jusqu'à son
-expiration (≤ 15 min). En échange, le guard ne touche jamais la base — c'est ce qui
-rend le contexte extractible. Les refresh tokens, eux, sont révoqués immédiatement,
-ce qui borne la fenêtre.
+**Compromis assumé** : le guard ne lit **jamais** la base. Un jeton est donc une
+photographie prise à l'émission, et pendant sa durée de vie deux choses peuvent
+être périmées — un compte désactivé continue d'accéder, et **un rôle modifié n'a
+pas encore d'effet** (un admin rétrogradé garde ses droits). Le rôle est le cas le
+plus gênant des deux.
+
+En échange, le contexte reste extractible : ce guard fonctionnera sans changement
+quand les jetons viendront d'un service distant.
+
+La fenêtre est donc **le TTL, et rien d'autre** — d'où 5 minutes plutôt que 15.
+Le coût est un `/auth/refresh` de plus toutes les cinq minutes par session active.
+
+L'alternative — lire l'utilisateur en base dans le guard — a été évaluée et
+écartée : elle fermerait la fenêtre, mais ferait d'Identity une **dépendance
+synchrone sur le chemin critique de chaque requête** une fois extraite en
+service, avec sa latence ajoutée partout et son indisponibilité arrêtant l'API
+entière. Un cache de quelques secondes serait le compromis intermédiaire si le
+besoin revenait.
+
+Les refresh tokens, eux, **sont** vérifiés en base et révoqués immédiatement.
 
 ## 4. Permissions : la matrice `rôle → capacités`
 
@@ -335,7 +351,7 @@ curl -sL https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwo
 JWT_ACCESS_SECRET=   # REQUIS — l'API refuse de démarrer sans. Générer avec :
                      # node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 JWT_ISSUER=chantia-identity
-JWT_ACCESS_TTL=900        # 15 min
+JWT_ACCESS_TTL=300        # 5 min — c'est la fenêtre de péremption d'un jeton
 JWT_REFRESH_TTL=2592000   # 30 jours
 MIN_PASSWORD_LENGTH=10
 
