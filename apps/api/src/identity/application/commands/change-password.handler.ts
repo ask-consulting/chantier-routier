@@ -41,9 +41,10 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
     const { userId, data } = command;
 
     const user = await this.users.findById(userId);
-    // The caller holds a valid access token, so a missing user means the account
-    // was deleted mid-session: same answer as a wrong password.
-    if (!user) {
+    // A missing user means the account was deleted mid-session; a user without a
+    // password never accepted their invitation and has nothing to prove. Both
+    // get the same answer as a wrong password.
+    if (!user?.passwordHash) {
       throw new InvalidCredentialsException();
     }
 

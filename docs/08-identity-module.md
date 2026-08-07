@@ -126,20 +126,118 @@ imbriquées).
 
 | Méthode | Route | Accès |
 |---|---|---|
-| POST | `/auth/register` | public — crée l'organisation **et** son premier admin |
+| POST | `/auth/register` | **fermé** — répond 404, voir §5 bis |
+| GET | `/auth/invitation/:token` | public — ce qu'affiche la page d'invitation |
+| POST | `/auth/accept-invitation` | public — choisit un mot de passe et connecte |
+| PATCH | `/auth/preferences` | authentifié — sa propre langue |
 | POST | `/auth/login` | public |
 | POST | `/auth/refresh` | public (le refresh token *est* la preuve) |
 | POST | `/auth/logout` | authentifié — sans corps = déconnexion de partout |
 | POST | `/auth/change-password` | authentifié — révoque **toutes** les sessions |
 | GET | `/auth/me` | authentifié — profil + permissions du rôle |
 | GET | `/users` | `user:read` |
-| POST | `/users` | `user:manage` |
+| POST | `/users` | `user:manage` — **invite**, ne crée pas de mot de passe |
 | GET | `/users/:id` | `user:read` |
 | PATCH | `/users/:id` | `user:manage` |
 | DELETE | `/users/:id` | `user:manage` |
 
 L'`organizationId` vient **toujours** du token, jamais de la requête : les routes
 n'ont tout simplement pas de paramètre pour en désigner une autre.
+
+## 5 bis. Une seule organisation, et des invitations
+
+### L'inscription est fermée
+
+`/auth/register` répond **404** sauf si `ALLOW_SELF_REGISTRATION=true`.
+
+Le produit ne sert qu'une organisation : une inscription publique ne créerait que
+des locataires que personne n'a demandés, et une route d'inscription ouverte sur
+un back-office privé est une invitation permanente.
+
+404 plutôt que 403 : la route n'existe pas du point de vue de l'appelant, et
+« interdit » annoncerait que ce déploiement *pourrait* faire de l'inscription.
+
+Le code n'est pas supprimé pour autant — il est écrit et testé, et le
+multi-locataire le voudra de nouveau. Il vit derrière un interrupteur.
+
+### Le premier administrateur
+
+Il faut bien un moyen de créer le premier compte :
+
+```bash
+BOOTSTRAP_ADMIN_EMAIL=vous@exemple.fr BOOTSTRAP_ADMIN_PASSWORD=… \
+  pnpm --filter @chantia/api bootstrap:admin
+```
+
+Un script ponctuel plutôt qu'un crochet au démarrage : il s'exécute quand
+quelqu'un le décide, le mot de passe vit quelques secondes dans un shell au lieu
+de dormir indéfiniment dans l'environnement d'un serveur, et il ne peut pas se
+déclencher par accident à un redémarrage.
+
+**Idempotent** : si le compte existe, il le signale et ne touche à rien. Réinitialiser
+silencieusement le mot de passe d'un administrateur en service depuis une variable
+d'environnement est exactement ce qu'un script d'amorçage ne doit pas faire.
+
+### Les autres comptes arrivent par invitation
+
+```
+ADMIN    POST /users { email, prénom, nom, rôle, langue }
+         → { invitationPath: "/invitation/aB3x…", expiresAt }
+
+INVITÉ   GET  /auth/invitation/:token     → son nom, son organisation
+         POST /auth/accept-invitation     → choisit son mot de passe
+         → connecté immédiatement
+```
+
+**L'admin ne choisit pas — et n'apprend jamais — le mot de passe de ses équipes.**
+C'est toute la raison de ce mécanisme plutôt qu'un `POST /users { password }`.
+
+Le jeton est **opaque, à usage unique, valable 7 jours**, et seul son SHA-256 est
+stocké : même modèle de menace qu'un refresh token, parce qu'un lien qui voyage
+par WhatsApp peut être transféré, capturé en photo, ou traîner des mois dans une
+conversation.
+
+Ré-inviter quelqu'un **annule le lien précédent** : sinon un ancien lien transféré
+resterait vivant à côté du nouveau.
+
+Le mot de passe n'est écrit qu'**avant** de brûler l'invitation : si l'invité se
+trompe de mot de passe, le lien reste utilisable au lieu de l'enfermer dehors.
+
+### Rien n'est envoyé
+
+L'API **émet** l'invitation, elle ne l'**achemine** pas. Elle publie un événement
+`UserInvitedEvent` et rend le lien à l'appelant ; aujourd'hui personne n'écoute et
+l'admin transmet le lien à la main.
+
+C'est le point de couture pour le module de notification à venir — email, SMS,
+autre. Envoyer depuis le handler laisserait un échec d'envoi annuler la création
+d'un compte, et figerait le canal dans le contexte Identity.
+
+L'événement ne porte **jamais le jeton**, seulement le chemin.
+
+### Un compte sans mot de passe
+
+Entre l'invitation et son acceptation, `password_hash` est **NULL** : le compte
+existe, porte un rôle, et ne peut pas s'authentifier. `canAuthenticate()` le
+refuse.
+
+À la connexion, un tel compte est traité **exactement comme un email inconnu** —
+même erreur, même coût en temps. Dire « ce compte existe mais n'a pas encore de
+mot de passe » confirmerait l'adresse à qui sonde.
+
+## 5 ter. La langue
+
+`app_users.locale` (`fr` ou `ar`), modifiable par chacun via
+`PATCH /auth/preferences`.
+
+Sur le compte et non dans un cookie : c'est une préférence de la **personne**, pas
+de son navigateur, et elle la suit du poste de bureau au téléphone sur le chantier.
+
+Séparé de `PATCH /users/:id`, qui est un acte d'administration protégé par
+`user:manage` : choisir sa propre langue n'en est pas un.
+
+L'énumération est partagée (`Locale` dans `@chantia/shared`), donc une langue
+ajoutée doit être traitée des deux côtés ou rien ne compile.
 
 ## 6. Invariants protégés
 
@@ -240,6 +338,11 @@ JWT_ISSUER=chantia-identity
 JWT_ACCESS_TTL=900        # 15 min
 JWT_REFRESH_TTL=2592000   # 30 jours
 MIN_PASSWORD_LENGTH=10
+
+# Inscription publique, fermée par défaut (voir §5 bis).
+ALLOW_SELF_REGISTRATION=false
+# Durée de vie d'une invitation, en secondes (défaut 604800 = 7 jours).
+INVITATION_TTL=604800
 ```
 
 Pas de valeur par défaut pour le secret, volontairement : elle embarquerait une clé
@@ -248,13 +351,15 @@ générer par la plateforme (`generateValue: true`).
 
 ## 9. Reste à faire
 
-- **Limitation de débit sur `/auth/login` et `/auth/register`.** Rien ne freine
+- **Limitation de débit sur `/auth/login` et `/auth/accept-invitation`.** Rien ne freine
   aujourd'hui le bourrage d'identifiants. `@nestjs/throttler` + un `@Throttle` sur
   ces deux routes ; c'est une dépendance à ajouter.
-- **Réinitialisation de mot de passe oublié** (token à usage unique par email) —
-  demande un fournisseur d'envoi d'emails.
-- **Purge des refresh tokens expirés** : `deleteExpired()` existe côté port et
-  repository, mais aucun `@Cron` ne l'appelle encore.
+- **Réinitialisation de mot de passe oublié.** Le mécanisme d'invitation est déjà
+  la moitié du travail : même table, même modèle de jeton. Il manque l'envoi.
+- **Module de notification.** `UserInvitedEvent` l'attend : email, SMS, gabarits,
+  multi-canal. Le contexte Identity n'aura pas à changer.
+- **Purge des jetons expirés** : `deleteExpired()` existe pour les refresh tokens
+  et pour les invitations, mais aucun `@Cron` ne l'appelle encore.
 - **Front web** : `apps/web` appelle encore l'API sans jeton (il envoyait
   `x-organization-id`, header supprimé) — il faut une page de connexion, le stockage
   du token et le refresh automatique.

@@ -20,6 +20,7 @@ import {
 } from '../../domain/ports/user-repository.port';
 import {
   EmailAlreadyUsedException,
+  RegistrationClosedException,
   WeakPasswordException,
 } from '../../infrastructure/exceptions/identity.exceptions';
 import { IssuedSession, SessionIssuer } from '../services/session-issuer.service';
@@ -50,6 +51,13 @@ export class RegisterHandler implements ICommandHandler<RegisterCommand> {
 
   async execute(command: RegisterCommand): Promise<IssuedSession> {
     const { data, userAgent } = command;
+
+    // Checked in the handler rather than by removing the route: the code is
+    // written and tested, and multi-tenant sign-up will want it back. Closed by
+    // default — see `IdentityConfig.allowSelfRegistration`.
+    if (!this.config.allowSelfRegistration) {
+      throw new RegistrationClosedException();
+    }
 
     const violations = checkPasswordPolicy(data.password, {
       minLength: this.config.minPasswordLength,

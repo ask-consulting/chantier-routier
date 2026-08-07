@@ -3,23 +3,28 @@ import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule } from '@nestjs/jwt';
 import { ChangePasswordHandler } from './application/commands/change-password.handler';
-import { CreateUserHandler } from './application/commands/create-user.handler';
+import { AcceptInvitationHandler } from './application/commands/accept-invitation.handler';
+import { InviteUserHandler } from './application/commands/invite-user.handler';
+import { UpdatePreferencesHandler } from './application/commands/update-preferences.handler';
 import { DeleteUserHandler } from './application/commands/delete-user.handler';
 import { LoginHandler } from './application/commands/login.handler';
 import { LogoutHandler } from './application/commands/logout.handler';
 import { RefreshSessionHandler } from './application/commands/refresh-session.handler';
 import { RegisterHandler } from './application/commands/register.handler';
 import { UpdateUserHandler } from './application/commands/update-user.handler';
+import { GetInvitationHandler } from './application/queries/get-invitation.handler';
 import { GetUserByIdHandler } from './application/queries/get-user-by-id.handler';
 import { GetUsersHandler } from './application/queries/get-users.handler';
 import { SessionIssuer } from './application/services/session-issuer.service';
 import identityConfig from './config/identity.config';
+import { INVITATION_REPOSITORY_PORT } from './domain/ports/invitation-repository.port';
 import { ORGANIZATION_REPOSITORY_PORT } from './domain/ports/organization-repository.port';
 import { PASSWORD_HASHER_PORT } from './domain/ports/password-hasher.port';
 import { REFRESH_TOKEN_REPOSITORY_PORT } from './domain/ports/refresh-token-repository.port';
 import { TOKEN_ISSUER_PORT } from './domain/ports/token-issuer.port';
 import { USER_REPOSITORY_PORT } from './domain/ports/user-repository.port';
 import { IdentityPrismaService } from './infrastructure/persistence/identity-prisma.service';
+import { InvitationRepository } from './infrastructure/repositories/invitation.repository';
 import { OrganizationRepository } from './infrastructure/repositories/organization.repository';
 import { RefreshTokenRepository } from './infrastructure/repositories/refresh-token.repository';
 import { UserRepository } from './infrastructure/repositories/user.repository';
@@ -34,17 +39,20 @@ const CommandHandlers = [
   RefreshSessionHandler,
   LogoutHandler,
   ChangePasswordHandler,
-  CreateUserHandler,
+  InviteUserHandler,
+  AcceptInvitationHandler,
+  UpdatePreferencesHandler,
   UpdateUserHandler,
   DeleteUserHandler,
 ];
 
-const QueryHandlers = [GetUsersHandler, GetUserByIdHandler];
+const QueryHandlers = [GetUsersHandler, GetUserByIdHandler, GetInvitationHandler];
 
 const Adapters = [
   { provide: USER_REPOSITORY_PORT, useClass: UserRepository },
   { provide: ORGANIZATION_REPOSITORY_PORT, useClass: OrganizationRepository },
   { provide: REFRESH_TOKEN_REPOSITORY_PORT, useClass: RefreshTokenRepository },
+  { provide: INVITATION_REPOSITORY_PORT, useClass: InvitationRepository },
   { provide: PASSWORD_HASHER_PORT, useClass: ScryptPasswordHasher },
   { provide: TOKEN_ISSUER_PORT, useClass: JwtTokenIssuer },
 ];

@@ -1,8 +1,11 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedUser, CurrentUser, Public } from '@shared/auth';
+import { AcceptInvitationCommand } from '../../application/commands/accept-invitation.command';
 import { ChangePasswordCommand } from '../../application/commands/change-password.command';
+import { UpdatePreferencesCommand } from '../../application/commands/update-preferences.command';
+import { GetInvitationQuery } from '../../application/queries/get-invitation.query';
 import { LoginCommand } from '../../application/commands/login.command';
 import { LogoutCommand } from '../../application/commands/logout.command';
 import { RefreshSessionCommand } from '../../application/commands/refresh-session.command';
@@ -10,7 +13,11 @@ import { RegisterCommand } from '../../application/commands/register.command';
 import { GetUserByIdQuery } from '../../application/queries/get-user-by-id.query';
 import { IssuedSession } from '../../application/services/session-issuer.service';
 import { User } from '../../domain/entities/user.entity';
+import type { IInvitationPreview } from '@chantia/shared';
+import { AcceptInvitationDto } from '../dto/accept-invitation.dto';
 import { AuthSessionResponseDto } from '../dto/auth-session-response.dto';
+import { InvitationPreviewDto } from '../dto/invitation-response.dto';
+import { UpdatePreferencesDto } from '../dto/update-preferences.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { LoginDto } from '../dto/login.dto';
 import { LogoutDto } from '../dto/logout.dto';
@@ -32,7 +39,12 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @ApiOperation({ summary: 'Create an organization with its first admin, and sign in' })
+  @ApiOperation({
+    summary: 'Create an organization with its first admin, and sign in',
+    description:
+      'Closed by default — the product serves a single organization. Answers 404 unless ' +
+      'ALLOW_SELF_REGISTRATION=true. Accounts are created by invitation instead.',
+  })
   @ApiResponse({ status: 201, type: AuthSessionResponseDto })
   @ApiResponse({ status: 409, description: 'Email already used' })
   async register(
@@ -81,6 +93,58 @@ export class AuthController {
       new RefreshSessionCommand(dto.refreshToken, userAgent ?? null),
     );
     return AuthSessionResponseDto.fromIssuedSession(session);
+  }
+
+  @Public()
+  @Get('invitation/:token')
+  @ApiOperation({
+    summary: 'What the invitation page shows before asking for a password',
+    description: 'Public: the token is the credential. Returns only the invitee’s own details.',
+  })
+  @ApiResponse({ status: 200, type: InvitationPreviewDto })
+  @ApiResponse({ status: 401, description: 'Unknown, already used or expired' })
+  async invitation(@Param('token') token: string): Promise<InvitationPreviewDto> {
+    return this.queryBus.execute<GetInvitationQuery, IInvitationPreview>(
+      new GetInvitationQuery(token),
+    );
+  }
+
+  @Public()
+  @Post('accept-invitation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Set a password from an invitation link, and sign in',
+    description:
+      'Signs the person in straight away: somebody who has just chosen a password should ' +
+      'not be asked to type it again.',
+  })
+  @ApiResponse({ status: 200, type: AuthSessionResponseDto })
+  @ApiResponse({ status: 401, description: 'Unknown, already used or expired' })
+  async acceptInvitation(
+    @Body() dto: AcceptInvitationDto,
+    @Headers('user-agent') userAgent?: string,
+  ): Promise<AuthSessionResponseDto> {
+    const session = await this.commandBus.execute<AcceptInvitationCommand, IssuedSession>(
+      new AcceptInvitationCommand(dto.token, dto.password, userAgent ?? null),
+    );
+    return AuthSessionResponseDto.fromIssuedSession(session);
+  }
+
+  @Patch('preferences')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Change your own interface language',
+    description: 'Stored on the account, so it follows you from the desktop to the phone.',
+  })
+  @ApiResponse({ status: 200, type: CurrentUserResponseDto })
+  async updatePreferences(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdatePreferencesDto,
+  ): Promise<CurrentUserResponseDto> {
+    const user = await this.commandBus.execute<UpdatePreferencesCommand, User>(
+      new UpdatePreferencesCommand(userId, dto.locale),
+    );
+    return CurrentUserResponseDto.fromDomain(user);
   }
 
   @Post('logout')

@@ -92,6 +92,40 @@ export class SelfTargetedActionException extends HttpException {
   }
 }
 
+/** Invitation unknown, already accepted, expired, or for a disabled account. */
+export class InvalidInvitationException extends HttpException {
+  constructor() {
+    super(
+      {
+        message: 'This invitation link is no longer valid',
+        error: 'Unauthorized',
+        statusCode: HttpStatus.UNAUTHORIZED,
+      },
+      HttpStatus.UNAUTHORIZED,
+    );
+  }
+}
+
+/**
+ * Self-registration is closed.
+ *
+ * 404 rather than 403: the route does not exist as far as a caller is
+ * concerned, and saying "forbidden" would advertise that sign-up is a thing this
+ * deployment could do.
+ */
+export class RegistrationClosedException extends HttpException {
+  constructor() {
+    super(
+      {
+        message: 'Cannot POST /auth/register',
+        error: 'Not Found',
+        statusCode: HttpStatus.NOT_FOUND,
+      },
+      HttpStatus.NOT_FOUND,
+    );
+  }
+}
+
 const PASSWORD_RULE_MESSAGES: Record<PasswordRule, (minLength: number) => string> = {
   [PasswordRule.MIN_LENGTH]: (min) => `Password must be at least ${min} characters long`,
   [PasswordRule.UPPERCASE]: () => 'Password must contain an uppercase letter',

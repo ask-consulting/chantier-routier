@@ -1,5 +1,5 @@
 import { Prisma, User as PrismaUser } from '@prisma/client';
-import { UserRole } from '@chantia/shared';
+import { Locale, UserRole } from '@chantia/shared';
 import { User } from '../../domain/entities/user.entity';
 
 export class UserMapper {
@@ -14,6 +14,7 @@ export class UserMapper {
       role: row.role as UserRole,
       active: row.active,
       workerId: row.workerId,
+      locale: row.locale as Locale,
       lastLoginAt: row.lastLoginAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -31,6 +32,7 @@ export class UserMapper {
       role: user.role,
       active: user.active,
       workerId: user.workerId,
+      locale: user.locale,
       lastLoginAt: user.lastLoginAt,
     };
   }

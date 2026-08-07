@@ -30,7 +30,7 @@ export class LogoutHandler implements ICommandHandler<LogoutCommand> {
       return;
     }
 
-    const tokenHash = this.tokenIssuer.hashRefreshToken(command.refreshToken);
+    const tokenHash = this.tokenIssuer.hashToken(command.refreshToken);
     const stored = await this.refreshTokens.findByTokenHash(tokenHash);
 
     // Ownership is checked so one user cannot end another's session by
