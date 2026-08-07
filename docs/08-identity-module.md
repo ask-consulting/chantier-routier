@@ -81,6 +81,38 @@ besoin revenait.
 
 Les refresh tokens, eux, **sont** vérifiés en base et révoqués immédiatement.
 
+### Là où la fenêtre n'est pas acceptable
+
+Toutes les routes ne se valent pas pendant ces cinq minutes. Le partage n'est pas
+« lecture / écriture », c'est : **est-ce que l'effet survit au jeton ?**
+
+| | Effet |
+|---|---|
+| Lire des chantiers | s'arrête avec la fenêtre |
+| Se déconnecter, changer sa langue | inoffensif |
+| **Changer un mot de passe** | survit |
+| **Inviter quelqu'un, modifier un rôle** | survit |
+
+Le cas grave n'est pas le mot de passe, c'est l'invitation : un **administrateur
+désactivé** pourrait, dans ces cinq minutes, inviter un nouvel administrateur et
+se recréer un accès **permanent** depuis un jeton qui allait expirer. Une
+escalade de privilèges qui traverse la fenêtre.
+
+`FreshAccountGuard` relit le compte sur ces routes-là et refuse en `403`.
+
+**Il vit dans `identity/`, pas à côté de `JwtAuthGuard`.** Les opérations qui
+accordent ou modifient un accès sont, par définition, celles de ce contexte —
+c'est pourquoi les quatre routes concernées s'y trouvent toutes, et ce n'est pas
+une coïncidence. Le garde lit `app_users`, **sa propre table** : rien ne traverse
+de frontière, et le jour de l'extraction il part avec le contexte. L'API métier
+garde son guard sans état et ne fait aucun appel supplémentaire.
+
+Posé **au niveau du contrôleur** et non route par route : un nouvel endpoint de
+gestion de comptes est protégé parce qu'il existe, pas parce que quelqu'un y a
+pensé. Le prix est une lecture par clé primaire sur les routes de consultation
+qui n'en ont pas besoin — un échange équitable contre l'oubli silencieux d'une
+route d'écriture.
+
 ## 4. Permissions : la matrice `rôle → capacités`
 
 Une route se garde par la **capacité** qu'elle exige, jamais par la liste des rôles

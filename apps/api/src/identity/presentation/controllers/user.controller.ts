@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -23,6 +24,7 @@ import { UpdateUserCommand } from '../../application/commands/update-user.comman
 import { GetUserByIdQuery } from '../../application/queries/get-user-by-id.query';
 import { GetUsersQuery } from '../../application/queries/get-users.query';
 import { User } from '../../domain/entities/user.entity';
+import { FreshAccountGuard } from '../guards/fresh-account.guard';
 import { InviteUserDto } from '../dto/invite-user.dto';
 import { InvitationResponseDto } from '../dto/invitation-response.dto';
 import { GetUsersDto } from '../dto/get-users.dto';
@@ -40,6 +42,11 @@ import { UserResponseDto } from '../dto/user-response.dto';
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
+// Every route here grants or changes access, so none of them may be served on a
+// five-minute-old photograph of a deactivated account. At class level on
+// purpose: a new endpoint is guarded because it exists, not because somebody
+// remembered.
+@UseGuards(FreshAccountGuard)
 export class UserController {
   constructor(
     private readonly queryBus: QueryBus,

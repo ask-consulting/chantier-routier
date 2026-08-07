@@ -16,7 +16,6 @@ import {
   UserRepositoryPort,
 } from '../../domain/ports/user-repository.port';
 import {
-  AccountDisabledException,
   InvalidCredentialsException,
   WeakPasswordException,
 } from '../../infrastructure/exceptions/identity.exceptions';
@@ -65,17 +64,9 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
       throw new InvalidCredentialsException();
     }
 
-    // A deactivated account keeps a valid access token until it expires — the
-    // documented cost of a stateless guard (docs/08 §3). Within that window it
-    // could otherwise change its own credentials, and an admin re-enabling the
-    // account later would not know the password had moved. Login and
-    // accept-invitation already refuse here; this was the odd one out.
-    //
-    // Checked *after* the password, like login: a disabled account is only
-    // revealed to somebody who already knows its credentials.
-    if (!user.active) {
-      throw new AccountDisabledException();
-    }
+    // Deactivation is not checked here: `FreshAccountGuard` on the route refuses
+    // the request before it reaches this handler. Declarative rather than
+    // hand-written, so the next credential route cannot forget it.
 
     const violations = checkPasswordPolicy(data.newPassword, {
       minLength: this.config.minPasswordLength,

@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedUser, CurrentUser, Public } from '@shared/auth';
@@ -13,6 +24,7 @@ import { RegisterCommand } from '../../application/commands/register.command';
 import { GetUserByIdQuery } from '../../application/queries/get-user-by-id.query';
 import { IssuedSession } from '../../application/services/session-issuer.service';
 import { User } from '../../domain/entities/user.entity';
+import { FreshAccountGuard } from '../guards/fresh-account.guard';
 import type { IInvitationPreview } from '@chantia/shared';
 import { AcceptInvitationDto } from '../dto/accept-invitation.dto';
 import { AuthSessionResponseDto } from '../dto/auth-session-response.dto';
@@ -162,12 +174,16 @@ export class AuthController {
   @Post('change-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
+  // The only route here that changes a credential. Logout and preferences are
+  // harmless on a deactivated account, and the rest are public.
+  @UseGuards(FreshAccountGuard)
   @ApiOperation({
     summary: 'Change your own password',
     description: 'Every session is revoked, including the current one: sign in again after this.',
   })
   @ApiResponse({ status: 204, description: 'Password changed, sessions revoked' })
   @ApiResponse({ status: 401, description: 'Current password does not match' })
+  @ApiResponse({ status: 403, description: 'Account deactivated' })
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body() dto: ChangePasswordDto,

@@ -31,6 +31,7 @@ import { UserRepository } from './infrastructure/repositories/user.repository';
 import { JwtTokenIssuer } from './infrastructure/security/jwt-token-issuer';
 import { ScryptPasswordHasher } from './infrastructure/security/scrypt-password-hasher';
 import { AuthController } from './presentation/controllers/auth.controller';
+import { FreshAccountGuard } from './presentation/guards/fresh-account.guard';
 import { UserController } from './presentation/controllers/user.controller';
 
 const CommandHandlers = [
@@ -75,6 +76,7 @@ const Adapters = [
   providers: [
     IdentityPrismaService,
     SessionIssuer,
+    FreshAccountGuard,
     ...CommandHandlers,
     ...QueryHandlers,
     ...Adapters,
