@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { WorksiteStatus } from '@chantier/shared';
+import { WorksiteStatus } from '@chantia/shared';
 
 export class GetWorksitesDto {
   @ApiPropertyOptional({ minimum: 1, default: 1 })

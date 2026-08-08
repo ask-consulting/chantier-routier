@@ -1,0 +1,38 @@
+# Development image for the NestJS API (hot-reload).
+# Build context is the repository root (see docker-compose.dev.yml).
+#
+# Installs all dependencies (incl. dev) and builds the shared package once.
+# The API source is mounted from the host at runtime, and `pnpm dev`
+# (prisma generate + nest start --watch) recompiles/restarts on every edit —
+# no image rebuild needed for day-to-day code changes.
+
+FROM node:22-alpine
+
+# Prisma needs OpenSSL to fetch/run its query engine.
+RUN apk add --no-cache openssl
+ENV PNPM_HOME=/root/.local/share/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+
+ENV NODE_ENV=development
+WORKDIR /app
+
+# Copy workspace manifests first for better layer caching.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+
+RUN pnpm install --frozen-lockfile
+
+# Copy sources. apps/api/src is overlaid by a host bind mount at runtime;
+# the shared package is built here since the API imports it from its dist.
+COPY packages/shared packages/shared
+COPY apps/api apps/api
+
+RUN pnpm --filter @chantia/shared build
+
+WORKDIR /app/apps/api
+EXPOSE 8080
+
+# Apply pending migrations, then start Nest in watch mode.
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm dev"]

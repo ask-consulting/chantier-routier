@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { calculateActualCost, IWorksiteCosts } from '@chantier/shared';
+import { calculateActualCost, IWorksiteCosts } from '@chantia/shared';
 import { ResourceNotFoundException } from '@shared/infrastructure/exceptions/not-found.exception';
 import {
   WORKSITE_REPOSITORY_PORT,

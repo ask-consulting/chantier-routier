@@ -7,7 +7,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { ICreateWorksite, WorksiteStatus } from '@chantier/shared';
+import { ICreateWorksite, WorksiteStatus } from '@chantia/shared';
 
 export class CreateWorksiteDto implements ICreateWorksite {
   @ApiProperty({ example: 'RN7-2026' })

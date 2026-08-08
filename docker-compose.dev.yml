@@ -1,0 +1,20 @@
+# Dev overlay: hot-reload for the API without rebuilding on every code change.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+#   (or: make up-dev)
+#
+# Builds apps/api/Dockerfile.dev (Nest in watch mode) and mounts the source from
+# the host. Editing files under apps/api/src recompiles and restarts the server
+# live. The `--build` on startup only (re)builds the dev image; day-to-day code
+# changes reload via the mounted volumes, no rebuild needed.
+
+services:
+  api:
+    build:
+      dockerfile: apps/api/Dockerfile.dev
+    image: chantia-api:dev
+    # Mount only source dirs — NOT node_modules — so the container keeps its own
+    # Alpine/musl-native binaries (Prisma engine, esbuild) intact.
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/prisma:/app/apps/api/prisma

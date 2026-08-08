@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@shared/prisma/prisma.service';
+import { Inject, Injectable } from '@nestjs/common';
+import { TENANT_PRISMA, TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
 import { SearchParams, SearchResult } from '@shared/domain/search.types';
 import { getPrismaPagination } from '@shared/infrastructure/repositories/search-params';
 import { buildPrismaSearchQuery } from '@shared/infrastructure/repositories/prisma-search.helper';
@@ -12,19 +12,21 @@ import { WorksiteMapper } from '../mappers/worksite.mapper';
 
 @Injectable()
 export class WorksiteRepository implements WorksiteRepositoryPort {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(TENANT_PRISMA)
+    private readonly prisma: TenantPrismaClient,
+  ) {}
 
-  async search(organizationId: string, params: SearchParams): Promise<SearchResult<Worksite>> {
+  async search(params: SearchParams): Promise<SearchResult<Worksite>> {
     const { skip, take, page } = getPrismaPagination(params);
+    // No tenant clause here: the extension adds it to both queries below.
     const { where, orderBy } = buildPrismaSearchQuery(params, 'createdAt', {
       searchableFields: ['name', 'code', 'client'],
     });
 
-    const finalWhere = { ...where, organizationId };
-
     const [rows, total] = await Promise.all([
-      this.prisma.worksite.findMany({ where: finalWhere, orderBy, skip, take }),
-      this.prisma.worksite.count({ where: finalWhere }),
+      this.prisma.worksite.findMany({ where, orderBy, skip, take }),
+      this.prisma.worksite.count({ where }),
     ]);
 
     return {

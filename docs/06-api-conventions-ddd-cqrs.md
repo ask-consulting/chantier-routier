@@ -75,7 +75,7 @@ presentation ──► application ──► domain ◄── infrastructure
 
 ## 6. Calculs métier partagés
 
-Les calculs **purs et testables** vivent dans `packages/shared` (`@chantier/shared`), pas
+Les calculs **purs et testables** vivent dans `packages/shared` (`@chantia/shared`), pas
 dans l'API. L'API les **appelle** depuis un query handler ; le mobile les **réutilise**
 pour recalculer hors-ligne. Exemple : `calculateActualCost()` dans
 `packages/shared/src/costs/worksite-costs.ts`, appelé par `GetWorksiteCostsHandler`.
@@ -86,11 +86,44 @@ pour recalculer hors-ligne. Exemple : `calculateActualCost()` dans
   format `{ field, code, message }`).
 - Ressource absente → `ResourceNotFoundException` (HTTP 404), levée dans les handlers.
 
-## 8. Multi-tenant
+## 8. Multi-tenant et autorisation
 
-Chaque ligne métier porte un `organizationId`. Tant que le module Auth n'existe pas,
-l'`organizationId` transite par le header `x-organization-id` (placeholder). À terme il
-viendra du contexte d'authentification (JWT + Supabase Auth) et le RLS Postgres fera foi.
+Chaque ligne métier porte un `organizationId`, qui vient **du token d'accès vérifié**,
+jamais de la requête (le header `x-organization-id` était un bouchon, il a été supprimé).
+
+Mais il n'apparaît **pas** dans les handlers : une extension Prisma l'injecte dans toute
+requête visant une table qui porte la colonne, dès lors que l'appelant est authentifié.
+Les repositories consomment le client filtré via `@Inject(TENANT_PRISMA)`.
+
+```ts
+// Lecture — aucun tenant nulle part : le filtre est appliqué en dessous.
+async execute(query: GetWorksiteByIdQuery): Promise<Worksite> {
+  const worksite = await this.repository.findById(query.id);
+  if (!worksite) throw new ResourceNotFoundException('Worksite', query.id);
+  return worksite;
+}
+
+// Création — le tenant est nommé, parce que l'agrégat porte la colonne.
+async create(@CurrentUser('organizationId') organizationId: string, @Body() dto: CreateWorksiteDto) { … }
+```
+
+Trois règles à appliquer dans **tout** nouveau module :
+
+- Le repository injecte `TENANT_PRISMA`, pas `PrismaService`.
+- Une route se garde par la **capacité** qu'elle exige (`@RequirePermissions`), pas par
+  la liste des rôles qui la détiennent. La matrice vit dans `@chantia/shared`.
+- Une permission donne le **verbe**, pas le **périmètre** : le tenant est pris en charge
+  par l'extension, mais restreindre les lignes à l'appelant lui-même (« ses » pointages)
+  reste le travail du query handler. Une ressource introuvable renvoie `404`, pas `403`.
+
+Détail complet : `09-multi-tenant.md`.
+
+## 8 bis. Nommage en base
+
+La base parle `snake_case` (tables au pluriel, colonnes, contraintes préfixées
+`pk_`/`fk_`/`uq_`/`ix_`), le code parle `camelCase` ; Prisma fait le pont via `@@map` et
+`@map`. Voir `10-conventions-base-de-donnees.md`, avec la check-list du nouveau modèle
+et la marche à suivre pour renommer sans perdre de données.
 
 ## 9. Générer un nouveau module
 
@@ -101,8 +134,8 @@ nom d'entité et des champs. Voir le module `worksite` comme référence vivante
 ## 10. Commandes utiles
 
 ```bash
-pnpm --filter @chantier/api dev            # API en watch (prisma generate + nest start)
-pnpm --filter @chantier/api prisma:migrate # créer/appliquer une migration
-pnpm --filter @chantier/api typecheck
-pnpm --filter @chantier/shared test        # tests des calculs métier
+pnpm --filter @chantia/api dev            # API en watch (prisma generate + nest start)
+pnpm --filter @chantia/api prisma:migrate # créer/appliquer une migration
+pnpm --filter @chantia/api typecheck
+pnpm --filter @chantia/shared test        # tests des calculs métier
 ```
