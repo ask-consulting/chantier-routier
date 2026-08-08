@@ -68,5 +68,30 @@
         "contextual": "Le mot de passe ne doit pas contenir votre nom, votre email ni le nom de votre organisation"
       }
     }
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "signingIn": "Connexion…",
+    "invalidCredentials": "Email ou mot de passe incorrect",
+    "disabled": "Ce compte a été désactivé",
+    "noSignUp": "Les comptes sont créés sur invitation. Contactez votre administrateur."
+  },
+  "invitation": {
+    "greeting": "Bonjour {firstName}",
+    "intro": "Vous êtes invité à rejoindre {organization}. Choisissez un mot de passe pour activer votre compte.",
+    "choosePassword": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordHint": "Au moins 10 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.",
+    "activate": "Activer mon compte",
+    "activating": "Activation…",
+    "mismatch": "Les deux mots de passe ne correspondent pas",
+    "expired": "Ce lien d’invitation n’est plus valide",
+    "expiredHelp": "Il a peut-être déjà été utilisé, ou il a expiré. Demandez une nouvelle invitation à votre administrateur."
+  },
+  "session": {
+    "signOut": "Se déconnecter"
   }
 }

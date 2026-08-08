@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import type { IWorksite } from '@chantia/shared';
 import { fetchWorksites } from '@/lib/api';
+import { RequireSession } from '@/components/auth/require-session';
 import {
   Alert,
   Badge,
@@ -19,7 +20,7 @@ import {
 import { WORKSITE_STATUS_TONE, formatAmount } from '@/lib/domain-display';
 import type { Locale } from '@/i18n/config';
 
-export default function WorksitesPage() {
+function Worksites() {
   const t = useTranslations('worksites');
   // Status labels are translations, so they come from the message bundle; the
   // tone that goes with them stays in `domain-display.ts`.
@@ -96,5 +97,13 @@ export default function WorksitesPage() {
         </Table>
       )}
     </section>
+  );
+}
+
+export default function WorksitesPage() {
+  return (
+    <RequireSession>
+      <Worksites />
+    </RequireSession>
   );
 }
