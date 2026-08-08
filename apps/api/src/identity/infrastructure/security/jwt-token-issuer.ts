@@ -6,7 +6,7 @@ import { IAccessTokenClaims } from '@chantia/shared';
 import { IdentityConfig } from '../../config/identity.config';
 import {
   IssuedAccessToken,
-  IssuedRefreshToken,
+  IssuedOpaqueToken,
   TokenIssuerPort,
 } from '../../domain/ports/token-issuer.port';
 
@@ -48,17 +48,24 @@ export class JwtTokenIssuer implements TokenIssuerPort {
     return { token, expiresIn: this.config.accessTokenTtl };
   }
 
-  issueRefreshToken(): IssuedRefreshToken {
-    const token = randomBytes(REFRESH_TOKEN_BYTES).toString('base64url');
-
-    return {
-      token,
-      tokenHash: this.hashRefreshToken(token),
-      expiresAt: new Date(Date.now() + this.config.refreshTokenTtl * 1000),
-    };
+  issueRefreshToken(): IssuedOpaqueToken {
+    return this.issueOpaque(this.config.refreshTokenTtl);
   }
 
-  hashRefreshToken(token: string): string {
+  issueInvitationToken(): IssuedOpaqueToken {
+    return this.issueOpaque(this.config.invitationTtl);
+  }
+
+  hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
+  }
+
+  private issueOpaque(ttlSeconds: number): IssuedOpaqueToken {
+    const token = randomBytes(REFRESH_TOKEN_BYTES).toString('base64url');
+    return {
+      token,
+      tokenHash: this.hashToken(token),
+      expiresAt: new Date(Date.now() + ttlSeconds * 1000),
+    };
   }
 }

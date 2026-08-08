@@ -10,19 +10,23 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Permission } from '@chantia/shared';
 import { AuthenticatedUser, CurrentUser, RequirePermissions } from '@shared/auth';
 import { SearchResult } from '@shared/domain/search.types';
-import { CreateUserCommand } from '../../application/commands/create-user.command';
+import { InviteUserCommand } from '../../application/commands/invite-user.command';
+import type { IssuedInvitation } from '../../application/commands/invite-user.handler';
 import { DeleteUserCommand } from '../../application/commands/delete-user.command';
 import { UpdateUserCommand } from '../../application/commands/update-user.command';
 import { GetUserByIdQuery } from '../../application/queries/get-user-by-id.query';
 import { GetUsersQuery } from '../../application/queries/get-users.query';
 import { User } from '../../domain/entities/user.entity';
-import { CreateUserDto } from '../dto/create-user.dto';
+import { FreshAccountGuard } from '../guards/fresh-account.guard';
+import { InviteUserDto } from '../dto/invite-user.dto';
+import { InvitationResponseDto } from '../dto/invitation-response.dto';
 import { GetUsersDto } from '../dto/get-users.dto';
 import { PaginatedUserResponseDto } from '../dto/paginated-user-response.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -38,6 +42,11 @@ import { UserResponseDto } from '../dto/user-response.dto';
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
+// Every route here grants or changes access, so none of them may be served on a
+// five-minute-old photograph of a deactivated account. At class level on
+// purpose: a new endpoint is guarded because it exists, not because somebody
+// remembered.
+@UseGuards(FreshAccountGuard)
 export class UserController {
   constructor(
     private readonly queryBus: QueryBus,
@@ -69,17 +78,23 @@ export class UserController {
 
   @Post()
   @RequirePermissions(Permission.USER_MANAGE)
-  @ApiOperation({ summary: 'Create an account in the organization' })
-  @ApiResponse({ status: 201, type: UserResponseDto })
+  @ApiOperation({
+    summary: 'Invite somebody into the organization',
+    description:
+      'Creates the account without a password and returns a single-use link. Nothing is ' +
+      'sent: delivery belongs to a notification module that does not exist yet, so the ' +
+      'link is handed back for the admin to pass on. Shown once — only its hash is stored.',
+  })
+  @ApiResponse({ status: 201, type: InvitationResponseDto })
   @ApiResponse({ status: 409, description: 'Email already used' })
-  async create(
-    @CurrentUser('organizationId') organizationId: string,
-    @Body() dto: CreateUserDto,
-  ): Promise<UserResponseDto> {
-    const user = await this.commandBus.execute<CreateUserCommand, User>(
-      new CreateUserCommand(organizationId, dto),
+  async invite(
+    @CurrentUser() caller: AuthenticatedUser,
+    @Body() dto: InviteUserDto,
+  ): Promise<InvitationResponseDto> {
+    const issued = await this.commandBus.execute<InviteUserCommand, IssuedInvitation>(
+      new InviteUserCommand(caller.organizationId, dto, caller.id),
     );
-    return UserResponseDto.fromDomain(user);
+    return InvitationResponseDto.fromIssued(issued);
   }
 
   @Get(':id')

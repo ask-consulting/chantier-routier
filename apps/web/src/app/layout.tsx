@@ -8,6 +8,7 @@ import { THEME_INIT_SCRIPT } from '@/components/theme/theme-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { LocaleSwitcher } from '@/components/i18n/locale-switcher';
 import { Logo } from '@/components/brand';
+import { UserMenu } from '@/components/auth/user-menu';
 import { directionOf, type Locale } from '@/i18n/config';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <div className="mx-auto flex max-w-content items-center justify-between px-gutter py-3 lg:px-gutter-lg">
                 <Logo />
                 <div className="flex items-center gap-2">
+                  <UserMenu />
                   <LocaleSwitcher />
                   <ThemeToggle />
                 </div>

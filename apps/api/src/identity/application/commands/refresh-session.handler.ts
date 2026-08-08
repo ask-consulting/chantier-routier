@@ -37,7 +37,7 @@ export class RefreshSessionHandler implements ICommandHandler<RefreshSessionComm
   ) {}
 
   async execute(command: RefreshSessionCommand): Promise<IssuedSession> {
-    const tokenHash = this.tokenIssuer.hashRefreshToken(command.refreshToken);
+    const tokenHash = this.tokenIssuer.hashToken(command.refreshToken);
 
     const stored = await this.refreshTokens.findByTokenHash(tokenHash);
     if (!stored) {

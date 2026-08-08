@@ -36,6 +36,15 @@ datasource db {
 // Identity context — owns tenants, accounts and refresh sessions.
 // ---------------------------------------------------------------------------
 
+/// Interface language of an account. Mirrors `Locale` in @chantia/shared.
+enum UserLocale {
+  fr
+  ar
+
+  @@map("user_locale")
+  @@schema("identity")
+}
+
 enum UserRole {
   admin
   site_manager
@@ -71,7 +80,9 @@ model User {
   /// exactly one organization, so login needs no tenant selector.
   email          String    @unique(map: "uq_app_users_email")
   /// Encoded as `scrypt$N$r$p$salt$key` — never leaves the identity context.
-  passwordHash   String    @map("password_hash")
+  /// NULL between the invitation and its acceptance: an invited account exists,
+  /// carries a role, and cannot yet authenticate.
+  passwordHash   String?   @map("password_hash")
   firstName      String    @map("first_name")
   lastName       String    @map("last_name")
   role           UserRole  @default(worker)
@@ -80,12 +91,16 @@ model User {
   /// the identity context stays extractable. Nulled by the application when the
   /// worker is deleted.
   workerId       String?   @unique(map: "uq_app_users_worker_id") @map("worker_id") @db.Uuid
+  /// Interface language. A preference of the person, not of their browser, so it
+  /// follows them from the office desktop to the phone on site.
+  locale         UserLocale @default(fr)
   lastLoginAt    DateTime? @map("last_login_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "fk_app_users_organizations")
   refreshTokens RefreshToken[]
+  invitations   Invitation[]
 
   @@index([organizationId], map: "ix_app_users_organization_id")
   @@map("app_users")
@@ -112,6 +127,35 @@ model RefreshToken {
   @@index([userId], map: "ix_refresh_tokens_user_id")
   @@index([expiresAt], map: "ix_refresh_tokens_expires_at")
   @@map("refresh_tokens")
+  @@schema("identity")
+}
+
+/// An invitation to join the organization.
+///
+/// Same shape as a refresh token, for the same reason: the clear-text token is
+/// handed over once and only its SHA-256 is kept, so a database leak yields
+/// nothing usable. Single-use and time-limited.
+///
+/// Delivery is deliberately absent. The API issues the token and emits an event;
+/// sending it — email, SMS, anything else — belongs to a notification module
+/// that does not exist yet and must not be assumed here.
+model Invitation {
+  id          String    @id(map: "pk_invitations") @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  /// SHA-256 of the opaque token. The token itself is never persisted.
+  tokenHash   String    @unique(map: "uq_invitations_token_hash") @map("token_hash")
+  expiresAt   DateTime  @map("expires_at")
+  acceptedAt  DateTime? @map("accepted_at")
+  /// Who invited them. A plain id, not a foreign key: a second relation to
+  /// `User` would need naming on both sides for an audit field nothing joins on.
+  invitedById String    @map("invited_by_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_invitations_app_users")
+
+  @@index([userId], map: "ix_invitations_user_id")
+  @@index([expiresAt], map: "ix_invitations_expires_at")
+  @@map("invitations")
   @@schema("identity")
 }
 

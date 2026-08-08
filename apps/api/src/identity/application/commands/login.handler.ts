@@ -31,7 +31,10 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     const email = User.normalizeEmail(data.email);
 
     const user = await this.users.findByEmail(email);
-    if (!user) {
+    // An invited account that has never accepted is treated exactly like an
+    // unknown email — same error, same cost. Saying "this account exists but has
+    // not set a password yet" would confirm the address to anyone probing.
+    if (!user?.passwordHash) {
       // Burn the same CPU a real verification would: returning immediately here
       // makes "unknown email" measurably faster than "wrong password", which is
       // all an attacker needs to harvest valid addresses.
