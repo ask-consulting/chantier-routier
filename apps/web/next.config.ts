@@ -7,6 +7,6 @@ const nextConfig: NextConfig = {
 };
 
 /** Points the plugin at our config, which resolves the locale from a cookie. */
-const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+const withNextIntl = createNextIntlPlugin('./src/shared/i18n/request.ts');
 
 export default withNextIntl(nextConfig);

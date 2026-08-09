@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { callApi } from '@/lib/api-server';
-import { clearRefreshToken, readRefreshToken } from '@/lib/session-cookie';
+import { callApi } from '@/shared/api/api-server';
+import { clearRefreshToken, readRefreshToken } from '@/shared/api/session-cookie';
 
 /**
  * Ends the session on both sides.

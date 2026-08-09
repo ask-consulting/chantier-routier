@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { ApiCallError, REFRESH_MAX_AGE, callApi, type AuthSession } from '@/lib/api-server';
-import { clearRefreshToken, readRefreshToken, setRefreshToken } from '@/lib/session-cookie';
+import { ApiCallError, REFRESH_MAX_AGE, callApi, type AuthSession } from '@/shared/api/api-server';
+import { clearRefreshToken, readRefreshToken, setRefreshToken } from '@/shared/api/session-cookie';
 
 /**
  * Trades the stored refresh token for a new access token.
