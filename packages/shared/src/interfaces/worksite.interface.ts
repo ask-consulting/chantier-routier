@@ -13,7 +13,16 @@ export interface IWorksite {
   plannedStartDate: string | null;
   plannedEndDate: string | null;
   status: WorksiteStatus;
-  totalBudget: number | null;
+  /**
+   * Optional because the API **omits the field entirely** for a caller without
+   * `budget:read` — field staff get the worksite, not its margin.
+   *
+   * `undefined` therefore means "not allowed to know", while `null` means "no
+   * budget set". Two different facts, and worth keeping distinguishable: a UI
+   * that renders `null` as "—" is right to do so, and would be wrong to render
+   * the same dash for a figure it simply was not shown.
+   */
+  totalBudget?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }

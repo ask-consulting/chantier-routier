@@ -1,7 +1,17 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IWorksiteCosts, Permission } from '@chantia/shared';
+import { IWorksiteCosts, Permission, UserRole, roleHasEveryPermission } from '@chantia/shared';
 import { CurrentUser, RequirePermissions } from '@shared/auth';
 import { SearchResult } from '@shared/domain/search.types';
 import { CreateWorksiteCommand } from '../../application/commands/create-worksite.command';
@@ -10,7 +20,7 @@ import { GetWorksiteCostsQuery } from '../../application/queries/get-worksite-co
 import { GetWorksitesQuery } from '../../application/queries/get-worksites.query';
 import { Worksite } from '../../domain/entities/worksite.entity';
 import { CreateWorksiteDto } from '../dto/create-worksite.dto';
-import { GetWorksitesDto } from '../dto/get-worksites.dto';
+import { BUDGET_SORT_FIELDS, GetWorksitesDto } from '../dto/get-worksites.dto';
 import { PaginatedWorksiteResponseDto } from '../dto/paginated-worksite-response.dto';
 import { WorksiteCostsResponseDto } from '../dto/worksite-costs-response.dto';
 import { WorksiteResponseDto } from '../dto/worksite-response.dto';
@@ -33,7 +43,19 @@ export class WorksiteController {
   @RequirePermissions(Permission.WORKSITE_READ)
   @ApiOperation({ summary: 'List worksites for the organization' })
   @ApiResponse({ status: 200, type: PaginatedWorksiteResponseDto })
-  async findAll(@Query() dto: GetWorksitesDto): Promise<PaginatedWorksiteResponseDto> {
+  async findAll(
+    @CurrentUser('role') role: UserRole,
+    @Query() dto: GetWorksitesDto,
+  ): Promise<PaginatedWorksiteResponseDto> {
+    const includeBudget = this.mayReadBudget(role);
+
+    // Sorting is a read of its own: ordering by budget discloses the ranking
+    // without ever printing a figure. Refused rather than silently ignored, so a
+    // caller learns the rule instead of getting a list in a puzzling order.
+    if (!includeBudget && dto.sortField && BUDGET_SORT_FIELDS.includes(dto.sortField)) {
+      throw new ForbiddenException(`Sorting by ${dto.sortField} requires ${Permission.BUDGET_READ}`);
+    }
+
     const result = await this.queryBus.execute<GetWorksitesQuery, SearchResult<Worksite>>(
       new GetWorksitesQuery({
         page: dto.page,
@@ -45,11 +67,23 @@ export class WorksiteController {
     );
 
     return {
-      items: result.items.map((w) => WorksiteResponseDto.fromDomain(w)),
+      items: result.items.map((w) => WorksiteResponseDto.fromDomain(w, { includeBudget })),
       total: result.total,
       page: result.page,
       limit: result.limit,
     };
+  }
+
+  /**
+   * Whether this caller may see money on a worksite.
+   *
+   * `budget:read` is split from `worksite:read` on purpose: a foreman needs the
+   * site without its margin. Hiding the column in the interface was never enough
+   * — the figure still travelled in the payload, and reading it took opening the
+   * network tab. This is where it is actually withheld.
+   */
+  private mayReadBudget(role: UserRole): boolean {
+    return roleHasEveryPermission(role, [Permission.BUDGET_READ]);
   }
 
   @Post()
@@ -62,23 +96,35 @@ export class WorksiteController {
     // extension overwrites it with the token's value regardless, so a wrong
     // value here cannot plant a row in someone else's organization.
     @CurrentUser('organizationId') organizationId: string,
+    @CurrentUser('role') role: UserRole,
     @Body() dto: CreateWorksiteDto,
   ): Promise<WorksiteResponseDto> {
     const worksite = await this.commandBus.execute<CreateWorksiteCommand, Worksite>(
       new CreateWorksiteCommand(organizationId, dto),
     );
-    return WorksiteResponseDto.fromDomain(worksite);
+    // Everyone holding `worksite:manage` today also holds `budget:read`, so this
+    // never actually withholds anything. It is here so that re-balancing
+    // `ROLE_PERMISSIONS` later cannot quietly turn the creation response into
+    // the one endpoint that still leaks a budget.
+    return WorksiteResponseDto.fromDomain(worksite, {
+      includeBudget: this.mayReadBudget(role),
+    });
   }
 
   @Get(':id')
   @RequirePermissions(Permission.WORKSITE_READ)
   @ApiOperation({ summary: 'Get a worksite by id' })
   @ApiResponse({ status: 200, type: WorksiteResponseDto })
-  async findOne(@Param('id') id: string): Promise<WorksiteResponseDto> {
+  async findOne(
+    @CurrentUser('role') role: UserRole,
+    @Param('id') id: string,
+  ): Promise<WorksiteResponseDto> {
     const worksite = await this.queryBus.execute<GetWorksiteByIdQuery, Worksite>(
       new GetWorksiteByIdQuery(id),
     );
-    return WorksiteResponseDto.fromDomain(worksite);
+    return WorksiteResponseDto.fromDomain(worksite, {
+      includeBudget: this.mayReadBudget(role),
+    });
   }
 
   @Get(':id/costs')
