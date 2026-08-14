@@ -4,12 +4,12 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import './globals.css';
 import { Providers } from './providers';
 import { arabicFont } from './fonts';
-import { THEME_INIT_SCRIPT } from '@/components/theme/theme-provider';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { LocaleSwitcher } from '@/components/i18n/locale-switcher';
-import { Logo } from '@/components/brand';
-import { UserMenu } from '@/components/auth/user-menu';
-import { directionOf, type Locale } from '@/i18n/config';
+import { THEME_INIT_SCRIPT } from '@/shared/theme/theme-provider';
+import { ThemeToggle } from '@/shared/theme/theme-toggle';
+import { LocaleSwitcher } from '@/shared/i18n/locale-switcher';
+import { Logo } from '@/shared/brand';
+import { UserMenu } from '@/features/auth';
+import { directionOf, type Locale } from '@/shared/i18n/config';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app');

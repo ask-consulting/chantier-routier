@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, isLocale } from '@/i18n/config';
-import { ApiCallError, REFRESH_MAX_AGE, callApi, type AuthSession } from '@/lib/api-server';
-import { setRefreshToken } from '@/lib/session-cookie';
+import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, isLocale } from '@/shared/i18n/config';
+import { ApiCallError, REFRESH_MAX_AGE, callApi, type AuthSession } from '@/shared/api/api-server';
+import { setRefreshToken } from '@/shared/api/session-cookie';
 
 /**
  * Sets a password from an invitation link and opens the session.

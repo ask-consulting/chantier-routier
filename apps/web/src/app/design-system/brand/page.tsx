@@ -1,7 +1,7 @@
 'use client';
 
-import { BrandIllustration, Logo, LogoMark } from '@/components/brand';
-import { Alert, Button, Card, CardBody, CardHeader, CardTitle, Snippet } from '@/components/ui';
+import { BrandIllustration, Logo, LogoMark } from '@/shared/brand';
+import { Alert, Button, Card, CardBody, CardHeader, CardTitle, Snippet } from '@/shared/ui';
 
 /**
  * How to use the mark. The living half of docs/11-design-system.md §11.
@@ -33,7 +33,7 @@ export default function BrandPage() {
             <Logo />
             <Logo size={40} className="text-2xl" />
           </div>
-          <Snippet>{`import { Logo } from '@/components/brand';
+          <Snippet>{`import { Logo } from '@/shared/brand';
 
 <Logo />                 // en-tête : symbole + « Chantia »
 <Logo size={40} />       // plus grand
@@ -59,7 +59,7 @@ export default function BrandPage() {
               </div>
             ))}
           </div>
-          <Snippet>{`import { LogoMark } from '@/components/brand';
+          <Snippet>{`import { LogoMark } from '@/shared/brand';
 
 <LogoMark size={24} />
 <LogoMark size={40} mono />       // une seule couleur, prend celle du texte
@@ -119,7 +119,7 @@ export default function BrandPage() {
               </p>
             </div>
           </div>
-          <Snippet>{`import { BrandIllustration } from '@/components/brand';
+          <Snippet>{`import { BrandIllustration } from '@/shared/brand';
 
 // page de connexion
 <BrandIllustration size={240} />
@@ -165,8 +165,8 @@ export default function BrandPage() {
           <CardTitle>Exemple — une page de connexion</CardTitle>
         </CardHeader>
         <CardBody>
-          <Snippet>{`import { BrandIllustration, Logo } from '@/components/brand';
-import { Button, Card, CardBody, Field } from '@/components/ui';
+          <Snippet>{`import { BrandIllustration, Logo } from '@/shared/brand';
+import { Button, Card, CardBody, Field } from '@/shared/ui';
 
 export default function LoginPage() {
   return (

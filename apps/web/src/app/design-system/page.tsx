@@ -18,12 +18,13 @@ import {
   THead,
   TRow,
   Table,
-} from '@/components/ui';
-import type { Tone } from '@/components/ui/badge';
-import * as Icons from '@/lib/icons';
-import { WORKSITE_STATUS_TONE, formatAmount, varianceTone } from '@/lib/domain-display';
+} from '@/shared/ui';
+import type { Tone } from '@/shared/ui/badge';
+import * as Icons from '@/shared/lib/icons';
+import { WORKSITE_STATUS_TONE, varianceTone } from '@/features/worksites';
+import { formatAmount } from '@/shared/lib/format';
 import { useLocale, useTranslations } from 'next-intl';
-import type { Locale } from '@/i18n/config';
+import type { Locale } from '@/shared/i18n/config';
 
 /**
  * The living reference for the design system.
@@ -162,7 +163,7 @@ export default function DesignSystemPage() {
             </Button>
           </CardBody>
         </Card>
-        <Snippet>{`import { Button } from '@/components/ui';
+        <Snippet>{`import { Button } from '@/shared/ui';
 
 <Button variant="primary">Enregistrer</Button>   // un seul par vue
 <Button variant="secondary">Annuler</Button>     // le défaut
@@ -185,8 +186,8 @@ export default function DesignSystemPage() {
             ))}
           </CardBody>
         </Card>
-        <Snippet>{`import { Badge } from '@/components/ui';
-import { WORKSITE_STATUS } from '@/lib/domain-display';
+        <Snippet>{`import { Badge } from '@/shared/ui';
+import { WORKSITE_STATUS } from '@/features/worksites';
 
 const tStatus = useTranslations('worksiteStatus');
 
@@ -238,7 +239,7 @@ const tStatus = useTranslations('worksiteStatus');
           <Alert tone="success">Chantier créé.</Alert>
           <Alert tone="danger">Impossible de charger les chantiers : le serveur est injoignable.</Alert>
         </div>
-        <Snippet>{`import { Alert } from '@/components/ui';
+        <Snippet>{`import { Alert } from '@/shared/ui';
 
 <Alert tone="danger">Impossible de charger les chantiers.</Alert>
 <Alert tone="signal">Ce chantier dépasse 90 % de son budget.</Alert>
@@ -262,7 +263,7 @@ const tStatus = useTranslations('worksiteStatus');
             />
           </CardBody>
         </Card>
-        <Snippet>{`import { Field } from '@/components/ui';
+        <Snippet>{`import { Field } from '@/shared/ui';
 
 <Field label="Code chantier" placeholder="RN7-2026" hint="Unique dans l'organisation." />
 <Field label="Mot de passe" type="password" error={errors.password} />
@@ -315,7 +316,7 @@ const tStatus = useTranslations('worksiteStatus');
             ))}
           </tbody>
         </Table>
-        <Snippet>{`import { Table, THead, TH, TRow, TD } from '@/components/ui';
+        <Snippet>{`import { Table, THead, TH, TRow, TD } from '@/shared/ui';
 
 <Table>
   <THead>
@@ -366,7 +367,7 @@ const tStatus = useTranslations('worksiteStatus');
             </Alert>
           </CardBody>
         </Card>
-        <Snippet>{`import { WorksiteIcon, RollerIcon } from '@/lib/icons';
+        <Snippet>{`import { WorksiteIcon, RollerIcon } from '@/shared/lib/icons';
 
 <WorksiteIcon className="size-4 text-fg-muted" aria-hidden />
 <RollerIcon size={32} strokeWidth={1.5} />
@@ -388,7 +389,7 @@ const tStatus = useTranslations('worksiteStatus');
           </CardHeader>
           <CardBody className="text-sm text-fg-muted">Le contenu vit ici.</CardBody>
         </Card>
-        <Snippet>{`import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui';
+        <Snippet>{`import { Card, CardHeader, CardTitle, CardBody } from '@/shared/ui';
 
 <Card>
   <CardHeader>
@@ -420,7 +421,7 @@ const tStatus = useTranslations('worksiteStatus');
             action={<Button variant="secondary">Saisir un pointage</Button>}
           />
         </div>
-        <Snippet>{`import { Skeleton, EmptyState } from '@/components/ui';
+        <Snippet>{`import { Skeleton, EmptyState } from '@/shared/ui';
 
 // Chargement : à la hauteur finale des lignes, pour que rien ne saute
 {isPending && <Skeleton className="h-12" />}
