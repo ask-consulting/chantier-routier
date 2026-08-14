@@ -1,55 +1,23 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { BrandIllustration, Logo } from '@/shared/brand';
 import { Alert, Button, Card, CardBody, Field } from '@/shared/ui';
-import { ApiError } from '@/shared/api/http-client';
-import { useSession } from '../model/session-provider';
+import { useLoginForm } from '../model/use-login-form';
 
 /**
- * The sign-in screen.
+ * The sign-in screen — markup only.
  *
- * It lives in the feature rather than in `app/login/page.tsx` for one practical
- * reason: a route file is a place Next mounts something, not a place to put
- * logic. Keeping the form here means a modal re-authentication, or a second
- * entry point, can render it without importing from a route.
+ * Every decision it used to make now lives in `useLoginForm`: what counts as a
+ * failure, when to redirect, when the button is busy. What is left is where
+ * things sit and how they read, which is the one thing a component should own.
+ *
+ * The split also makes the wording testable apart from the behaviour: the hook
+ * returns `'disabled'`, this file turns it into a sentence in French or Arabic.
  */
 export function LoginForm() {
   const t = useTranslations('login');
-  const { user, loading, signIn } = useSession();
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  // Somebody already signed in has no business on this page.
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace('/worksites');
-    }
-  }, [loading, user, router]);
-
-  async function onSubmit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
-    setError(null);
-    setPending(true);
-    try {
-      await signIn(email, password);
-    } catch (caught) {
-      // The API answers 401 for both a wrong password and an unknown address,
-      // deliberately — repeating its message verbatim keeps that property.
-      setError(
-        caught instanceof ApiError && caught.status === 403
-          ? t('disabled')
-          : t('invalidCredentials'),
-      );
-      setPending(false);
-    }
-  }
+  const { email, setEmail, password, setPassword, error, pending, submit } = useLoginForm();
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 py-8">
@@ -58,10 +26,10 @@ export function LoginForm() {
 
       <Card className="w-full">
         <CardBody>
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form onSubmit={submit} className="flex flex-col gap-4">
             <h1 className="text-lg font-semibold tracking-tight">{t('title')}</h1>
 
-            {error && <Alert tone="danger">{error}</Alert>}
+            {error && <Alert tone="danger">{t(error)}</Alert>}
 
             <Field
               label={t('email')}
