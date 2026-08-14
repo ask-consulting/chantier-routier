@@ -1,67 +1,34 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
-import type { IInvitationPreview } from '@chantia/shared';
-import { BrandIllustration, Logo } from '@/shared/brand';
 import { Alert, Button, Card, CardBody, Field, Skeleton } from '@/shared/ui';
-import { ApiError } from '@/shared/api/http-client';
-import { previewInvitation } from '../api/auth.api';
-import { useSession } from '../model/session-provider';
-
-/** The minimum length the API enforces — quoted here only to fill the message. */
-const MIN_PASSWORD_LENGTH = 10;
+import { BrandIllustration, Logo } from '@/shared/brand';
+import {
+  MIN_PASSWORD_LENGTH,
+  useInvitationForm,
+  type InvitationError,
+} from '../model/use-invitation-form';
 
 /**
- * Where an invitation link lands.
+ * Where an invitation link lands — markup only.
  *
- * Public: the token in the URL is the credential. The preview call is what lets
- * the page greet the person by name and fail early on a dead link, instead of
- * showing an anonymous form that only rejects after a password is typed twice.
+ * The hook decides what failed; this file decides how it reads. That is the
+ * whole of the split, and it is what lets the password rules be shown all at
+ * once, in the reader's language, without the hook ever holding a sentence.
  */
 export function InvitationForm({ token }: { token: string }) {
   const t = useTranslations('invitation');
-  const tErrors = useTranslations('form.errors.password');
-  const { acceptInvitation } = useSession();
-
-  const [preview, setPreview] = useState<IInvitationPreview | null>(null);
-  const [invalid, setInvalid] = useState(false);
-  const [password, setPassword] = useState('');
-  const [confirmation, setConfirmation] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
-  const [pending, setPending] = useState(false);
-
-  useEffect(() => {
-    previewInvitation(token).then(setPreview).catch(() => setInvalid(true));
-  }, [token]);
-
-  async function onSubmit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
-    if (password !== confirmation) {
-      setErrors([t('mismatch')]);
-      return;
-    }
-
-    setErrors([]);
-    setPending(true);
-    try {
-      await acceptInvitation(token, password);
-    } catch (caught) {
-      if (caught instanceof ApiError && caught.fields?.length) {
-        // The API returns every unmet password rule at once, and each carries an
-        // i18n key — so all of them are shown, in the reader's language, rather
-        // than one per attempt.
-        setErrors(
-          caught.fields.map((field) =>
-            tErrors(field.code.split('.').pop() ?? 'minLength', { min: MIN_PASSWORD_LENGTH }),
-          ),
-        );
-      } else {
-        setErrors([caught instanceof ApiError ? caught.message : t('expired')]);
-      }
-      setPending(false);
-    }
-  }
+  const {
+    preview,
+    invalid,
+    password,
+    setPassword,
+    confirmation,
+    setConfirmation,
+    errors,
+    pending,
+    submit,
+  } = useInvitationForm(token);
 
   if (invalid) {
     return (
@@ -96,17 +63,9 @@ export function InvitationForm({ token }: { token: string }) {
             </div>
           )}
 
-          {errors.length > 0 && (
-            <Alert tone="danger">
-              <ul className="flex list-inside list-disc flex-col gap-0.5">
-                {errors.map((message) => (
-                  <li key={message}>{message}</li>
-                ))}
-              </ul>
-            </Alert>
-          )}
+          {errors.length > 0 && <ErrorList errors={errors} />}
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form onSubmit={submit} className="flex flex-col gap-4">
             <Field
               label={t('choosePassword')}
               type="password"
@@ -133,5 +92,31 @@ export function InvitationForm({ token }: { token: string }) {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+/**
+ * The refusals, worded.
+ *
+ * Two namespaces because the two kinds of failure are written in two different
+ * places: an unmet password rule is shared with every other password form, a
+ * dead link belongs to this screen alone.
+ */
+function ErrorList({ errors }: { errors: InvitationError[] }) {
+  const t = useTranslations('invitation');
+  const tRules = useTranslations('form.errors.password');
+
+  return (
+    <Alert tone="danger">
+      <ul className="flex list-inside list-disc flex-col gap-0.5">
+        {errors.map((error) => {
+          const text =
+            error.kind === 'passwordRule'
+              ? tRules(error.code, { min: MIN_PASSWORD_LENGTH })
+              : t(error.key);
+          return <li key={text}>{text}</li>;
+        })}
+      </ul>
+    </Alert>
   );
 }

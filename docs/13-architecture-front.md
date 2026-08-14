@@ -166,19 +166,61 @@ export default function Page() {
 
 ---
 
-## Quand ajouter un hook d'orchestration
+## Séparer le calcul du rendu
 
-cie-next extrait systématiquement un `useUserList` qui renvoie douze valeurs. On ne
-le fait **pas par défaut**, et voici le critère :
+Le critère, en une phrase :
 
-> Tant que l'écran n'a qu'une requête et aucun état local, l'appeler depuis le
-> composant est plus lisible. Le hook arrive quand il y a un **état à coordonner** :
-> tri serveur, filtres de colonnes, pagination, sélection multiple.
+> Un composant décide **où les choses sont et comment elles se lisent**. Tout ce
+> qui décide **ce qui se passe** part dans un hook de `model/`.
 
-`WorksiteListPage` s'en passe aujourd'hui. Le premier filtre justifiera
-`model/use-worksite-list.ts`. Extraire avant, c'est déplacer six lignes derrière une
-indirection sans rien gagner — remplacer un composant fourre-tout par un hook
-fourre-tout ne change que l'endroit du désordre.
+### Les formulaires : toujours
+
+Un formulaire coordonne des champs, un drapeau d'envoi, des erreurs et souvent une
+redirection. C'est de l'état à coordonner par définition, donc le hook n'est pas
+discutable.
+
+```
+model/use-login-form.ts       ← champs, envoi, échecs, redirection
+ui/login-form.tsx             ← où sont les champs, comment ils se lisent
+```
+
+**Le hook renvoie des clés, jamais des phrases.**
+
+```ts
+setError(caught.status === 403 ? 'disabled' : 'invalidCredentials');
+```
+
+```tsx
+{error && <Alert tone="danger">{t(error)}</Alert>}
+```
+
+Trois raisons, et la troisième est la vraie :
+
+1. Le hook se teste sans fournisseur de traduction.
+2. La formulation reste avec les autres formulations.
+3. **Un message serveur en anglais ne peut plus atterrir sur un écran arabe.**
+   L'ancien code affichait `caught.message` tel quel ; désormais ce qu'on ne sait
+   pas traduire retombe sur une clé connue.
+
+### Les listes : quand il y a un état
+
+Tant que l'écran n'a qu'une requête et aucun état local, l'appeler depuis le
+composant est plus lisible. Le hook arrive avec le **tri serveur, les filtres de
+colonnes, la pagination ou la sélection multiple**.
+
+`WorksiteListPage` s'en passe aujourd'hui — une requête, aucun état. Le premier
+filtre justifiera `model/use-worksite-list.ts`.
+
+cie-next extrait systématiquement un `useUserList` qui renvoie douze valeurs.
+Extraire avant d'avoir un état, c'est déplacer six lignes derrière une indirection :
+remplacer un composant fourre-tout par un hook fourre-tout ne change que l'endroit
+du désordre.
+
+### Ce qui reste légitimement dans le composant
+
+Un sous-composant privé pour une portion de rendu — comme `ErrorList` dans
+`invitation-form.tsx`. Il ne décide rien, il met en forme ; le sortir dans `model/`
+serait une erreur de sens.
 
 ## Permissions
 
