@@ -1,6 +1,6 @@
 # 14 — État des lieux et priorités
 
-*Arrêté au 14 août 2026.*
+*Arrêté au 14 août 2026. Révisé le 17 août 2026.*
 
 ## Le constat en une phrase
 
@@ -13,35 +13,81 @@ Ce document classe ce qui manque. L'ordre est une décision prise, pas une
 suggestion : sécurité, puis qualité de code, puis observabilité, puis le mobile,
 puis le module utilisateurs complet avec les notifications. Le métier vient après.
 
+> **Révision du 17 août.** Trois constats du 14 août étaient faux ou périmés, et
+> ils le sont dans les deux sens. `packages/shared` était annoncé sans tests : il
+> en a quarante, sur exactement ce que le document réclamait en premier. Les
+> « cinq alertes » de dépendances en sont vingt-huit. Et la fuite de budget est
+> fusionnée. Les corrections sont intégrées ci-dessous, pas listées à part : un
+> état des lieux qu'on lit en diagonale doit être juste ligne à ligne.
+
 ---
 
 ## Priorité 1 — Sécurité
 
-### 1.1 Aucune limitation de débit
+### 1.1 Limitation de débit ✅
 
-`POST /auth/login` et `POST /auth/accept-invitation` acceptent un nombre illimité
-de tentatives. Un mot de passe se teste sans aucun frein, et la politique de mot de
-passe ne protège que contre les tentatives *lentes*.
+*Fait le 17 août.* `POST /auth/login` et `POST /auth/accept-invitation`
+acceptaient un nombre illimité de tentatives ; la politique de mot de passe ne
+protégeait que contre les tentatives *lentes*. C'était le seul point de ce
+document où l'absence était un risque immédiat plutôt qu'une dette.
 
-C'est le seul point de ce document où l'absence est un risque immédiat plutôt
-qu'une dette.
+`@nestjs/throttler` est en place sur `AuthController`, avec deux fenêtres qui
+arrêtent deux attaques différentes :
 
-**Action** — `@nestjs/throttler`, appliqué aux routes publiques d'authentification.
-Une fenêtre courte par adresse IP, et une seconde par adresse email pour qu'une
-rotation d'IP ne contourne pas la première.
+| fenêtre | défaut | ce qu'elle arrête |
+|---|---|---|
+| par adresse | 20 / minute | un appelant qui essaie beaucoup de mots de passe |
+| par email | 10 / quart d'heure | beaucoup d'adresses qui essaient **un** compte |
 
-### 1.2 Cinq alertes de dépendances ouvertes
+La seconde est celle qui compte : un botnet change d'IP gratuitement, donc une
+limite par adresse seule ne protège rien. L'email testé, lui, ne se change pas —
+c'est la cible.
+
+Trois décisions qui ne se lisent pas dans la configuration :
+
+- **Le compteur est partagé entre les routes**, pas posé par route. La clé par
+  défaut de la bibliothèque inclut le nom du handler, ce qui offrirait un budget
+  neuf à chaque endpoint : épuiser `login`, continuer sur `accept-invitation`.
+- **`X-Forwarded-For` se lit par la droite**, en remontant le nombre de proxies
+  qu'on déclare (`TRUSTED_PROXY_HOPS`, à `1` sur Render). Les maillons de gauche
+  sont forgeables par l'appelant ; prendre le premier — le réflexe — rend le
+  limiteur décoratif, chaque tentative tombant dans un compteur neuf. Laisser `0`
+  derrière un proxy est aussi mauvais dans l'autre sens : tout le trafic passe
+  pour une seule adresse et les vingt premiers appels bloquent tout le monde.
+- **Le 429 ne dit rien** de la limite franchie ni de l'existence du compte. Un
+  429 qui répond différemment selon l'email est un oracle d'énumération déguisé
+  en limiteur.
+
+Le stockage est en mémoire : correct pour une instance, et pour une seule. Une
+seconde réplique doublerait chaque allocation — c'est le prix d'un passage à
+l'échelle horizontale, et rien d'autre ne changera ce jour-là.
+
+**Reste à faire** — le front ne sait pas encore présenter un 429. La bibliothèque
+répond `retry-after-ip` plutôt que le `Retry-After` standard quand les fenêtres
+sont nommées ; à traduire côté client au moment d'écrire l'écran.
+
+### 1.2 Vingt-huit alertes de dépendances ouvertes
+
+Le compte du 14 août — « cinq alertes » — était faux. `pnpm audit` en remonte
+vingt-huit, dont dix-neuf sur des dépendances de production :
 
 ```
-high    brace-expansion   déni de service, épuisement mémoire   (deux avis distincts)
-high    fast-uri          confusion d'hôte via antislash
-high    js-yaml           consommation CPU quadratique sur !!omap
-medium  postcss           lecture de fichiers .map arbitraires
+tout            28 alertes    1 critique · 18 hautes · 9 moyennes
+production      19 alertes                 14 hautes · 5 moyennes
 ```
+
+La critique (`vitest < 3.2.6`, lecture et exécution de fichier arbitraire quand
+le serveur d'interface écoute) ne concerne que le développement. Les quatorze
+hautes en production, non : au `brace-expansion`, `fast-uri`, `js-yaml` et
+`postcss` déjà listés s'ajoutent `find-my-way`, `@fastify/static`, `sharp`,
+`nanoid`, `esbuild` et `deepmerge-ts`.
 
 **Action** — monter les versions, vérifier que `pnpm build` et la suite de tests
 passent. La plupart sont des dépendances transitives : `pnpm.overrides` dans le
 `package.json` racine règle celles que personne ne met à jour en amont.
+
+Ce point passe **devant le reste de la priorité 1** : il est mécanique, et il
+couvre quatorze alertes de production pour un après-midi.
 
 ### 1.3 Ni `helmet` ni en-têtes de sécurité
 
@@ -54,13 +100,15 @@ défaut.
 ### 1.4 Dépendances déclarées et inutilisées
 
 `@fastify/static` et `@fastify/cookie` figurent dans les dépendances sans qu'aucun
-code ne les importe. Surface d'attaque gratuite.
+code ne les importe. Surface d'attaque gratuite — et pas théorique :
+`@fastify/static` porte lui-même une des alertes hautes du point 1.2. Le retirer
+règle les deux d'un coup.
 
 **Action** — les retirer.
 
-### 1.5 Le budget quitte encore le serveur
+### 1.5 Le budget quittait le serveur ✅
 
-*Corrigé par la PR #17, à fusionner.* `totalBudget` partait vers tous les rôles ;
+*Fusionné (PR #17, commit `c147b26`).* `totalBudget` partait vers tous les rôles ;
 masquer la colonne côté front ne retenait rien. Voir la PR pour le détail, y compris
 la fuite par le tri, plus discrète.
 
@@ -86,26 +134,32 @@ importer ni `infrastructure` ni `presentation`, et `identity` n'exporte rien ver
 `app`. Ces règles sont documentées dans `06-api-conventions-ddd-cqrs.md` et
 `08-identity-module.md` mais rien ne les vérifie.
 
-### 2.2 Vingt-sept tests, et zéro sur le web
+### 2.2 Le trou est sur le web, pas sur le paquet partagé
+
+Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — regardait
+`apps/` seulement et concluait faux sur le reste. Le compte réel :
 
 ```
-apps/api          27 tests   (3 fichiers)
-apps/web           0
-packages/shared    0
+apps/api          46 tests   (5 fichiers)
+packages/shared   40 tests   (3 fichiers)
+apps/web           0         Vitest n'est pas installé
 ```
 
-Les tests existants portent sur deux failles trouvées après coup — une élévation de
-privilège et une fuite de budget — pas sur une couverture pensée. Le module
-d'identité complet, la politique de mot de passe et la rotation des jetons de
-rafraîchissement ne sont couverts par rien.
+`packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
+et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
+par rendement ci-dessous, faite depuis les commits qui ont amené ces fonctions.
+Elle est retirée de la liste.
+
+Ce qui reste vrai : côté API, les tests portent sur des failles trouvées après
+coup — une élévation de privilège, une fuite de budget — plus la limitation de
+débit ajoutée au point 1.1. Le parcours d'authentification lui-même n'est couvert
+par rien.
 
 **Action, par ordre de rendement :**
 
-1. `packages/shared` — la politique de mot de passe et `ROLE_PERMISSIONS` sont des
-   fonctions pures : les tester coûte peu et protège ce qui décide de tout.
-2. `apps/api` — le parcours d'authentification de bout en bout : connexion,
+1. `apps/api` — le parcours d'authentification de bout en bout : connexion,
    rotation du jeton, détection de réemploi, acceptation d'invitation.
-3. `apps/web` — Vitest n'est même pas installé. Commencer par les hooks de
+2. `apps/web` — Vitest n'est même pas installé. Commencer par les hooks de
    `model/`, qui sont testables sans rendu.
 
 ### 2.3 Aucun seuil de couverture
@@ -270,6 +324,8 @@ Solide et documenté :
   traverse la frontière (`08-identity-module.md`)
 - **Authentification** — JWT de 5 minutes, jeton de rafraîchissement rotatif avec
   détection de réemploi, inscription fermée, invitations par lien
+- **Limitation de débit** — deux fenêtres sur les routes d'authentification, par
+  adresse et par email, compteur partagé entre les routes (§1.1)
 - **Permissions** — matrice statique partagée entre l'API et les clients, aucune
   requête pour autoriser
 - **Multi-tenant** — extension Prisma, filtre automatique, activable et
