@@ -12,7 +12,9 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthenticatedUser, CurrentUser, Public } from '@shared/auth';
+import { SkipRateLimit } from '@shared/throttling';
 import { AcceptInvitationCommand } from '../../application/commands/accept-invitation.command';
 import { ChangePasswordCommand } from '../../application/commands/change-password.command';
 import { UpdatePreferencesCommand } from '../../application/commands/update-preferences.command';
@@ -40,9 +42,14 @@ import { CurrentUserResponseDto } from '../dto/user-response.dto';
 /**
  * Session lifecycle. The three token-minting routes are `@Public()` — they are
  * how a caller obtains the credential every other route demands.
+ *
+ * Rate-limited as a whole, because this is where credentials are tested: by
+ * address, and by the email being tried so that rotating addresses buys nothing.
+ * The routes that carry no credential opt out with `@SkipRateLimit()`.
  */
 @ApiTags('Auth')
 @Controller('auth')
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -59,6 +66,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, type: AuthSessionResponseDto })
   @ApiResponse({ status: 409, description: 'Email already used' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async register(
     @Body() dto: RegisterDto,
     @Headers('user-agent') userAgent?: string,
@@ -76,6 +84,7 @@ export class AuthController {
   @ApiResponse({ status: 200, type: AuthSessionResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
   @ApiResponse({ status: 403, description: 'Account deactivated' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async login(
     @Body() dto: LoginDto,
     @Headers('user-agent') userAgent?: string,
@@ -97,6 +106,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, type: AuthSessionResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid, expired or already-rotated token' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async refresh(
     @Body() dto: RefreshSessionDto,
     @Headers('user-agent') userAgent?: string,
@@ -115,6 +125,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, type: InvitationPreviewDto })
   @ApiResponse({ status: 401, description: 'Unknown, already used or expired' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async invitation(@Param('token') token: string): Promise<InvitationPreviewDto> {
     return this.queryBus.execute<GetInvitationQuery, IInvitationPreview>(
       new GetInvitationQuery(token),
@@ -132,6 +143,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, type: AuthSessionResponseDto })
   @ApiResponse({ status: 401, description: 'Unknown, already used or expired' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async acceptInvitation(
     @Body() dto: AcceptInvitationDto,
     @Headers('user-agent') userAgent?: string,
@@ -143,6 +155,7 @@ export class AuthController {
   }
 
   @Patch('preferences')
+  @SkipRateLimit()
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Change your own interface language',
@@ -161,6 +174,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
+  // Never refuse a sign-out over a rate limit.
+  @SkipRateLimit()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'End the given session, or all of them when no token is sent' })
   @ApiResponse({ status: 204, description: 'Logged out' })
@@ -184,6 +199,7 @@ export class AuthController {
   @ApiResponse({ status: 204, description: 'Password changed, sessions revoked' })
   @ApiResponse({ status: 401, description: 'Current password does not match' })
   @ApiResponse({ status: 403, description: 'Account deactivated' })
+  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body() dto: ChangePasswordDto,
@@ -192,6 +208,8 @@ export class AuthController {
   }
 
   @Get('me')
+  // Clients poll this one to notice a role change; it tests no credential.
+  @SkipRateLimit()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'The authenticated profile and the permissions it carries' })
   @ApiResponse({ status: 200, type: CurrentUserResponseDto })

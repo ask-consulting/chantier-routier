@@ -40,3 +40,9 @@ services:
         generateValue: true
       - key: JWT_ISSUER
         value: chantia-identity
+      # Render's edge appends the real client address to X-Forwarded-For, so the
+      # rate limiter counts one hop back from the right to find it. Left at the
+      # default 0, every request would look like it came from the proxy and the
+      # first few callers would lock out everyone else.
+      - key: TRUSTED_PROXY_HOPS
+        value: 1
