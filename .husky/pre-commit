@@ -1,0 +1,8 @@
+# Lint what is staged, and nothing else. See .lintstagedrc.mjs for why the hook
+# stops there — the real gate is .github/workflows/ci.yml, which builds,
+# typechecks, tests and lints the whole workspace on every push and PR.
+#
+# A hook is a courtesy, not a guarantee: it is trivially skipped with
+# `--no-verify`, and it does not run at all on a machine where `pnpm install`
+# has never been run. Nothing here may be the only place a rule is enforced.
+pnpm exec lint-staged
