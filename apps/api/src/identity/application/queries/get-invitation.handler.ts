@@ -14,7 +14,7 @@ import {
   USER_REPOSITORY_PORT,
   UserRepositoryPort,
 } from '../../domain/ports/user-repository.port';
-import { InvalidInvitationException } from '../../infrastructure/exceptions/identity.exceptions';
+import { InvalidInvitationException } from '../../domain/exceptions/identity.exceptions';
 import { GetInvitationQuery } from './get-invitation.query';
 
 /**

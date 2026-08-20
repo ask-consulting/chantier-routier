@@ -6,7 +6,8 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
 import { AppConfig } from '@config/app.config';
-import { ValidationException } from '@shared/infrastructure/exceptions/validation.exception';
+import { DomainExceptionFilter } from '@shared/presentation/domain-exception.filter';
+import { ValidationException } from '@shared/presentation/exceptions/validation.exception';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -29,6 +30,11 @@ async function bootstrap(): Promise<void> {
       },
     }),
   );
+
+  // Business errors are plain `Error`s (see `shared/domain/domain.exception.ts`);
+  // this is the single place that turns them into HTTP. Registered after the
+  // pipe so the order reads the way a request flows.
+  app.useGlobalFilters(new DomainExceptionFilter());
 
   app.enableShutdownHooks();
 

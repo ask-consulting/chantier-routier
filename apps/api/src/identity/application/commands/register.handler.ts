@@ -22,7 +22,7 @@ import {
   EmailAlreadyUsedException,
   RegistrationClosedException,
   WeakPasswordException,
-} from '../../infrastructure/exceptions/identity.exceptions';
+} from '../../domain/exceptions/identity.exceptions';
 import { IssuedSession, SessionIssuer } from '../services/session-issuer.service';
 import { RegisterCommand } from './register.command';
 

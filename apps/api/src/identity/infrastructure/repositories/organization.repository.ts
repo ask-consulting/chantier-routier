@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Organization } from '../../domain/entities/organization.entity';
 import { User } from '../../domain/entities/user.entity';
 import { OrganizationRepositoryPort } from '../../domain/ports/organization-repository.port';
-import { EmailAlreadyUsedException } from '../exceptions/identity.exceptions';
+import { EmailAlreadyUsedException } from '../../domain/exceptions/identity.exceptions';
 import { OrganizationMapper } from '../mappers/organization.mapper';
 import { UserMapper } from '../mappers/user.mapper';
 import { IdentityPrismaService } from '../persistence/identity-prisma.service';

@@ -4,7 +4,7 @@ import {
   USER_REPOSITORY_PORT,
   UserRepositoryPort,
 } from '../../domain/ports/user-repository.port';
-import { AccountDisabledException } from '../../infrastructure/exceptions/identity.exceptions';
+import { AccountDisabledException } from '../../domain/exceptions/identity.exceptions';
 
 /**
  * Re-reads the caller's account before letting them grant or change access.

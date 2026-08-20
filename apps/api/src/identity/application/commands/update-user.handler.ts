@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserRole } from '@chantia/shared';
-import { ResourceNotFoundException } from '@shared/infrastructure/exceptions/not-found.exception';
+import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { User } from '../../domain/entities/user.entity';
 import {
   REFRESH_TOKEN_REPOSITORY_PORT,
@@ -14,7 +14,7 @@ import {
 import {
   LastAdminException,
   SelfTargetedActionException,
-} from '../../infrastructure/exceptions/identity.exceptions';
+} from '../../domain/exceptions/identity.exceptions';
 import { UpdateUserCommand } from './update-user.command';
 
 @CommandHandler(UpdateUserCommand)

@@ -9,7 +9,7 @@ import {
   USER_REPOSITORY_PORT,
   UserRepositoryPort,
 } from '../../domain/ports/user-repository.port';
-import { InvalidRefreshTokenException } from '../../infrastructure/exceptions/identity.exceptions';
+import { InvalidRefreshTokenException } from '../../domain/exceptions/identity.exceptions';
 import { IssuedSession, SessionIssuer } from '../services/session-issuer.service';
 import { RefreshSessionCommand } from './refresh-session.command';
 

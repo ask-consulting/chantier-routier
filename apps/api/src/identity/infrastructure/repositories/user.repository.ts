@@ -5,7 +5,7 @@ import { buildPrismaSearchQuery } from '@shared/infrastructure/repositories/pris
 import { getPrismaPagination } from '@shared/infrastructure/repositories/search-params';
 import { User } from '../../domain/entities/user.entity';
 import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
-import { EmailAlreadyUsedException } from '../exceptions/identity.exceptions';
+import { EmailAlreadyUsedException } from '../../domain/exceptions/identity.exceptions';
 import { UserMapper } from '../mappers/user.mapper';
 import { IdentityPrismaService } from '../persistence/identity-prisma.service';
 import { isUniqueViolationOn } from '../persistence/prisma-error';

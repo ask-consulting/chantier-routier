@@ -12,7 +12,7 @@ import {
 import {
   AccountDisabledException,
   InvalidCredentialsException,
-} from '../../infrastructure/exceptions/identity.exceptions';
+} from '../../domain/exceptions/identity.exceptions';
 import { IssuedSession, SessionIssuer } from '../services/session-issuer.service';
 import { LoginCommand } from './login.command';
 
