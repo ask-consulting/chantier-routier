@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { ResourceNotFoundException } from '@shared/infrastructure/exceptions/not-found.exception';
+import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { User } from '../../domain/entities/user.entity';
 import {
   USER_REPOSITORY_PORT,

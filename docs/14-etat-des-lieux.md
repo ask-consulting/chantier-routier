@@ -1,6 +1,6 @@
 # 14 — État des lieux et priorités
 
-*Arrêté au 14 août 2026. Révisé le 17 août 2026.*
+*Arrêté au 14 août 2026. Révisé les 17 et 18, puis le 20 août 2026.*
 
 ## Le constat en une phrase
 
@@ -13,12 +13,37 @@ Ce document classe ce qui manque. L'ordre est une décision prise, pas une
 suggestion : sécurité, puis qualité de code, puis observabilité, puis le mobile,
 puis le module utilisateurs complet avec les notifications. Le métier vient après.
 
-> **Révision du 17 août.** Trois constats du 14 août étaient faux ou périmés, et
-> ils le sont dans les deux sens. `packages/shared` était annoncé sans tests : il
-> en a quarante, sur exactement ce que le document réclamait en premier. Les
-> « cinq alertes » de dépendances en sont vingt-huit. Et la fuite de budget est
-> fusionnée. Les corrections sont intégrées ci-dessous, pas listées à part : un
-> état des lieux qu'on lit en diagonale doit être juste ligne à ligne.
+> **Révision du 20 août.** Deux points se ferment, et le diagnostic du 18 août
+> était faux — c'est le plus utile des deux constats.
+>
+> **1.2 est clos.** Les alertes de dépendances sont à **zéro partout**, en
+> production comme en développement, et les 86 tests du dépôt tournent de nouveau.
+> Mais la cause n'était pas celle annoncée le 18 : `vite` n'est pas une dépendance
+> de `vitest`, c'en est une **peer dependency**, et une `pnpm.override` ne
+> s'applique pas à la résolution automatique d'une peer. Rejouer `pnpm install` —
+> l'action prescrite ici même — ne changeait donc rien, silencieusement. Le détail
+> est au point 1.2 : il vaut d'être lu, parce que la même erreur se reproduira au
+> prochain paquet qui déclare une peer.
+>
+> **2.1 est clos aussi**, et il a ouvert 2.4 en se fermant. L'API et le paquet
+> partagé ont leur configuration ESLint, les règles de frontière de `06` et `08`
+> sont exécutoires, un hook de pre-commit lint ce qui est indexé, et la CI passe
+> le lint en premier. La règle « `application` ne touche pas `infrastructure` »
+> butait sur une quinzaine de fichiers : les erreurs métier héritaient de
+> `HttpException`, donc aucune couche ne pouvait les tenir. Elles sont redevenues
+> des erreurs de domaine (§2.4). Le trou de tests du web (2.2) reste ouvert.
+>
+> *(Révision du 18 août.)* Un seul point bouge, et il bouge dans les deux sens.
+> Les alertes de dépendances sont passées de vingt-huit à quatre, et de dix-neuf
+> à **zéro** en production — mais le travail qui les règle est encore dans un
+> arbre de travail non committé, et **il casse la suite de tests** : plus une
+> seule ligne de test ne s'exécute dans le dépôt. Le détail est au point 1.2, qui
+> reste ouvert pour cette raison.
+>
+> *(Révision du 17 août : trois constats du 14 août étaient faux ou périmés dans
+> les deux sens — `packages/shared` a quarante tests et non zéro, les « cinq
+> alertes » en étaient vingt-huit, la fuite de budget est fusionnée. Les
+> corrections sont intégrées ci-dessous, pas listées à part.)*
 
 ---
 
@@ -66,28 +91,60 @@ l'échelle horizontale, et rien d'autre ne changera ce jour-là.
 répond `retry-after-ip` plutôt que le `Retry-After` standard quand les fenêtres
 sont nommées ; à traduire côté client au moment d'écrire l'écran.
 
-### 1.2 Vingt-huit alertes de dépendances ouvertes
+### 1.2 Alertes de dépendances ✅
 
-Le compte du 14 août — « cinq alertes » — était faux. `pnpm audit` en remonte
-vingt-huit, dont dix-neuf sur des dépendances de production :
+*Fait le 20 août.* Le compte du 14 août — « cinq alertes » — était faux ; il y en
+avait vingt-huit, dont dix-neuf en production. `pnpm audit` :
 
 ```
-tout            28 alertes    1 critique · 18 hautes · 9 moyennes
-production      19 alertes                 14 hautes · 5 moyennes
+avant   tout  28 alertes   1 critique · 18 hautes · 9 moyennes
+        prod  19 alertes                14 hautes · 5 moyennes
+
+après   tout   0 alerte
+        prod   0 alerte
 ```
 
-La critique (`vitest < 3.2.6`, lecture et exécution de fichier arbitraire quand
-le serveur d'interface écoute) ne concerne que le développement. Les quatorze
-hautes en production, non : au `brace-expansion`, `fast-uri`, `js-yaml` et
-`postcss` déjà listés s'ajoutent `find-my-way`, `@fastify/static`, `sharp`,
-`nanoid`, `esbuild` et `deepmerge-ts`.
+Onze `pnpm.overrides` à la racine ont fait le gros du travail —
+`brace-expansion`, `fast-uri`, `js-yaml`, `postcss`, `find-my-way`, `sharp`,
+`nanoid`, `deepmerge-ts` — et `@fastify/cookie`, qu'aucun code n'importait, a été
+retiré (voir 1.4).
 
-**Action** — monter les versions, vérifier que `pnpm build` et la suite de tests
-passent. La plupart sont des dépendances transitives : `pnpm.overrides` dans le
-`package.json` racine règle celles que personne ne met à jour en amont.
+**La douzième surcharge, `vite: ^8.2.1`, n'a jamais rien fait.** Elle est en tête
+du verrou, elle a l'air appliquée, et `vite@5.4.21` était résolu en dessous. Le
+18 août ce document concluait à un verrou périmé et prescrivait de rejouer
+l'installation. Rejouer l'installation ne change rien — vérifié :
 
-Ce point passe **devant le reste de la priorité 1** : il est mécanique, et il
-couvre quatorze alertes de production pour un après-midi.
+```
+✕ unmet peer vite@^8.2.1: found 5.4.21
+```
+
+`vite` n'est pas une dépendance de `vitest`, c'en est une **peer dependency**, et
+`pnpm.overrides` ne s'applique pas à la peer qu'`autoInstallPeers` installe à
+votre place. Une surcharge qui vise une peer est acceptée, écrite dans le verrou,
+et sans effet : elle échoue en silence, ce qui est la pire des trois façons
+d'échouer. Un avertissement d'installation le disait, noyé dans la sortie.
+
+**La correction est de déclarer la peer, pas de la surcharger.** `vite ^8.2.2`
+est passé en `devDependencies` de `apps/api` et de `packages/shared` — celui qui
+en a besoin la nomme. La surcharge est retirée : la laisser en place aurait
+entretenu l'idée qu'elle tenait quelque chose.
+
+Deux conséquences ont suivi, et aucune n'était visible avant que les tests
+redémarrent :
+
+- **Les décorateurs de paramètre ne se compilaient plus dans les specs.** Vite 8
+  transforme avec oxc, qui applique par défaut les décorateurs TC39 et refuse
+  `login(@Body() body)` à la lecture. Oxc lit pourtant `experimentalDecorators`
+  dans `tsconfig.json` — mais ce fichier exclut les specs : le code de
+  production passait, `**/*.spec.ts` échouait. L'option est donc posée explicitement
+  dans `vitest.config.mts`, `emitDecoratorMetadata` compris, faute de quoi Nest
+  construit un contrôleur dont les dépendances sont `undefined`.
+- **`vitest.config.ts` est devenu `.mts`.** Vite 8 avertit qu'il charge un
+  fichier ESM comme du CommonJS ; l'extension le règle, et `import.meta.dirname`
+  remplace `__dirname`, qui n'existe pas en ESM.
+
+État final : `pnpm audit` net, 46 tests sur `apps/api`, 40 sur `packages/shared`,
+`pnpm build` et `pnpm typecheck` verts.
 
 ### 1.3 Ni `helmet` ni en-têtes de sécurité
 
@@ -97,14 +154,27 @@ Aucun en-tête de protection n'est posé par l'API : ni `Content-Security-Policy
 **Action** — `@fastify/helmet`, configuré explicitement plutôt qu'au réglage par
 défaut.
 
-### 1.4 Dépendances déclarées et inutilisées
+### 1.4 Dépendances déclarées et inutilisées — une sur deux
 
-`@fastify/static` et `@fastify/cookie` figurent dans les dépendances sans qu'aucun
-code ne les importe. Surface d'attaque gratuite — et pas théorique :
-`@fastify/static` porte lui-même une des alertes hautes du point 1.2. Le retirer
-règle les deux d'un coup.
+`@fastify/cookie` est retiré (branche `fix/api-dependency-alerts`).
+`@fastify/static` est resté, et a été **monté** de `^8` à `^10` : la version règle
+son alerte, mais aucun code ne l'importe toujours. On a payé une montée de version
+majeure pour un paquet qu'on peut supprimer.
 
-**Action** — les retirer.
+**Et la montée casse une plage de peer**, ce qu'on ne voyait pas le 18 août :
+
+```
+@nestjs/platform-fastify 11.1.28
+  ✕ unmet peer @fastify/static@"^8.0.0 || ^9.0.0": found 10.1.3
+```
+
+C'est le seul avertissement de peer qui reste à l'installation. Il ne casse rien
+aujourd'hui — précisément parce que personne n'importe le paquet — mais il place
+Nest devant une version qu'il ne déclare pas supporter, pour un service dont on
+n'a pas l'usage.
+
+**Action** — le retirer plutôt que le maintenir. La suppression règle l'alerte et
+l'avertissement d'un coup, sans montée de version du tout.
 
 ### 1.5 Le budget quittait le serveur ✅
 
@@ -116,23 +186,76 @@ la fuite par le tri, plus discrète.
 
 ## Priorité 2 — Qualité de code
 
-### 2.1 Le lint ne couvre qu'un tiers du dépôt
+### 2.1 Le lint couvre le dépôt ✅
+
+*Fait le 20 août.*
 
 ```
-apps/web        eslint src        ✓
-apps/api        —
-packages/shared —
+apps/web        eslint src        ✓   (features, déjà en place)
+apps/api        eslint src        ✓
+packages/shared eslint src        ✓
 ```
 
-`pnpm lint` a longtemps été un no-op complet : `turbo run lint` sans qu'aucun paquet
-ne définisse la tâche, donc une CI verte sur rien. Le front est couvert depuis
-l'architecture en features ; l'API et le paquet partagé ne le sont pas.
+`pnpm lint` a longtemps été un no-op complet : `turbo run lint` sans qu'aucun
+paquet ne définisse la tâche, donc une CI verte sur rien. Puis un tiers du dépôt,
+depuis l'architecture en features. Les trois paquets sont couverts.
 
-**Action** — une configuration ESLint pour `apps/api` et `packages/shared`. Pour
-l'API, l'équivalent des règles de frontière du front : la couche `domain` ne doit
-importer ni `infrastructure` ni `presentation`, et `identity` n'exporte rien vers
-`app`. Ces règles sont documentées dans `06-api-conventions-ddd-cqrs.md` et
-`08-identity-module.md` mais rien ne les vérifie.
+**Ce que les règles vérifient, et pourquoi celles-là.** Le socle est
+`eslint:recommended` et `typescript-eslint/recommended` sur les deux nouveaux
+paquets. Ce qui compte est au-dessus : les frontières documentées dans `06` et
+`08` étaient de la prose, et une prose ne s'exécute pas.
+
+| paquet | règle | ce qu'elle empêche |
+|---|---|---|
+| api | `domain` n'importe rien | ni `infrastructure`, ni `presentation`, ni `application`, ni `@nestjs/*`, ni `@prisma/client` |
+| api | `application` et `presentation` passent par les ports | l'import direct d'un repository, d'un mapper, de Prisma |
+| api | `infrastructure` ne remonte pas | ni vers `presentation`, ni vers `application` |
+| api | rien sous `app/` n'importe `identity/` | l'unique porte est `app.module.ts`, qui câble le module Nest |
+| api | `identity/` n'importe aucun module métier | le jour de l'extraction, il part seul |
+| shared | aucun module natif Node | `fs`, `crypto`, `process`… qui cassent React Native sans casser l'API |
+
+Trois décisions qui ne se lisent pas dans la configuration :
+
+- **Il n'y a aucune exception à ces règles.** Il y en a eu une pendant une heure,
+  pour `infrastructure/exceptions/`, et la lever a appris quelque chose : ces
+  classes n'étaient pas mal rangées, elles étaient d'une autre nature. Elles
+  héritaient de `HttpException` et portaient leur code de statut — c'étaient des
+  réponses HTTP, et c'est pour ça qu'aucune couche ne pouvait les tenir. Voir
+  §2.4.
+- **Côté `shared`, la règle ne liste que les modules natifs.** Le paquet ne
+  déclare aucune dépendance, et l'isolation de `node_modules` par pnpm fait que
+  tout import non déclaré ne résout pas : `tsc` échoue avant qu'ESLint soit
+  consulté. Les modules natifs sont le seul trou que ça laisse — ils résolvent
+  partout, sans dépendance. La règle vise ce trou, et rien d'autre.
+- **Les règles ont été vérifiées en écrivant les infractions.** Un import interdit
+  par paquet, passé au linter, avant de supprimer les fichiers d'essai. Une règle
+  de frontière qui ne se déclenche jamais est une CI verte sur rien, en plus
+  petit.
+
+**Le hook de pre-commit.** `husky` + `lint-staged` : `.husky/pre-commit` lance
+ESLint sur **les seuls fichiers indexés**, avec `--fix` (lint-staged réindexe ce
+qu'il réécrit) et `--max-warnings=0`. Il ne construit pas, ne typecheck pas et ne
+teste pas : ces trois-là demandent tout l'espace de travail et transformeraient un
+commit de trois secondes en quatre-vingt-dix, ce qui est exactement comme ça qu'un
+hook finit contourné au `--no-verify` par habitude.
+
+Chaque paquet est linté depuis son propre dossier (`pnpm --filter … exec eslint`) :
+ESLint 9 résout une configuration *plate* depuis le répertoire courant et non
+depuis le fichier linté, donc un seul ESLint lancé à la racine appliquerait
+silencieusement la configuration de la racine — qui n'existe pas — aux trois
+paquets.
+
+Un hook est une commodité, pas une garantie : il se saute au `--no-verify` et il
+n'existe pas sur une machine où `pnpm install` n'a jamais tourné. **Le garde-fou
+réel est la CI**, où le lint est passé en **premier** — trois secondes contre
+trente pour le build, et un échec y signifie soit un hook contourné, soit un
+fichier modifié que l'auteur n'a pas indexé.
+
+**Reste à faire** — les règles de frontière du front vivent dans
+`apps/web/eslint.config.mjs`, celles de l'API dans `apps/api/eslint.config.mjs`.
+Rien n'est partagé entre les trois configurations : le jour où une quatrième
+apparaît (le mobile), il faudra un paquet `@chantia/eslint-config` plutôt qu'un
+quatrième copier-coller.
 
 ### 2.2 Le trou est sur le web, pas sur le paquet partagé
 
@@ -166,6 +289,51 @@ par rien.
 
 Rien n'empêche la couverture de baisser. Poser un seuil bas mais réel — et qui ne
 descend jamais — vaut mieux qu'un objectif élevé que personne ne tient.
+
+### 2.4 Les erreurs métier ne sont plus des réponses HTTP ✅
+
+*Fait le 20 août.* Écrit en dernier parce que c'est le lint qui l'a révélé : la
+règle « `application` ne touche pas `infrastructure` » butait sur une quinzaine de
+fichiers, tous pour la même raison.
+
+`ResourceNotFoundException`, `InvalidCredentialsException` et leurs huit voisines
+héritaient de `HttpException` et portaient leur propre code de statut. Rangées
+sous `infrastructure/exceptions/`, levées depuis `application/`, attrapées dans un
+repository, relayées par un garde : **aucune des quatre couches ne pouvait les
+tenir légalement**, parce que ce n'étaient pas des erreurs de domaine du tout.
+C'étaient des réponses HTTP habillées en exceptions.
+
+Ce qui a changé :
+
+```
+identity/domain/exceptions/       les 9 erreurs, en simples Error
+app/shared/domain/exceptions/     ResourceNotFoundException
+app/shared/domain/domain.exception.ts       la base + le kind sémantique
+app/shared/presentation/domain-exception.filter.ts   la seule traduction en HTTP
+app/shared/presentation/exceptions/         ValidationException, qui reste HTTP
+```
+
+Une erreur dit maintenant **ce qui ne va pas**, jamais **quoi répondre** : elle
+porte un `kind` (`not-found`, `unauthenticated`, `forbidden`, `conflict`,
+`invalid-input`) et le filtre global fait la correspondance. Deux effets qui
+comptent : un handler se teste sans framework, et le jour où un second transport
+apparaît, les codes de statut ne partent pas avec le domaine.
+
+Le cas qui justifie le `kind` plutôt qu'un numéro : `RegistrationClosedException`
+répond **404 alors qu'elle veut dire « interdit »** — répondre 403 reviendrait à
+annoncer que l'inscription existe dans ce déploiement. C'est une décision de
+présentation ; elle vit dans la table du filtre, pas dans la classe qui lève.
+
+`ValidationException` n'a pas suivi : elle n'est levée que par la fabrique du
+`ValidationPipe` dans `main.ts`, c'est-à-dire du HTTP dans la racine de
+composition. Elle reste un `HttpException`, sous `presentation/`.
+
+**Le corps de réponse est inchangé**, volontairement : mêmes clés, mêmes statuts,
+même tableau `errors[]` avec les codes i18n que le front lit pour marquer les
+règles de mot de passe non tenues. Le déplacement change où la décision vit, pas
+ce que l'appelant reçoit. **Réserve** — cette équivalence est tenue par
+construction, pas par un test : le filtre n'est couvert par rien. C'est le premier
+candidat de la liste 2.2.
 
 ---
 
@@ -335,6 +503,8 @@ Solide et documenté :
 - **Internationalisation** — français et arabe, RTL (`12-internationalisation.md`)
 - **Architecture front** — features cloisonnées, frontières tenues par ESLint
   (`13-architecture-front.md`)
+- **Frontières de l'API** — les flèches DDD de `06` et le mur autour d'`identity`
+  de `08` sont exécutoires, hook de pre-commit et lint en tête de CI (§2.1)
 
 Une réserve sur l'arabe : **il n'a jamais été relu par un locuteur natif.** Les
 traductions sont plausibles, ce n'est pas la même chose que justes.

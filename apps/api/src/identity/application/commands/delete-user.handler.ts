@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserRole } from '@chantia/shared';
-import { ResourceNotFoundException } from '@shared/infrastructure/exceptions/not-found.exception';
+import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import {
   USER_REPOSITORY_PORT,
   UserRepositoryPort,
@@ -9,7 +9,7 @@ import {
 import {
   LastAdminException,
   SelfTargetedActionException,
-} from '../../infrastructure/exceptions/identity.exceptions';
+} from '../../domain/exceptions/identity.exceptions';
 import { DeleteUserCommand } from './delete-user.command';
 
 /**

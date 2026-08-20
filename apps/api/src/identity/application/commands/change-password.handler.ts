@@ -18,7 +18,7 @@ import {
 import {
   InvalidCredentialsException,
   WeakPasswordException,
-} from '../../infrastructure/exceptions/identity.exceptions';
+} from '../../domain/exceptions/identity.exceptions';
 import { ChangePasswordCommand } from './change-password.command';
 
 @CommandHandler(ChangePasswordCommand)

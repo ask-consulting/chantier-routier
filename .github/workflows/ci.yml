@@ -29,6 +29,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Lint runs first, and it is the cheapest step by an order of magnitude —
+      # about three seconds against thirty for the build. It is also the one the
+      # pre-commit hook already ran on the staged files, so a failure here means
+      # either the hook was skipped or a file changed that the author did not
+      # stage. Either way you want to know before waiting for a build.
+      #
+      # It covers the three packages since `apps/api` and `packages/shared` got
+      # their own ESLint config; `turbo run lint` used to walk the workspace and
+      # find a single task, which is a green tick on almost nothing.
+      - name: Lint
+        run: pnpm lint
+
       - name: Build
         run: pnpm build
 
@@ -37,6 +49,3 @@ jobs:
 
       - name: Test
         run: pnpm test
-
-      - name: Lint
-        run: pnpm lint

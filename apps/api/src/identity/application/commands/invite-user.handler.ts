@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'node:crypto';
-import { ResourceNotFoundException } from '@shared/infrastructure/exceptions/not-found.exception';
+import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { Invitation } from '../../domain/entities/invitation.entity';
 import { User } from '../../domain/entities/user.entity';
 import {
@@ -17,7 +17,7 @@ import {
   USER_REPOSITORY_PORT,
   UserRepositoryPort,
 } from '../../domain/ports/user-repository.port';
-import { EmailAlreadyUsedException } from '../../infrastructure/exceptions/identity.exceptions';
+import { EmailAlreadyUsedException } from '../../domain/exceptions/identity.exceptions';
 import { UserInvitedEvent } from '../events/user-invited.event';
 import { InviteUserCommand } from './invite-user.command';
 

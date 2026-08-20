@@ -6,7 +6,7 @@ import { RefreshTokenRepositoryPort } from '../../domain/ports/refresh-token-rep
 import {
   LastAdminException,
   SelfTargetedActionException,
-} from '../../infrastructure/exceptions/identity.exceptions';
+} from '../../domain/exceptions/identity.exceptions';
 import { UpdateUserCommand } from './update-user.command';
 import { UpdateUserHandler } from './update-user.handler';
 
