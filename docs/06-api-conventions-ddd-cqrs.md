@@ -66,6 +66,30 @@ presentation ──► application ──► domain ◄── infrastructure
 - L'injection d'un repository se fait **par `Symbol`** (`@Inject(XXX_REPOSITORY_PORT)`),
   câblé dans le `*.module.ts` via `{ provide: XXX_REPOSITORY_PORT, useClass: XxxRepository }`.
 
+**Ces flèches sont vérifiées, pas seulement dessinées.** `apps/api/eslint.config.mjs`
+les traduit en `no-restricted-imports` : un dossier n'est pas une frontière si rien
+n'empêche de la traverser. `pnpm lint` échoue sur un import de `domain` vers
+`infrastructure`, sur `@prisma/client` au-dessus de la couche infrastructure, sur
+`@nestjs/*` dans `domain`, et sur tout import de `identity/` depuis `app/`
+(cf. `08-identity-module.md`).
+
+**Aucune exception.** Il y en a eu une, le temps d'un commit :
+`infrastructure/exceptions/` restait joignable depuis `application/`. La cause
+n'était pas un mauvais rangement mais une confusion de nature — ces classes
+héritaient de `HttpException` et portaient leur code de statut, donc c'étaient des
+réponses HTTP, et aucune couche ne pouvait les accueillir légalement.
+
+Elles sont redevenues des erreurs de domaine (`DomainException`, un simple `Error`
+qui porte un `kind` sémantique), et la traduction en HTTP se fait une seule fois,
+dans `DomainExceptionFilter`, côté présentation. Deux effets : un handler se teste
+sans framework, et le jour où un second transport apparaît, les codes de statut ne
+voyagent pas avec le domaine.
+
+Un cas mérite d'être lu : `RegistrationClosedException` répond 404 alors qu'elle
+veut dire « interdit » — ne pas annoncer que l'inscription existe. C'est une
+décision de présentation, elle vit donc dans la table de correspondance et non
+dans la classe qui lève l'erreur.
+
 ## 5. Commands vs Queries
 
 - **Command** = écriture (create/update/delete). Retourne l'entité (ou void).
