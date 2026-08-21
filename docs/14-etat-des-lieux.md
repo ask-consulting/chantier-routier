@@ -1,6 +1,6 @@
 # 14 — État des lieux et priorités
 
-*Arrêté au 14 août 2026. Révisé les 17 et 18, puis le 20 août 2026.*
+*Arrêté au 14 août 2026. Révisé les 17, 18, 20 et 21 août 2026.*
 
 ## Le constat en une phrase
 
@@ -13,6 +13,30 @@ Ce document classe ce qui manque. L'ordre est une décision prise, pas une
 suggestion : sécurité, puis qualité de code, puis observabilité, puis le mobile,
 puis le module utilisateurs complet avec les notifications. Le métier vient après.
 
+> **Révision du 21 août.** La priorité 1 est close, et là encore le document
+> avait tort sur l'un des deux points — pour la deuxième révision d'affilée.
+>
+> **1.3 est clos.** `@fastify/helmet` est en place, avec une politique qui prend
+> deux formes parce que ce service ne sert qu'une seule page HTML : Swagger, hors
+> production. Le réglage vit dans un module à part et non dans `main.ts`, parce
+> que toutes les pannes possibles ici sont silencieuses — un en-tête qui cesse
+> d'être envoyé ressemble à un en-tête qui n'a jamais existé. Sept tests le
+> fixent, vérifiés en cassant le code exprès.
+>
+> **1.4 disait l'inverse de la vérité.** « Aucun code n'importe `@fastify/static`,
+> le retirer » — le retirer aurait **cassé Swagger en production**. Nest ne
+> l'importe pas : il le charge par son nom au démarrage, par un `require()`
+> dynamique qu'aucun `grep` ne voit. Et le vrai problème n'était pas l'inutilité
+> mais un étau de versions dont l'intersection est vide : la seule version non
+> vulnérable est hors de la plage que déclare `platform-fastify`. La sortie n'est
+> pas une version, c'est de **ne plus servir Swagger hors développement** — ce qui
+> a fermé au passage une exposition plus lourde que les deux points réunis : la
+> spécification OpenAPI complète, publique et sans authentification (§1.4 bis).
+>
+> La leçon des trois dernières révisions est la même à chaque fois : **une
+> dépendance ne se juge pas au `grep`.** Les peers ne se surchargent pas (§1.2),
+> les chargements dynamiques ne se cherchent pas dans le texte (§1.4).
+>
 > **Révision du 20 août.** Deux points se ferment, et le diagnostic du 18 août
 > était faux — c'est le plus utile des deux constats.
 >
@@ -106,8 +130,10 @@ après   tout   0 alerte
 
 Onze `pnpm.overrides` à la racine ont fait le gros du travail —
 `brace-expansion`, `fast-uri`, `js-yaml`, `postcss`, `find-my-way`, `sharp`,
-`nanoid`, `deepmerge-ts` — et `@fastify/cookie`, qu'aucun code n'importait, a été
-retiré (voir 1.4).
+`nanoid`, `deepmerge-ts` — et `@fastify/cookie`, retiré parce que rien ne
+l'importait *et* que rien ne le chargeait. La nuance a son importance : elle est
+exactement ce qui distingue ce cas de `@fastify/static`, où la même conclusion
+était fausse (§1.4).
 
 **La douzième surcharge, `vite: ^8.2.1`, n'a jamais rien fait.** Elle est en tête
 du verrou, elle a l'air appliquée, et `vite@5.4.21` était résolu en dessous. Le
@@ -146,35 +172,144 @@ redémarrent :
 État final : `pnpm audit` net, 46 tests sur `apps/api`, 40 sur `packages/shared`,
 `pnpm build` et `pnpm typecheck` verts.
 
-### 1.3 Ni `helmet` ni en-têtes de sécurité
+### 1.3 En-têtes de sécurité ✅
 
-Aucun en-tête de protection n'est posé par l'API : ni `Content-Security-Policy`, ni
-`Strict-Transport-Security`, ni `X-Content-Type-Options`.
-
-**Action** — `@fastify/helmet`, configuré explicitement plutôt qu'au réglage par
-défaut.
-
-### 1.4 Dépendances déclarées et inutilisées — une sur deux
-
-`@fastify/cookie` est retiré (branche `fix/api-dependency-alerts`).
-`@fastify/static` est resté, et a été **monté** de `^8` à `^10` : la version règle
-son alerte, mais aucun code ne l'importe toujours. On a payé une montée de version
-majeure pour un paquet qu'on peut supprimer.
-
-**Et la montée casse une plage de peer**, ce qu'on ne voyait pas le 18 août :
+*Fait le 21 août.* Le constat de départ a été mesuré sur la production, pas lu
+dans le code :
 
 ```
-@nestjs/platform-fastify 11.1.28
-  ✕ unmet peer @fastify/static@"^8.0.0 || ^9.0.0": found 10.1.3
+$ curl -D - https://chantia-api.onrender.com/health
+HTTP/2 200
+content-type · vary · access-control-allow-credentials · server: cloudflare
 ```
 
-C'est le seul avertissement de peer qui reste à l'installation. Il ne casse rien
-aujourd'hui — précisément parce que personne n'importe le paquet — mais il place
-Nest devant une version qu'il ne déclare pas supporter, pour un service dont on
-n'a pas l'usage.
+Pas un seul en-tête de protection, et ni Render ni Cloudflare n'en ajoutent.
 
-**Action** — le retirer plutôt que le maintenir. La suppression règle l'alerte et
-l'avertissement d'un coup, sans montée de version du tout.
+`@fastify/helmet` est en place. **La configuration a deux formes**, et la raison
+tient en une phrase : presque tous ces en-têtes protègent du HTML, or ce service
+sert exactement une page HTML — Swagger, et seulement hors production (§1.4).
+
+| en-tête | ce qu'il arrête | portée |
+|---|---|---|
+| `Strict-Transport-Security` | une première requête en clair sur un réseau hostile | tout le trafic |
+| `X-Content-Type-Options` | un corps interprété autrement que son `content-type` | tout le trafic |
+| `Content-Security-Policy` | le chargement de quoi que ce soit depuis une réponse | la page Swagger |
+| `X-Frame-Options` / `frame-ancestors` | l'encadrement de la page dans un site tiers | la page Swagger |
+| `Referrer-Policy` | un chemin d'API — donc un identifiant — parti vers un tiers | tout le trafic |
+
+En production la politique est `default-src 'none'` : une réponse JSON n'a jamais
+vocation à charger quoi que ce soit, donc la politique honnête est de tout
+interdire. En développement, Swagger récupère le strict nécessaire.
+
+Quatre décisions qui ne se lisent pas dans la configuration :
+
+- **`useDefaults: false`.** Helmet fusionne ses propres directives par défaut si
+  on le laisse faire. Une politique qu'on ne peut pas lire en entier est une
+  politique sur laquelle on ne peut pas raisonner.
+- **HSTS à un an, sans `preload`.** Le préchargement est une inscription sur une
+  liste embarquée dans les navigateurs, lente et pénible à quitter. Ça se décide
+  un jour exprès, pas par effet de bord d'un ajout d'en-têtes.
+- **`Cross-Origin-Resource-Policy: same-origin` ne casse pas le front.** CORP
+  n'est vérifié que sur les requêtes `no-cors` ; le front appelle l'API en mode
+  CORS — en-tête `Authorization`, liste d'origines autorisées. Vérifié : le
+  préflight et la requête réelle depuis `http://localhost:3000` passent.
+- **COEP est désactivé.** L'isolation d'origine ne nous apporte rien (ni
+  `SharedArrayBuffer`, ni minuteurs précis) et obligerait chaque sous-ressource
+  tierce à donner son accord.
+
+Sur la CSP de Swagger, une croyance répandue veut que helmet « casse Swagger ».
+Vérification faite sur la page réellement servie : ses trois bundles sont
+**externes et de même origine**, donc `script-src 'self'` les laisse passer ; il
+ne reste que deux blocs `<style>` en ligne, d'où `style-src 'unsafe-inline'` et
+rien de plus. Le test interdit explicitement d'étendre `unsafe-inline` aux
+scripts — le jour où une version de Swagger en insère un, il échouera.
+
+**Où ça vit.** `app/shared/security/security-headers.ts`, pas dans `main.ts` :
+une politique que personne ne peut importer est une politique que personne ne
+peut tester, et **chaque panne possible ici est silencieuse** — un en-tête qui
+cesse d'être envoyé ressemble exactement à un en-tête qui n'a jamais existé.
+`security-headers.spec.ts` fixe le résultat, 7 tests, vérifiés en cassant le code
+exprès : Swagger rallumé en production et `nosniff` retiré font tomber un test
+chacun.
+
+### 1.4 `@fastify/static` — le diagnostic était faux ✅
+
+*Fait le 21 août.* Ce point disait l'inverse de la vérité les 18 et 20 août :
+« aucun code ne l'importe », donc « le retirer plutôt que le maintenir ».
+**Suivre cette action aurait cassé Swagger en production.**
+
+`grep` ne trouvait rien parce que Nest ne l'importe pas : il le charge **par son
+nom, au démarrage**, par un `require()` dynamique qu'aucune recherche textuelle
+ne voit.
+
+```
+main.ts                    SwaggerModule.setup('/api', …)
+  swagger-module.js:99       serveStatic()
+  swagger-module.js:105        app.useStaticAssets({ root, prefix, decorateReply })
+  fastify-adapter.js:308         loadPackage('@fastify/static')
+```
+
+Le paquet servait donc les 1,5 Mo de bundles de Swagger, à chaque démarrage.
+
+**Le vrai problème n'était pas l'inutilité, c'était un étau de versions :**
+
+| qui | plage déclarée |
+|---|---|
+| `@nestjs/platform-fastify` | `^8 \|\| ^9` *(peer optionnelle)* |
+| `@nestjs/swagger` | `^8 \|\| ^9 \|\| ^10` |
+| **versions non vulnérables** | **`>= 10.1.2`** |
+
+L'intersection est vide. Vérifié plutôt que déduit — verrou reconstruit en
+`^9.3.0` dans une copie isolée, puis `pnpm audit` :
+
+```
+high      route guard bypass via path traversal          patché >= 10.1.1
+moderate  authorization bypass via non-canonical paths   patché >= 10.1.2
+```
+
+Deux contournements de contrôle d'accès, sur le composant qui sert des fichiers.
+Redescendre en `^9` pour faire taire l'avertissement de peer aurait rouvert
+exactement ça. La montée en `^10` du 18 août était donc juste ; c'est sa
+justification qui était fausse.
+
+**La sortie de l'étau n'est pas une version, c'est de ne plus servir Swagger.**
+Hors développement, `SwaggerModule.setup` n'est plus appelé, donc
+`useStaticAssets()` non plus, donc `loadPackage` non plus. Le paquet est passé en
+`devDependencies` : c'est là qu'il appartient, puisque seul le développement le
+charge. En production, `/api`, `/api-json` et les bundles répondent 404 — vérifié
+sur un vrai démarrage en `NODE_ENV=production`.
+
+**Deux réserves, parce que ce point a déjà été annoncé clos à tort :**
+
+- **L'avertissement de peer subsiste à l'installation.** `10.1.3` reste résolu
+  pour le développement, et `platform-fastify` continue de ne pas déclarer `^10`.
+  Il est maintenant sans portée en production — le paquet n'y est jamais chargé —
+  mais il n'a pas disparu, et prétendre le contraire serait refaire l'erreur du
+  18 août.
+- **L'image de production contient toujours le paquet.** `Dockerfile.prod` fait
+  un `pnpm install --frozen-lockfile` complet et recopie l'espace de travail
+  entier ; les `devDependencies` sont donc dans l'image. Ce qui a changé, c'est
+  que rien ne les charge. Élaguer l'étage `runner` est un chantier à part, qui
+  vaut pour la taille de l'image plus que pour la sécurité.
+
+### 1.4 bis — la spécification OpenAPI n'est plus publique ✅
+
+Trouvé en vérifiant les deux points ci-dessus, et plus lourd que les deux :
+
+```
+GET /api        → 200  text/html      Swagger UI, sans authentification
+GET /api-json   → 200  19 682 octets  spécification OpenAPI complète
+```
+
+Toute la surface de l'API était publiée : chaque route, chaque forme de DTO,
+chaque champ. Ce n'est pas une faille — une API gardée reste gardée — mais c'est
+une carte offerte à qui veut la lire, sans aucune contrepartie en production.
+
+`swaggerEnabled` vaut `env !== 'production'` (`app.config.ts`). Le choix d'un
+booléen dérivé plutôt que d'une variable d'environnement dédiée est délibéré :
+une porte qui s'ouvre par configuration finit ouverte quelque part. Le jour où la
+préproduction du §3.3 existera et voudra Swagger, ce sera une décision à prendre
+à ce moment-là, pas une option laissée traîner d'avance.
 
 ### 1.5 Le budget quittait le serveur ✅
 
@@ -263,10 +398,12 @@ Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — rega
 `apps/` seulement et concluait faux sur le reste. Le compte réel :
 
 ```
-apps/api          46 tests   (5 fichiers)
+apps/api          53 tests   (6 fichiers)
 packages/shared   40 tests   (3 fichiers)
 apps/web           0         Vitest n'est pas installé
 ```
+
+*(Au 21 août : les 7 tests ajoutés sont ceux des en-têtes de sécurité, §1.3.)*
 
 `packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
 et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
@@ -505,6 +642,10 @@ Solide et documenté :
   (`13-architecture-front.md`)
 - **Frontières de l'API** — les flèches DDD de `06` et le mur autour d'`identity`
   de `08` sont exécutoires, hook de pre-commit et lint en tête de CI (§2.1)
+- **En-têtes de sécurité** — helmet, politique stricte en production et permissive
+  pour la seule page Swagger, sept tests qui la fixent (§1.3)
+- **Surface d'API non publiée** — Swagger et `/api-json` mis hors production, ce
+  qui retire aussi `@fastify/static` du chemin d'exécution (§1.4)
 
 Une réserve sur l'arabe : **il n'a jamais été relu par un locuteur natif.** Les
 traductions sont plausibles, ce n'est pas la même chose que justes.
