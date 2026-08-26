@@ -571,30 +571,47 @@ Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — rega
 `apps/` seulement et concluait faux sur le reste. Le compte réel :
 
 ```
-apps/api          75 tests   (8 fichiers)
+apps/api         102 tests   (9 fichiers)
 packages/shared   40 tests   (3 fichiers)
 apps/web           0         Vitest n'est pas installé
 ```
 
 *(Au 21 août : +7, les en-têtes de sécurité, §1.3. Au 26 : +22, la traduction
-des erreurs métier en HTTP, §2.4.)*
+des erreurs métier en HTTP (§2.4), puis +27, le parcours d'authentification.)*
 
 `packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
 et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
 par rendement ci-dessous, faite depuis les commits qui ont amené ces fonctions.
 Elle est retirée de la liste.
 
-Ce qui reste vrai : côté API, les tests portent sur des failles trouvées après
-coup — une élévation de privilège, une fuite de budget — plus la limitation de
-débit (§1.1), les en-têtes (§1.3) et la traduction des erreurs (§2.4). **Le
-parcours d'authentification lui-même n'est couvert par rien.**
+**Le parcours d'authentification est couvert** *(26 août)*. C'était le point 1 de
+la liste ci-dessous, et le dernier morceau du cœur produit qui ne l'était pas :
+jusque-là, tous les tests de l'API portaient sur des failles trouvées après coup
+— une élévation de privilège, une fuite de budget — plus la limitation de débit
+(§1.1), les en-têtes (§1.3) et la traduction des erreurs (§2.4).
 
-**Action, par ordre de rendement :**
+27 tests dans `identity/application/auth-flow.spec.ts`, qui font tourner les
+vrais handlers sur des doubles en mémoire des cinq ports. Les doubles sont bêtes
+volontairement : ce qui est testé, c'est **l'ordre des étapes et la forme des
+refus**, et un faux malin finirait par s'affirmer lui-même.
 
-1. `apps/api` — le parcours d'authentification de bout en bout : connexion,
-   rotation du jeton, détection de réemploi, acceptation d'invitation.
-2. `apps/web` — Vitest n'est même pas installé. Commencer par les hooks de
-   `model/`, qui sont testables sans rendu.
+Ce qu'ils retiennent, et qui ne se voit pas en lisant le code une fois :
+
+| | ce qui casse si on l'inverse |
+|---|---|
+| `active` est testé **après** le mot de passe | sinon on apprend quelles adresses sont des comptes désactivés sans connaître un seul mot de passe |
+| `simulateVerify()` sur une adresse inconnue | sans lui, « email inconnu » devient mesurablement plus rapide que « mauvais mot de passe » — l'oracle d'énumération |
+| un compte invité jamais accepté répond comme un inconnu | sinon la réponse confirme l'adresse |
+| un jeton retiré présenté deux fois révoque **toute la famille** | c'est la signature d'un vol : le client honnête serait déjà passé au remplaçant |
+| l'expiration n'est **pas** traitée comme un vol | sinon partir en vacances déconnecte tous ses appareils |
+| le remplaçant est écrit **avant** que l'ancien soit révoqué | l'ordre inverse, si la seconde écriture échoue, laisse le client avec deux jetons morts |
+| l'invitation est brûlée **après** la validation du mot de passe | sinon un invité qui se trompe de mot de passe est enfermé dehors, et seul un admin peut le repêcher |
+
+Vérifiés en cassant le code exprès, cinq mutations, cinq échecs — dont les deux
+inversions d'ordre ci-dessus, qu'aucune relecture ne rattrape de façon fiable.
+
+**Reste à faire :** `apps/web` — Vitest n'est même pas installé. Commencer par
+les hooks de `model/`, qui sont testables sans rendu.
 
 ### 2.3 Aucun seuil de couverture
 
