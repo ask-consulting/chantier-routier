@@ -1,18 +1,58 @@
 # 14 — État des lieux et priorités
 
-*Arrêté au 14 août 2026. Révisé les 17, 18, 20 et 21 août 2026.*
+*Arrêté au 14 août 2026. Révisé les 17, 18, 20, 21 et 26 août 2026.*
 
 ## Le constat en une phrase
 
-**Les fondations sont plus solides que le produit.** L'authentification, le
-multi-tenant, les permissions et l'architecture front tiendront des années — mais
-un chef de chantier ne peut toujours rien pointer, et personne ne peut être invité
-sans copier-coller une URL à la main.
+**Les fondations sont plus solides que le produit — et ce qui est écrit n'est pas
+toujours en ligne.** L'authentification, le multi-tenant, les permissions et
+l'architecture front tiendront des années ; mais un chef de chantier ne peut
+toujours rien pointer, personne ne peut être invité sans copier-coller une URL à
+la main, et le durcissement de sécurité du 21 août dort sur une branche locale
+que la production n'a jamais vue.
 
 Ce document classe ce qui manque. L'ordre est une décision prise, pas une
 suggestion : sécurité, puis qualité de code, puis observabilité, puis le mobile,
 puis le module utilisateurs complet avec les notifications. Le métier vient après.
 
+> **Révision du 26 août.** Aucune ligne n'a été écrite depuis le 21 — et c'est
+> précisément le constat.
+>
+> **Le travail de sécurité du 21 août n'est pas en ligne.** Il tient sur une
+> branche locale, `feat/api-security-headers`, jamais poussée, sans PR ouverte.
+> `develop` ne l'a pas, `main` encore moins, et la production pas du tout.
+> Mesuré aujourd'hui sur la vraie production, pas déduit du dépôt :
+>
+> ```
+> GET /health     200   content-type · vary · cf-cache-status · server: cloudflare
+>                       aucun HSTS, aucun nosniff, aucune CSP, aucun Referrer-Policy
+> GET /api        200   text/html          Swagger UI, sans authentification
+> GET /api-json   200   19 682 octets      spécification OpenAPI complète
+> ```
+>
+> `19 682` octets — au dernier octet près, le nombre que ce document citait le
+> 21 août comme le problème à fermer. **Les trois sections marquées ✅ ce
+> jour-là l'étaient à tort** : « fait » y voulait dire *écrit*, pas *livré*.
+> §1.3, §1.4 et §1.4 bis repassent en ⚠️.
+>
+> La leçon change de nature. Les révisions des 17, 18, 20 et 21 août portaient
+> toutes sur un **diagnostic faux** — une dépendance mal jugée, un `grep` pris
+> pour une preuve. Celle-ci porte sur un **diagnostic juste, et un correctif qui
+> n'atteint personne.** Un correctif non fusionné protège exactement autant
+> qu'un correctif jamais écrit ; il coûte seulement plus cher, parce qu'il donne
+> en prime le sentiment que c'est réglé. Un ✅ dans ce document ne vaut
+> désormais que pour du code sur `develop`.
+>
+> D'où une **priorité 0** : livrer ce qui est déjà écrit, avant d'écrire autre
+> chose. C'est la plus petite action du document, et la seule qui change l'état
+> de la production.
+>
+> Le reste du dépôt est sain, revérifié aujourd'hui plutôt que recopié :
+> `pnpm audit` net (0 alerte, tout comme en production), 93 tests verts
+> (53 sur l'API, 40 sur le paquet partagé), `pnpm lint` et `pnpm typecheck`
+> verts. Tous les points encore ouverts ci-dessous ont été reconfirmés un par un
+> dans le code — aucun ne s'est fermé tout seul.
+>
 > **Révision du 21 août.** La priorité 1 est close, et là encore le document
 > avait tort sur l'un des deux points — pour la deuxième révision d'affilée.
 >
@@ -68,6 +108,61 @@ puis le module utilisateurs complet avec les notifications. Le métier vient apr
 > les deux sens — `packages/shared` a quarante tests et non zéro, les « cinq
 > alertes » en étaient vingt-huit, la fuite de budget est fusionnée. Les
 > corrections sont intégrées ci-dessous, pas listées à part.)*
+
+---
+
+## Priorité 0 — Livrer ce qui est déjà écrit
+
+Cette priorité n'existait pas avant le 26 août. Elle ne demande aucune ligne de
+code : tout ce qu'elle recouvre est écrit, testé et vert. Il manque un `git push`
+et une PR.
+
+### 0.1 La branche de sécurité n'est ni poussée ni fusionnée ⚠️
+
+Deux commits, sur une branche qui n'existe que sur cette machine :
+
+```
+44de0ef  feat(api): poser les en-têtes de sécurité et sortir Swagger de la production
+894f992  docs: réviser l'état des lieux au 21 août
+```
+
+| | ce que contient la branche | ce que voit la production |
+|---|---|---|
+| en-têtes de protection | HSTS, `nosniff`, CSP, `Referrer-Policy`, CORP | aucun |
+| Swagger UI (`/api`) | 404 hors développement | 200, `text/html`, sans authentification |
+| spécification (`/api-json`) | 404 hors développement | 200, 19 682 octets |
+| `@fastify/static` | hors du chemin d'exécution | chargé à chaque démarrage |
+| tests | 7, sur la politique d'en-têtes | — (ils ne sont pas sur `develop` non plus) |
+
+`develop` est donc toujours à 46 tests sur l'API, pas 53 : les sept tests qui
+fixent la politique d'en-têtes sont sur la branche, avec le code qu'ils fixent.
+
+**Action** — pousser la branche, ouvrir la PR vers `develop`, fusionner, puis
+**re-mesurer** `/health`, `/api` et `/api-json` sur la production. La dernière
+étape n'est pas une formalité : c'est exactement celle qui manquait le 21 août.
+
+Le redéploiement, lui, ne demande rien. `render.yaml` porte `autoDeploy: true` et
+`NODE_ENV=production` ; `swaggerEnabled` valant `env !== 'production'`, Swagger
+s'éteindra de lui-même à la première mise en ligne. Vérifié dans la
+configuration — donc à confirmer sur la vraie réponse, pas à cocher d'avance.
+
+**Une réserve sur la mesure de production ci-dessus.** Elle est passée par un
+proxy TLS interceptant, seul chemin sortant depuis cette machine. Les codes de
+statut et les 19 682 octets sont robustes — un proxy ne fabrique pas une page
+Swagger. L'absence d'en-têtes l'est un peu moins : un intermédiaire peut en
+retirer. Le résultat concorde avec la mesure du 21 août et avec l'état du code
+déployé, mais la vérification qui tranche est celle d'après la fusion, depuis un
+réseau non intercepté.
+
+### 0.2 `main` est 17 commits derrière `develop`
+
+Les deux branches ont divergé et personne ne les a rapprochées. Ça n'a aucune
+conséquence tant que `develop` est la branche déployée — mais c'est précisément
+ce qui rend la question du §3.3 urgente : le jour où la production est promue
+depuis `main`, ce retard devient la production elle-même.
+
+**Action** — trancher §3.3 (quelle branche déploie quoi) avant que l'écart
+grandisse, ou aligner `main` sur `develop` en attendant.
 
 ---
 
@@ -172,10 +267,11 @@ redémarrent :
 État final : `pnpm audit` net, 46 tests sur `apps/api`, 40 sur `packages/shared`,
 `pnpm build` et `pnpm typecheck` verts.
 
-### 1.3 En-têtes de sécurité ✅
+### 1.3 En-têtes de sécurité — écrit, pas livré ⚠️
 
-*Fait le 21 août.* Le constat de départ a été mesuré sur la production, pas lu
-dans le code :
+*Écrit le 21 août, toujours pas fusionné au 26 (§0.1).* Le constat de départ a
+été mesuré sur la production, pas lu dans le code — et il **reste vrai à ce
+jour**, la mesure du 26 août rendant exactement la même réponse :
 
 ```
 $ curl -D - https://chantia-api.onrender.com/health
@@ -232,9 +328,10 @@ cesse d'être envoyé ressemble exactement à un en-tête qui n'a jamais existé
 exprès : Swagger rallumé en production et `nosniff` retiré font tomber un test
 chacun.
 
-### 1.4 `@fastify/static` — le diagnostic était faux ✅
+### 1.4 `@fastify/static` — le diagnostic était faux — écrit, pas livré ⚠️
 
-*Fait le 21 août.* Ce point disait l'inverse de la vérité les 18 et 20 août :
+*Écrit le 21 août, toujours pas fusionné au 26 (§0.1).* Ce point disait
+l'inverse de la vérité les 18 et 20 août :
 « aucun code ne l'importe », donc « le retirer plutôt que le maintenir ».
 **Suivre cette action aurait cassé Swagger en production.**
 
@@ -292,16 +389,17 @@ sur un vrai démarrage en `NODE_ENV=production`.
   que rien ne les charge. Élaguer l'étage `runner` est un chantier à part, qui
   vaut pour la taille de l'image plus que pour la sécurité.
 
-### 1.4 bis — la spécification OpenAPI n'est plus publique ✅
+### 1.4 bis — la spécification OpenAPI, toujours publique ⚠️
 
-Trouvé en vérifiant les deux points ci-dessus, et plus lourd que les deux :
+Trouvé le 21 août en vérifiant les deux points ci-dessus, plus lourd que les
+deux — et **encore ouvert le 26**, le correctif n'étant pas fusionné (§0.1) :
 
 ```
 GET /api        → 200  text/html      Swagger UI, sans authentification
 GET /api-json   → 200  19 682 octets  spécification OpenAPI complète
 ```
 
-Toute la surface de l'API était publiée : chaque route, chaque forme de DTO,
+Toute la surface de l'API est publiée : chaque route, chaque forme de DTO,
 chaque champ. Ce n'est pas une faille — une API gardée reste gardée — mais c'est
 une carte offerte à qui veut la lire, sans aucune contrepartie en production.
 
@@ -623,7 +721,7 @@ demande.
 
 ## Annexe — Ce qui est construit
 
-Solide et documenté :
+Sur `develop`, donc en ligne — solide et documenté :
 
 - **Identité** — contexte borné, schéma Postgres propre, aucune clé étrangère ne
   traverse la frontière (`08-identity-module.md`)
@@ -642,6 +740,10 @@ Solide et documenté :
   (`13-architecture-front.md`)
 - **Frontières de l'API** — les flèches DDD de `06` et le mur autour d'`identity`
   de `08` sont exécutoires, hook de pre-commit et lint en tête de CI (§2.1)
+
+Écrit mais pas en ligne — à ne pas compter comme acquis tant que §0.1 n'est pas
+fait :
+
 - **En-têtes de sécurité** — helmet, politique stricte en production et permissive
   pour la seule page Swagger, sept tests qui la fixent (§1.3)
 - **Surface d'API non publiée** — Swagger et `/api-json` mis hors production, ce
