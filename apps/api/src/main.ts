@@ -4,9 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app/app.module';
 import { AppConfig } from '@config/app.config';
 import { DomainExceptionFilter } from '@shared/presentation/domain-exception.filter';
+import { securityHeaderOptions } from '@shared/security/security-headers';
 import { ValidationException } from '@shared/presentation/exceptions/validation.exception';
 
 async function bootstrap(): Promise<void> {
@@ -14,6 +16,12 @@ async function bootstrap(): Promise<void> {
     AppModule,
     new FastifyAdapter({ routerOptions: { ignoreTrailingSlash: true } }),
   );
+
+  const appConfig = app.get(ConfigService).getOrThrow<AppConfig>('app');
+
+  // Registered before the routes exist: Nest mounts them during `init()`, which
+  // `listen()` calls, and a Fastify hook only sees what is registered after it.
+  await app.register(helmet, securityHeaderOptions(appConfig));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -38,8 +46,6 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
 
-  const appConfig = app.get(ConfigService).getOrThrow<AppConfig>('app');
-
   const allowedOrigins = ['http://localhost:3000', ...appConfig.corsOrigins];
   app.enableCors({
     origin: allowedOrigins,
@@ -48,13 +54,18 @@ async function bootstrap(): Promise<void> {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Chantia API')
-    .setDescription('Road worksite management REST API')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup('/api', app, SwaggerModule.createDocument(app, swaggerConfig));
+  // Off in production (see `app.config.ts`). `SwaggerModule.setup` is what calls
+  // `useStaticAssets()`, and that is the only thing in this service that loads
+  // `@fastify/static` — hence a devDependency.
+  if (appConfig.swaggerEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Chantia API')
+      .setDescription('Road worksite management REST API')
+      .setVersion('0.1.0')
+      .addBearerAuth()
+      .build();
+    SwaggerModule.setup('/api', app, SwaggerModule.createDocument(app, swaggerConfig));
+  }
 
   await app.listen(appConfig.port, '0.0.0.0');
 }
