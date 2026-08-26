@@ -571,12 +571,13 @@ Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — rega
 `apps/` seulement et concluait faux sur le reste. Le compte réel :
 
 ```
-apps/api          53 tests   (6 fichiers)
+apps/api          75 tests   (8 fichiers)
 packages/shared   40 tests   (3 fichiers)
 apps/web           0         Vitest n'est pas installé
 ```
 
-*(Au 21 août : les 7 tests ajoutés sont ceux des en-têtes de sécurité, §1.3.)*
+*(Au 21 août : +7, les en-têtes de sécurité, §1.3. Au 26 : +22, la traduction
+des erreurs métier en HTTP, §2.4.)*
 
 `packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
 et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
@@ -585,8 +586,8 @@ Elle est retirée de la liste.
 
 Ce qui reste vrai : côté API, les tests portent sur des failles trouvées après
 coup — une élévation de privilège, une fuite de budget — plus la limitation de
-débit ajoutée au point 1.1. Le parcours d'authentification lui-même n'est couvert
-par rien.
+débit (§1.1), les en-têtes (§1.3) et la traduction des erreurs (§2.4). **Le
+parcours d'authentification lui-même n'est couvert par rien.**
 
 **Action, par ordre de rendement :**
 
@@ -641,9 +642,36 @@ composition. Elle reste un `HttpException`, sous `presentation/`.
 **Le corps de réponse est inchangé**, volontairement : mêmes clés, mêmes statuts,
 même tableau `errors[]` avec les codes i18n que le front lit pour marquer les
 règles de mot de passe non tenues. Le déplacement change où la décision vit, pas
-ce que l'appelant reçoit. **Réserve** — cette équivalence est tenue par
-construction, pas par un test : le filtre n'est couvert par rien. C'est le premier
-candidat de la liste 2.2.
+ce que l'appelant reçoit.
+
+**La réserve est levée** *(26 août)*. Cette équivalence était tenue par
+construction et par relecture ; elle l'est maintenant par 22 tests, répartis en
+deux parce que la frontière l'impose — `app/` ne peut pas importer `identity/`,
+spec comprise, et il n'y a pas d'exception à cette règle (§2.1). Le découpage
+qui en sort est celui qu'il fallait de toute façon :
+
+| fichier | ce qu'il fixe |
+|---|---|
+| `app/shared/presentation/domain-exception.filter.spec.ts` | ce qu'un appelant reçoit pour chaque `kind` — statut, `error`, et **l'ordre exact des clés** |
+| `identity/domain/exceptions/identity.exceptions.spec.ts` | quel `kind` chacune des neuf déclare |
+
+Trois choses que ces tests fixent et qu'un relecteur casserait sans le voir :
+
+- **`RegistrationClosedException` répond 404 en voulant dire « interdit ».** Le
+  message imite celui de Nest pour une route jamais déclarée. C'est du
+  camouflage délibéré : un 403 confirmerait que l'inscription existe dans ce
+  déploiement. Qui « corrige » ça en `forbidden` doit supprimer un test dont le
+  commentaire explique pourquoi — c'est tout l'objet du test.
+- **`errors` est absent, pas `undefined` ni `[]`.** Un front qui teste
+  `'errors' in body` distingue les trois. L'assertion porte sur
+  `Object.keys(body)`, donc sur l'ordre aussi.
+- **Chaque `kind` de l'union a une ligne dans la table.** Elle est indexée à
+  l'exécution : un `kind` ajouté sans ligne déstructure `undefined` et répond
+  500. Le typage seul ne ferme pas ce trou.
+
+Vérifiés en cassant le code exprès, comme au §1.3 : `RegistrationClosed` passée
+en `forbidden`, `conflict` répondant 400, et `errors` toujours envoyé — un test
+tombe, un test tombe, six tests tombent.
 
 ---
 
