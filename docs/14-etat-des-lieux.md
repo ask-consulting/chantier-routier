@@ -4,24 +4,26 @@
 
 ## Le constat en une phrase
 
-**Les fondations sont plus solides que le produit — et ce qui est écrit n'est pas
-toujours en ligne.** L'authentification, le multi-tenant, les permissions et
-l'architecture front tiendront des années ; mais un chef de chantier ne peut
-toujours rien pointer, personne ne peut être invité sans copier-coller une URL à
-la main, et le durcissement de sécurité du 21 août dort sur une branche locale
-que la production n'a jamais vue.
+**Les fondations sont plus solides que le produit.** L'authentification, le
+multi-tenant, les permissions, l'architecture front et le durcissement de l'API
+tiendront des années — mais un chef de chantier ne peut toujours rien pointer,
+et personne ne peut être invité sans copier-coller une URL à la main.
+
+La priorité 1 est close, et vérifiée là où ça compte : sur la production, pas
+dans le dépôt.
 
 Ce document classe ce qui manque. L'ordre est une décision prise, pas une
 suggestion : sécurité, puis qualité de code, puis observabilité, puis le mobile,
 puis le module utilisateurs complet avec les notifications. Le métier vient après.
 
-> **Révision du 26 août.** Aucune ligne n'a été écrite depuis le 21 — et c'est
-> précisément le constat.
+> **Révision du 26 août.** Aucune ligne n'avait été écrite depuis le 21 — et
+> c'était précisément le constat. Il est clos le soir même : la priorité 0 que
+> cette révision a ouverte a été tenue dans la journée (PR #22).
 >
-> **Le travail de sécurité du 21 août n'est pas en ligne.** Il tient sur une
+> **Le travail de sécurité du 21 août n'était pas en ligne.** Il tenait sur une
 > branche locale, `feat/api-security-headers`, jamais poussée, sans PR ouverte.
-> `develop` ne l'a pas, `main` encore moins, et la production pas du tout.
-> Mesuré aujourd'hui sur la vraie production, pas déduit du dépôt :
+> `develop` ne l'avait pas, `main` encore moins, et la production pas du tout.
+> Mesuré sur la vraie production, pas déduit du dépôt :
 >
 > ```
 > GET /health     200   content-type · vary · cf-cache-status · server: cloudflare
@@ -33,7 +35,9 @@ puis le module utilisateurs complet avec les notifications. Le métier vient apr
 > `19 682` octets — au dernier octet près, le nombre que ce document citait le
 > 21 août comme le problème à fermer. **Les trois sections marquées ✅ ce
 > jour-là l'étaient à tort** : « fait » y voulait dire *écrit*, pas *livré*.
-> §1.3, §1.4 et §1.4 bis repassent en ⚠️.
+> Elles sont revenues à ✅ en fin de journée, cette fois pour la bonne raison —
+> la production a été re-mesurée après la fusion, et rend la politique attendue
+> (§0.1).
 >
 > La leçon change de nature. Les révisions des 17, 18, 20 et 21 août portaient
 > toutes sur un **diagnostic faux** — une dépendance mal jugée, un `grep` pris
@@ -43,12 +47,20 @@ puis le module utilisateurs complet avec les notifications. Le métier vient apr
 > en prime le sentiment que c'est réglé. Un ✅ dans ce document ne vaut
 > désormais que pour du code sur `develop`.
 >
-> D'où une **priorité 0** : livrer ce qui est déjà écrit, avant d'écrire autre
-> chose. C'est la plus petite action du document, et la seule qui change l'état
-> de la production.
+> D'où la **priorité 0** : livrer ce qui est déjà écrit, avant d'écrire autre
+> chose. C'était la plus petite action du document, et la seule qui changeait
+> l'état de la production. Elle est faite.
 >
-> Le reste du dépôt est sain, revérifié aujourd'hui plutôt que recopié :
-> `pnpm audit` net (0 alerte, tout comme en production), 93 tests verts
+> **Un point neuf s'est ouvert en la faisant (§1.2 bis).** Le `git push` a fait
+> répondre GitHub : neuf alertes de dépendances sur `develop`, là où §1.2
+> déclare zéro depuis le 20 août et où `pnpm audit` rend toujours zéro. Après
+> vérification, le verrou est propre et les neuf alertes sont périmées —
+> Dependabot ne les a jamais réévaluées. §1.2 tient donc sur le fond, mais pas
+> sur la méthode : « zéro alerte » y avait été mesuré au seul `pnpm audit`. Un
+> outil ne donne pas l'état du dépôt, il donne son avis — c'est le `grep` des
+> révisions précédentes, avec un instrument plus crédible.
+>
+> Le reste du dépôt est sain, revérifié plutôt que recopié : 93 tests verts
 > (53 sur l'API, 40 sur le paquet partagé), `pnpm lint` et `pnpm typecheck`
 > verts. Tous les points encore ouverts ci-dessous ont été reconfirmés un par un
 > dans le code — aucun ne s'est fermé tout seul.
@@ -117,7 +129,7 @@ Cette priorité n'existait pas avant le 26 août. Elle ne demande aucune ligne d
 code : tout ce qu'elle recouvre est écrit, testé et vert. Il manque un `git push`
 et une PR.
 
-### 0.1 La branche de sécurité n'est ni poussée ni fusionnée ⚠️
+### 0.1 La branche de sécurité est fusionnée et en ligne ✅
 
 Deux commits, sur une branche qui n'existe que sur cette machine :
 
@@ -137,22 +149,41 @@ Deux commits, sur une branche qui n'existe que sur cette machine :
 `develop` est donc toujours à 46 tests sur l'API, pas 53 : les sept tests qui
 fixent la politique d'en-têtes sont sur la branche, avec le code qu'ils fixent.
 
-**Action** — pousser la branche, ouvrir la PR vers `develop`, fusionner, puis
-**re-mesurer** `/health`, `/api` et `/api-json` sur la production. La dernière
-étape n'est pas une formalité : c'est exactement celle qui manquait le 21 août.
+*Fermé le 26 août, PR #22.* La branche a été poussée, fusionnée dans `develop`,
+et Render a redéployé seul (`autoDeploy: true`). **Puis la production a été
+re-mesurée** — l'étape qui manquait le 21 août, et la seule qui distingue
+« écrit » de « livré » :
 
-Le redéploiement, lui, ne demande rien. `render.yaml` porte `autoDeploy: true` et
-`NODE_ENV=production` ; `swaggerEnabled` valant `env !== 'production'`, Swagger
-s'éteindra de lui-même à la première mise en ligne. Vérifié dans la
-configuration — donc à confirmer sur la vraie réponse, pas à cocher d'avance.
+```
+$ curl -D - https://chantia-api.onrender.com/health
+HTTP/2 200
+content-security-policy: default-src 'none';base-uri 'none';form-action 'none';frame-ancestors 'none'
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+referrer-policy: no-referrer
+cross-origin-resource-policy: same-origin
+x-frame-options: DENY
 
-**Une réserve sur la mesure de production ci-dessus.** Elle est passée par un
-proxy TLS interceptant, seul chemin sortant depuis cette machine. Les codes de
-statut et les 19 682 octets sont robustes — un proxy ne fabrique pas une page
-Swagger. L'absence d'en-têtes l'est un peu moins : un intermédiaire peut en
-retirer. Le résultat concorde avec la mesure du 21 août et avec l'état du code
-déployé, mais la vérification qui tranche est celle d'après la fusion, depuis un
-réseau non intercepté.
+GET /api        → 404
+GET /api-json   → 404   71 octets
+```
+
+Conforme à la politique décrite en §1.3, au détail près : CSP `default-src
+'none'` en production, HSTS à un an **sans `preload`**, COEP absent — les trois
+décisions délibérées y sont visibles dans la réponse. Swagger et la
+spécification ont disparu ; les 19 682 octets avec.
+
+**Deux notes de méthode**, parce que la mesure elle-même a failli mentir dans
+les deux sens :
+
+- **La première requête est revenue vide.** Le plan gratuit de Render endort le
+  service ; le réveil à froid dépasse le délai. Une mesure qui échoue ressemble
+  à une mesure qui trouve zéro en-tête — exactement la panne silencieuse que
+  §1.3 décrit à propos des en-têtes eux-mêmes. Il faut relancer, pas conclure.
+- **Le chemin sortant de cette machine passe par un proxy TLS interceptant.**
+  La réserve levée avant la fusion vaut toujours : un intermédiaire peut retirer
+  des en-têtes. Ici il en ajoute — donc l'inquiétude ne porte plus. Les 404 sur
+  `/api` et `/api-json`, eux, n'ont jamais dépendu du proxy.
 
 ### 0.2 `main` est 17 commits derrière `develop`
 
@@ -267,11 +298,55 @@ redémarrent :
 État final : `pnpm audit` net, 46 tests sur `apps/api`, 40 sur `packages/shared`,
 `pnpm build` et `pnpm typecheck` verts.
 
-### 1.3 En-têtes de sécurité — écrit, pas livré ⚠️
+### 1.2 bis — Dependabot et `pnpm audit` ne mesurent pas la même chose ⚠️
 
-*Écrit le 21 août, toujours pas fusionné au 26 (§0.1).* Le constat de départ a
-été mesuré sur la production, pas lu dans le code — et il **reste vrai à ce
-jour**, la mesure du 26 août rendant exactement la même réponse :
+*Trouvé le 26 août, en poussant la branche.* GitHub a répondu au `git push` :
+
+```
+GitHub found 9 vulnerabilities on the default branch (8 high, 1 moderate)
+```
+
+La branche par défaut est `develop` — pas `main`. Donc GitHub annonce neuf
+alertes là où §1.2 déclare « zéro partout » depuis le 20 août, et où
+`pnpm audit` rend toujours zéro aujourd'hui. **Les deux outils se contredisent
+sur la même branche.**
+
+Ce sont exactement les six paquets que §1.2 dit avoir corrigés. Plages
+vulnérables confrontées aux versions **réellement résolues dans le verrou** :
+
+| paquet | vulnérable | résolu | |
+|---|---|---|---|
+| `brace-expansion` | `< 1.1.17` · `< 5.0.9` | 1.1.18 · 5.0.9 | ✓ |
+| `deepmerge-ts` | `< 8.0.0` | 8.0.1 | ✓ |
+| `fast-uri` | `< 3.1.5` · `< 4.1.2` | 3.1.5 · 4.1.2 | ✓ |
+| `js-yaml` | `< 4.3.1` | 4.3.1 · 5.3.0 | ✓ |
+| `nanoid` | `< 3.3.18` | 3.3.18 | ✓ |
+| `postcss` | `<= 8.5.22` | 8.5.26 | ✓ |
+
+**Les neuf alertes sont périmées.** Toutes créées entre le 1er et le 17 août,
+donc avant le correctif du 20 — et sur les neuf, `created_at == updated_at` :
+Dependabot ne les a jamais réévaluées, ni après la fusion du 20, ni après celle
+du 26. Rien de vulnérable n'est installé ; §1.2 tient sur le fond.
+
+Ce qui ne tient pas, c'est la façon dont il a été vérifié. « Zéro alerte » y a
+été mesuré au seul `pnpm audit`, et présenté comme l'état du dépôt. Un seul
+outil ne donne pas l'état du dépôt : il donne son avis. C'est la même erreur de
+méthode que le `grep` des révisions précédentes, avec un instrument plus
+crédible — et c'est ce qui la rend plus facile à répéter.
+
+**Le coût n'est pas une faille, c'est l'usure.** Neuf alertes hautes rouges en
+permanence dans l'onglet Sécurité apprennent à ne plus l'ouvrir. La dixième, un
+jour, sera vraie.
+
+**Action** — fermer les neuf à la main (`gh api … /dependabot/alerts/N -X PATCH
+-f state=dismissed -f dismissed_reason=fix_started`, ou l'interface), puis
+vérifier que le compte retombe à zéro. Et ne plus écrire « zéro alerte » sans
+dire **avec quoi** ça a été mesuré.
+
+### 1.3 En-têtes de sécurité ✅
+
+*Écrit le 21 août, livré et vérifié en production le 26 (§0.1).* Le constat de
+départ a été mesuré sur la production, pas lu dans le code :
 
 ```
 $ curl -D - https://chantia-api.onrender.com/health
@@ -328,10 +403,10 @@ cesse d'être envoyé ressemble exactement à un en-tête qui n'a jamais existé
 exprès : Swagger rallumé en production et `nosniff` retiré font tomber un test
 chacun.
 
-### 1.4 `@fastify/static` — le diagnostic était faux — écrit, pas livré ⚠️
+### 1.4 `@fastify/static` — le diagnostic était faux ✅
 
-*Écrit le 21 août, toujours pas fusionné au 26 (§0.1).* Ce point disait
-l'inverse de la vérité les 18 et 20 août :
+*Écrit le 21 août, livré le 26 (§0.1).* Ce point disait l'inverse de la vérité
+les 18 et 20 août :
 « aucun code ne l'importe », donc « le retirer plutôt que le maintenir ».
 **Suivre cette action aurait cassé Swagger en production.**
 
@@ -389,17 +464,17 @@ sur un vrai démarrage en `NODE_ENV=production`.
   que rien ne les charge. Élaguer l'étage `runner` est un chantier à part, qui
   vaut pour la taille de l'image plus que pour la sécurité.
 
-### 1.4 bis — la spécification OpenAPI, toujours publique ⚠️
+### 1.4 bis — la spécification OpenAPI n'est plus publique ✅
 
-Trouvé le 21 août en vérifiant les deux points ci-dessus, plus lourd que les
-deux — et **encore ouvert le 26**, le correctif n'étant pas fusionné (§0.1) :
+Trouvé le 21 août en vérifiant les deux points ci-dessus, et plus lourd que les
+deux — fermé en production le 26 (§0.1) :
 
 ```
 GET /api        → 200  text/html      Swagger UI, sans authentification
 GET /api-json   → 200  19 682 octets  spécification OpenAPI complète
 ```
 
-Toute la surface de l'API est publiée : chaque route, chaque forme de DTO,
+Toute la surface de l'API était publiée : chaque route, chaque forme de DTO,
 chaque champ. Ce n'est pas une faille — une API gardée reste gardée — mais c'est
 une carte offerte à qui veut la lire, sans aucune contrepartie en production.
 
@@ -496,12 +571,13 @@ Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — rega
 `apps/` seulement et concluait faux sur le reste. Le compte réel :
 
 ```
-apps/api          53 tests   (6 fichiers)
+apps/api          75 tests   (8 fichiers)
 packages/shared   40 tests   (3 fichiers)
 apps/web           0         Vitest n'est pas installé
 ```
 
-*(Au 21 août : les 7 tests ajoutés sont ceux des en-têtes de sécurité, §1.3.)*
+*(Au 21 août : +7, les en-têtes de sécurité, §1.3. Au 26 : +22, la traduction
+des erreurs métier en HTTP, §2.4.)*
 
 `packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
 et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
@@ -510,8 +586,8 @@ Elle est retirée de la liste.
 
 Ce qui reste vrai : côté API, les tests portent sur des failles trouvées après
 coup — une élévation de privilège, une fuite de budget — plus la limitation de
-débit ajoutée au point 1.1. Le parcours d'authentification lui-même n'est couvert
-par rien.
+débit (§1.1), les en-têtes (§1.3) et la traduction des erreurs (§2.4). **Le
+parcours d'authentification lui-même n'est couvert par rien.**
 
 **Action, par ordre de rendement :**
 
@@ -566,9 +642,36 @@ composition. Elle reste un `HttpException`, sous `presentation/`.
 **Le corps de réponse est inchangé**, volontairement : mêmes clés, mêmes statuts,
 même tableau `errors[]` avec les codes i18n que le front lit pour marquer les
 règles de mot de passe non tenues. Le déplacement change où la décision vit, pas
-ce que l'appelant reçoit. **Réserve** — cette équivalence est tenue par
-construction, pas par un test : le filtre n'est couvert par rien. C'est le premier
-candidat de la liste 2.2.
+ce que l'appelant reçoit.
+
+**La réserve est levée** *(26 août)*. Cette équivalence était tenue par
+construction et par relecture ; elle l'est maintenant par 22 tests, répartis en
+deux parce que la frontière l'impose — `app/` ne peut pas importer `identity/`,
+spec comprise, et il n'y a pas d'exception à cette règle (§2.1). Le découpage
+qui en sort est celui qu'il fallait de toute façon :
+
+| fichier | ce qu'il fixe |
+|---|---|
+| `app/shared/presentation/domain-exception.filter.spec.ts` | ce qu'un appelant reçoit pour chaque `kind` — statut, `error`, et **l'ordre exact des clés** |
+| `identity/domain/exceptions/identity.exceptions.spec.ts` | quel `kind` chacune des neuf déclare |
+
+Trois choses que ces tests fixent et qu'un relecteur casserait sans le voir :
+
+- **`RegistrationClosedException` répond 404 en voulant dire « interdit ».** Le
+  message imite celui de Nest pour une route jamais déclarée. C'est du
+  camouflage délibéré : un 403 confirmerait que l'inscription existe dans ce
+  déploiement. Qui « corrige » ça en `forbidden` doit supprimer un test dont le
+  commentaire explique pourquoi — c'est tout l'objet du test.
+- **`errors` est absent, pas `undefined` ni `[]`.** Un front qui teste
+  `'errors' in body` distingue les trois. L'assertion porte sur
+  `Object.keys(body)`, donc sur l'ordre aussi.
+- **Chaque `kind` de l'union a une ligne dans la table.** Elle est indexée à
+  l'exécution : un `kind` ajouté sans ligne déstructure `undefined` et répond
+  500. Le typage seul ne ferme pas ce trou.
+
+Vérifiés en cassant le code exprès, comme au §1.3 : `RegistrationClosed` passée
+en `forbidden`, `conflict` répondant 400, et `errors` toujours envoyé — un test
+tombe, un test tombe, six tests tombent.
 
 ---
 
@@ -740,9 +843,6 @@ Sur `develop`, donc en ligne — solide et documenté :
   (`13-architecture-front.md`)
 - **Frontières de l'API** — les flèches DDD de `06` et le mur autour d'`identity`
   de `08` sont exécutoires, hook de pre-commit et lint en tête de CI (§2.1)
-
-Écrit mais pas en ligne — à ne pas compter comme acquis tant que §0.1 n'est pas
-fait :
 
 - **En-têtes de sécurité** — helmet, politique stricte en production et permissive
   pour la seule page Swagger, sept tests qui la fixent (§1.3)
