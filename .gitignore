@@ -36,3 +36,6 @@ pnpm-debug.log*
 # Supabase
 supabase/.branches
 supabase/.temp
+
+# Rapports de couverture
+coverage/

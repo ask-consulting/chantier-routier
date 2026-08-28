@@ -565,7 +565,7 @@ Rien n'est partagé entre les trois configurations : le jour où une quatrième
 apparaît (le mobile), il faudra un paquet `@chantia/eslint-config` plutôt qu'un
 quatrième copier-coller.
 
-### 2.2 Le trou est sur le web, pas sur le paquet partagé
+### 2.2 Le trou du web est comblé ✅
 
 Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — regardait
 `apps/` seulement et concluait faux sur le reste. Le compte réel :
@@ -573,11 +573,14 @@ Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — rega
 ```
 apps/api         102 tests   (9 fichiers)
 packages/shared   40 tests   (3 fichiers)
-apps/web           0         Vitest n'est pas installé
+apps/web          31 tests   (3 fichiers)
 ```
 
 *(Au 21 août : +7, les en-têtes de sécurité, §1.3. Au 26 : +22, la traduction
-des erreurs métier en HTTP (§2.4), puis +27, le parcours d'authentification.)*
+
+des erreurs métier en HTTP (§2.4), +27 le parcours d'authentification, et +31
+sur le front. Les deux derniers lots sont sur des branches distinctes ; le
+compte de `apps/api` ci-dessus est celui de `develop`.)*
 
 `packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
 et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
@@ -613,10 +616,85 @@ inversions d'ordre ci-dessus, qu'aucune relecture ne rattrape de façon fiable.
 **Reste à faire :** `apps/web` — Vitest n'est même pas installé. Commencer par
 les hooks de `model/`, qui sont testables sans rendu.
 
-### 2.3 Aucun seuil de couverture
+**Le front a des tests** *(28 août)*. Vitest n'y était pas installé du tout ;
+il l'est, avec jsdom et Testing Library, et 31 tests couvrent `model/` — la
+couche que `13-architecture-front.md` définit comme « ce que l'écran décide
+avant de dessiner ». C'est la partie qui survit à une refonte visuelle.
 
-Rien n'empêche la couverture de baisser. Poser un seuil bas mais réel — et qui ne
-descend jamais — vaut mieux qu'un objectif élevé que personne ne tient.
+La configuration reprend deux leçons déjà payées ailleurs :
+
+- **`vite` est déclaré en `devDependencies`, pas surchargé.** C'est la leçon du
+  §1.2, dont la version front aurait échoué en silence de la même façon.
+- **L'alias `@/…` est redéclaré dans `vitest.config.mts`.** Vitest ne lit pas les
+  `paths` de `tsconfig.json` — c'est exactement le piège qui a laissé les
+  handlers de l'API sans tests pendant des mois.
+
+Ce que les tests retiennent, et qui ne se voit pas à l'écran :
+
+| | ce qui casse si on l'inverse |
+|---|---|
+| 401 et « email inconnu » donnent **une seule** clé d'erreur | le front rendrait l'oracle d'énumération que l'API refuse de donner |
+| seul le 403 distingue un compte désactivé | c'est le seul cas qu'un nouvel essai ne répare pas |
+| `pending` **reste** vrai après un succès | sinon le bouton se rallume sur une page qui s'en va |
+| une réponse d'aperçu tardive est ignorée | sinon l'écran affiche le nom de l'invité précédent |
+| seul le dernier segment de la clé i18n est gardé | sinon le composant cherche `form.errors.password.form.errors.password.minLength` |
+| les erreurs sont des **clés**, jamais des phrases | sinon un message serveur en anglais atterrit sur un écran arabe |
+| un écart de budget nul reste `neutral` | tomber pile est une coïncidence d'arrondi, pas un résultat |
+
+Vérifiés en cassant le code exprès : cinq mutations, cinq échecs.
+
+**Reste à faire** — les composants de `ui/` ne sont pas couverts, et c'est
+volontaire pour l'instant : ils changent avec le design, `model/` non. Le point
+suivant est §2.3.
+
+### 2.3 Le cliquet de couverture ✅
+
+*Fait le 28 août.* Rien n'empêchait la couverture de baisser. Un seuil bas mais
+réel — et qui ne descend jamais — vaut mieux qu'un objectif élevé que personne
+ne tient.
+
+**Sonar a été écarté, délibérément.** Le dépôt est public, donc SonarQube Cloud
+serait gratuit. Ce qui manquait ici était une seule chose : un chiffre qui ne
+peut pas descendre. C'est dix lignes de configuration contre une intégration
+tierce — et surtout, le mode d'échec récurrent de ce projet est *un signal que
+personne ne lit* (§1.2 bis, quatre révisions de suite). Un profil Sonar par
+défaut sort des centaines de *code smells* sur une base jeune : ce serait un
+second tableau de bord ignoré à côté du premier. À rouvrir à l'arrivée d'un
+deuxième développeur, ou d'un quatrième paquet.
+
+**`all: true` est ce qui en fait un cliquet.** Laissé par défaut, v8 ne mesure
+que les fichiers qu'un test a importés — dix nouveaux modules non testés ne
+feraient bouger le pourcentage d'aucun point, et la barrière serait verte
+pendant que le code empire. Mesuré ainsi, le premier chiffre du front était
+80 % ; compté honnêtement, il est de 17 %.
+
+Les seuils sont **la mesure du jour, arrondie au plancher** — pas un objectif :
+
+| paquet | relevé | seuil posé | dénominateur |
+|---|---|---|---|
+| `packages/shared` | 82,6 % | 82 | `src/**`, hors barils |
+| `apps/api` | 25,3 % | 25 | `src/**`, hors `main.ts`, `*.module.ts`, `scripts/` |
+| `apps/web` | 17,5 % | 17 | `src/**`, hors `src/app/**` (pages Next) |
+
+Deux choses à ne pas se raconter sur ces chiffres :
+
+- **La couverture basse de l'API est réelle**, pas un artefact de comptage.
+  Retirer le câblage et les déclarations ne l'a fait passer que de 24,4 % à
+  23,4 % : ce qui n'est pas testé, ce sont des repositories, des mappers, des
+  gardes et les autres handlers — de la logique, pas de la plomberie.
+- **Le cliquet mord au deuxième fichier non testé, pas au premier.** Vérifié en
+  ajoutant des modules sonde un à un : 17,51 → 17,17 (passe) → 16,84 (bloque).
+  L'arrondi au plancher laisse un demi-point de mou, soit environ un fichier.
+  Serrer davantage ferait échouer la moindre ligne non couverte ajoutée dans un
+  fichier déjà couvert, et le seuil finirait relevé à chaque commit — c'est-à-dire
+  contourné.
+
+Aucune modification de la CI : `pnpm test` porte désormais `--coverage`, et
+l'étape existante l'exécute. Local et CI appliquent la même règle, ce qui évite
+qu'un échec ne se découvre qu'après un push.
+
+**La règle** — on relève un seuil quand le chiffre réel monte. On ne l'abaisse
+jamais pour faire passer un build.
 
 ### 2.4 Les erreurs métier ne sont plus des réponses HTTP ✅
 
