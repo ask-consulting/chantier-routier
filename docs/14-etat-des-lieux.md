@@ -565,7 +565,7 @@ Rien n'est partagé entre les trois configurations : le jour où une quatrième
 apparaît (le mobile), il faudra un paquet `@chantia/eslint-config` plutôt qu'un
 quatrième copier-coller.
 
-### 2.2 Le trou est sur le web, pas sur le paquet partagé
+### 2.2 Le trou du web est comblé ✅
 
 Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — regardait
 `apps/` seulement et concluait faux sur le reste. Le compte réel :
@@ -573,11 +573,13 @@ Le décompte du 14 août — « 27 tests, `packages/shared` à zéro » — rega
 ```
 apps/api          75 tests   (8 fichiers)
 packages/shared   40 tests   (3 fichiers)
-apps/web           0         Vitest n'est pas installé
+apps/web          31 tests   (3 fichiers)
 ```
 
 *(Au 21 août : +7, les en-têtes de sécurité, §1.3. Au 26 : +22, la traduction
-des erreurs métier en HTTP, §2.4.)*
+des erreurs métier en HTTP (§2.4), +27 le parcours d'authentification, et +31
+sur le front. Les deux derniers lots sont sur des branches distinctes ; le
+compte de `apps/api` ci-dessus est celui de `develop`.)*
 
 `packages/shared` couvre la politique de mot de passe (26), `ROLE_PERMISSIONS` (8)
 et le calcul de coût (6) — c'est-à-dire exactement l'action classée en premier
@@ -589,12 +591,36 @@ coup — une élévation de privilège, une fuite de budget — plus la limitati
 débit (§1.1), les en-têtes (§1.3) et la traduction des erreurs (§2.4). **Le
 parcours d'authentification lui-même n'est couvert par rien.**
 
-**Action, par ordre de rendement :**
+**Le front a des tests** *(28 août)*. Vitest n'y était pas installé du tout ;
+il l'est, avec jsdom et Testing Library, et 31 tests couvrent `model/` — la
+couche que `13-architecture-front.md` définit comme « ce que l'écran décide
+avant de dessiner ». C'est la partie qui survit à une refonte visuelle.
 
-1. `apps/api` — le parcours d'authentification de bout en bout : connexion,
-   rotation du jeton, détection de réemploi, acceptation d'invitation.
-2. `apps/web` — Vitest n'est même pas installé. Commencer par les hooks de
-   `model/`, qui sont testables sans rendu.
+La configuration reprend deux leçons déjà payées ailleurs :
+
+- **`vite` est déclaré en `devDependencies`, pas surchargé.** C'est la leçon du
+  §1.2, dont la version front aurait échoué en silence de la même façon.
+- **L'alias `@/…` est redéclaré dans `vitest.config.mts`.** Vitest ne lit pas les
+  `paths` de `tsconfig.json` — c'est exactement le piège qui a laissé les
+  handlers de l'API sans tests pendant des mois.
+
+Ce que les tests retiennent, et qui ne se voit pas à l'écran :
+
+| | ce qui casse si on l'inverse |
+|---|---|
+| 401 et « email inconnu » donnent **une seule** clé d'erreur | le front rendrait l'oracle d'énumération que l'API refuse de donner |
+| seul le 403 distingue un compte désactivé | c'est le seul cas qu'un nouvel essai ne répare pas |
+| `pending` **reste** vrai après un succès | sinon le bouton se rallume sur une page qui s'en va |
+| une réponse d'aperçu tardive est ignorée | sinon l'écran affiche le nom de l'invité précédent |
+| seul le dernier segment de la clé i18n est gardé | sinon le composant cherche `form.errors.password.form.errors.password.minLength` |
+| les erreurs sont des **clés**, jamais des phrases | sinon un message serveur en anglais atterrit sur un écran arabe |
+| un écart de budget nul reste `neutral` | tomber pile est une coïncidence d'arrondi, pas un résultat |
+
+Vérifiés en cassant le code exprès : cinq mutations, cinq échecs.
+
+**Reste à faire** — les composants de `ui/` ne sont pas couverts, et c'est
+volontaire pour l'instant : ils changent avec le design, `model/` non. Le point
+suivant est §2.3.
 
 ### 2.3 Aucun seuil de couverture
 
