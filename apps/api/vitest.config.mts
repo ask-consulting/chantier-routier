@@ -14,6 +14,7 @@ export default defineConfig({
       '@config': resolve(import.meta.dirname, 'src/config'),
       '@shared': resolve(import.meta.dirname, 'src/app/shared'),
       '@worksite': resolve(import.meta.dirname, 'src/app/worksite'),
+      '@notification': resolve(import.meta.dirname, 'src/app/notification'),
       '@identity': resolve(import.meta.dirname, 'src/identity'),
       '@src': resolve(import.meta.dirname, 'src'),
     },

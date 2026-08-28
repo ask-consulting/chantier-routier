@@ -19,6 +19,7 @@
       "@config/*": ["src/config/*"],
       "@shared/*": ["src/app/shared/*"],
       "@worksite/*": ["src/app/worksite/*"],
+      "@notification/*": ["src/app/notification/*"],
       "@identity/*": ["src/identity/*"],
       "@src/*": ["src/*"]
     },

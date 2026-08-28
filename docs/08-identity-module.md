@@ -251,17 +251,30 @@ resterait vivant à côté du nouveau.
 Le mot de passe n'est écrit qu'**avant** de brûler l'invitation : si l'invité se
 trompe de mot de passe, le lien reste utilisable au lieu de l'enfermer dehors.
 
-### Rien n'est envoyé
+### L'envoi, sans l'attendre
 
-L'API **émet** l'invitation, elle ne l'**achemine** pas. Elle publie un événement
-`UserInvitedEvent` et rend le lien à l'appelant ; aujourd'hui personne n'écoute et
-l'admin transmet le lien à la main.
+*Depuis le 28 août.* `InviteUserHandler` appelle le use case du module de
+notification, et **ne l'attend pas** :
 
-C'est le point de couture pour le module de notification à venir — email, SMS,
-autre. Envoyer depuis le handler laisserait un échec d'envoi annuler la création
-d'un compte, et figerait le canal dans le contexte Identity.
+```ts
+this.notifications.executeDetached(new SendNotificationCommand(…));
+```
 
-L'événement ne porte **jamais le jeton**, seulement le chemin.
+`executeDetached` rend la main immédiatement et ne rejette jamais ; un échec
+d'envoi finit en ligne de journal. La propriété exigée ici — un échec d'envoi ne
+doit pas annuler la création d'un compte — est donc tenue par **la forme de
+l'appel**, pas par un bus.
+
+`UserInvitedEvent` reste publié, mais il n'achemine plus rien : c'est un fait sur
+ce qui s'est passé, disponible pour un audit ou un fil in-app. Il ne porte
+toujours **jamais le jeton**, seulement le chemin.
+
+**Une dette assumée.** Ce handler importe un module métier, ce que le mur
+autour d'`identity/` interdit partout ailleurs. L'exception est déclarée dans
+`apps/api/eslint.config.mjs` et fait exactement un fichier de large : tout autre
+fichier d'`identity/` est refusé. Le plan reste un `POST /notifications` sur son
+propre service ; ce jour-là l'import devient un client HTTP et l'exception
+disparaît.
 
 ### Un compte sans mot de passe
 
@@ -404,8 +417,9 @@ générer par la plateforme (`generateValue: true`).
   ces deux routes ; c'est une dépendance à ajouter.
 - **Réinitialisation de mot de passe oublié.** Le mécanisme d'invitation est déjà
   la moitié du travail : même table, même modèle de jeton. Il manque l'envoi.
-- **Module de notification.** `UserInvitedEvent` l'attend : email, SMS, gabarits,
-  multi-canal. Le contexte Identity n'aura pas à changer.
+- ~~**Module de notification.**~~ Fait le 28 août : table `notification_templates`
+  par (sujet, canal, langue), semée par migration, canal email seul actif.
+  Voir `14-etat-des-lieux.md` §5.2.
 - **Purge des jetons expirés** : `deleteExpired()` existe pour les refresh tokens
   et pour les invitations, mais aucun `@Cron` ne l'appelle encore.
 - **Front web** : `apps/web` appelle encore l'API sans jeton (il envoyait

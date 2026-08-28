@@ -23,7 +23,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Runtime connection — use the pooled URL in production (e.g. Supabase pooler).
   url       = env("DATABASE_URL")
   // Direct (non-pooled) connection used for migrations. Locally / on a single
@@ -74,29 +74,29 @@ model Organization {
 /// have no account at all (no smartphone on site), and an account may belong to
 /// office staff with no worker record.
 model User {
-  id             String    @id(map: "pk_app_users") @default(uuid()) @db.Uuid
-  organizationId String    @map("organization_id") @db.Uuid
+  id             String     @id(map: "pk_app_users") @default(uuid()) @db.Uuid
+  organizationId String     @map("organization_id") @db.Uuid
   /// Login identifier, stored lower-cased. Globally unique: a user belongs to
   /// exactly one organization, so login needs no tenant selector.
-  email          String    @unique(map: "uq_app_users_email")
+  email          String     @unique(map: "uq_app_users_email")
   /// Encoded as `scrypt$N$r$p$salt$key` — never leaves the identity context.
   /// NULL between the invitation and its acceptance: an invited account exists,
   /// carries a role, and cannot yet authenticate.
-  passwordHash   String?   @map("password_hash")
-  firstName      String    @map("first_name")
-  lastName       String    @map("last_name")
-  role           UserRole  @default(worker)
-  active         Boolean   @default(true)
+  passwordHash   String?    @map("password_hash")
+  firstName      String     @map("first_name")
+  lastName       String     @map("last_name")
+  role           UserRole   @default(worker)
+  active         Boolean    @default(true)
   /// Soft reference to `public.workers.id` — deliberately NOT a foreign key, so
   /// the identity context stays extractable. Nulled by the application when the
   /// worker is deleted.
-  workerId       String?   @unique(map: "uq_app_users_worker_id") @map("worker_id") @db.Uuid
+  workerId       String?    @unique(map: "uq_app_users_worker_id") @map("worker_id") @db.Uuid
   /// Interface language. A preference of the person, not of their browser, so it
   /// follows them from the office desktop to the phone on site.
   locale         UserLocale @default(fr)
-  lastLoginAt    DateTime? @map("last_login_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  lastLoginAt    DateTime?  @map("last_login_at")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "fk_app_users_organizations")
   refreshTokens RefreshToken[]
@@ -262,5 +262,71 @@ model Expense {
 
   @@index([worksiteId], map: "ix_expenses_worksite_id")
   @@map("expenses")
+  @@schema("public")
+}
+
+// ---------------------------------------------------------------------------
+// Notification — what gets sent, in which language, on which channel.
+//
+// Lives in `public` (the business side), not in `identity`: delivery is not an
+// identity concern, and the module is meant to become its own service. Nothing
+// here references the identity schema — the recipient arrives as plain data.
+// ---------------------------------------------------------------------------
+
+/// What a notification is *about*. An enum rather than a free string because a
+/// template is looked up by it: an unknown subject must be a compile error and a
+/// migration, not a row silently missing at send time.
+enum NotificationSubject {
+  invitation
+
+  @@map("notification_subject")
+  @@schema("public")
+}
+
+/// How it travels. `sms` exists in the schema and in the templates before it can
+/// be sent: the table is the thing a migration fills, and back-filling a channel
+/// later would mean re-editing every template.
+enum NotificationChannel {
+  email
+  sms
+
+  @@map("notification_channel")
+  @@schema("public")
+}
+
+/// Mirrors `Locale` in @chantia/shared, and deliberately NOT `identity.user_locale`.
+/// No dependency crosses the schema boundary — enums included, or `pg_dump -n
+/// identity` would stop being self-contained.
+enum NotificationLocale {
+  fr
+  ar
+
+  @@map("notification_locale")
+  @@schema("public")
+}
+
+/// One row per (subject, channel, locale).
+///
+/// No `organization_id`, on purpose: templates are product copy, not tenant data.
+/// That also keeps them out of the multi-tenant extension, which filters only
+/// models carrying the column — so a send works before any tenant is known.
+///
+/// Rows are created by migration only. A template is a contract between the code
+/// that fills placeholders and the text that reads them; letting it be edited at
+/// runtime would let the two drift with nothing to catch it.
+model NotificationTemplate {
+  id          String              @id(map: "pk_notification_templates") @default(uuid()) @db.Uuid
+  subject     NotificationSubject
+  channel     NotificationChannel
+  locale      NotificationLocale
+  /// Null on channels that carry no subject line — SMS.
+  subjectLine String?             @map("subject_line")
+  /// Placeholders are `{{name}}`. Every one must be supplied at send time.
+  body        String
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  @@unique([subject, channel, locale], map: "uq_notification_templates_subject_channel_locale")
+  @@map("notification_templates")
   @@schema("public")
 }
