@@ -622,10 +622,54 @@ Vérifiés en cassant le code exprès : cinq mutations, cinq échecs.
 volontaire pour l'instant : ils changent avec le design, `model/` non. Le point
 suivant est §2.3.
 
-### 2.3 Aucun seuil de couverture
+### 2.3 Le cliquet de couverture ✅
 
-Rien n'empêche la couverture de baisser. Poser un seuil bas mais réel — et qui ne
-descend jamais — vaut mieux qu'un objectif élevé que personne ne tient.
+*Fait le 28 août.* Rien n'empêchait la couverture de baisser. Un seuil bas mais
+réel — et qui ne descend jamais — vaut mieux qu'un objectif élevé que personne
+ne tient.
+
+**Sonar a été écarté, délibérément.** Le dépôt est public, donc SonarQube Cloud
+serait gratuit. Ce qui manquait ici était une seule chose : un chiffre qui ne
+peut pas descendre. C'est dix lignes de configuration contre une intégration
+tierce — et surtout, le mode d'échec récurrent de ce projet est *un signal que
+personne ne lit* (§1.2 bis, quatre révisions de suite). Un profil Sonar par
+défaut sort des centaines de *code smells* sur une base jeune : ce serait un
+second tableau de bord ignoré à côté du premier. À rouvrir à l'arrivée d'un
+deuxième développeur, ou d'un quatrième paquet.
+
+**`all: true` est ce qui en fait un cliquet.** Laissé par défaut, v8 ne mesure
+que les fichiers qu'un test a importés — dix nouveaux modules non testés ne
+feraient bouger le pourcentage d'aucun point, et la barrière serait verte
+pendant que le code empire. Mesuré ainsi, le premier chiffre du front était
+80 % ; compté honnêtement, il est de 17 %.
+
+Les seuils sont **la mesure du jour, arrondie au plancher** — pas un objectif :
+
+| paquet | relevé | seuil posé | dénominateur |
+|---|---|---|---|
+| `packages/shared` | 82,6 % | 82 | `src/**`, hors barils |
+| `apps/api` | 25,3 % | 25 | `src/**`, hors `main.ts`, `*.module.ts`, `scripts/` |
+| `apps/web` | 17,5 % | 17 | `src/**`, hors `src/app/**` (pages Next) |
+
+Deux choses à ne pas se raconter sur ces chiffres :
+
+- **La couverture basse de l'API est réelle**, pas un artefact de comptage.
+  Retirer le câblage et les déclarations ne l'a fait passer que de 24,4 % à
+  23,4 % : ce qui n'est pas testé, ce sont des repositories, des mappers, des
+  gardes et les autres handlers — de la logique, pas de la plomberie.
+- **Le cliquet mord au deuxième fichier non testé, pas au premier.** Vérifié en
+  ajoutant des modules sonde un à un : 17,51 → 17,17 (passe) → 16,84 (bloque).
+  L'arrondi au plancher laisse un demi-point de mou, soit environ un fichier.
+  Serrer davantage ferait échouer la moindre ligne non couverte ajoutée dans un
+  fichier déjà couvert, et le seuil finirait relevé à chaque commit — c'est-à-dire
+  contourné.
+
+Aucune modification de la CI : `pnpm test` porte désormais `--coverage`, et
+l'étape existante l'exécute. Local et CI appliquent la même règle, ce qui évite
+qu'un échec ne se découvre qu'après un push.
+
+**La règle** — on relève un seuil quand le chiffre réel monte. On ne l'abaisse
+jamais pour faire passer un build.
 
 ### 2.4 Les erreurs métier ne sont plus des réponses HTTP ✅
 

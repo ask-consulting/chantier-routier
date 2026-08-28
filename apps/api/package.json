@@ -13,7 +13,7 @@
     "start:prod": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --coverage",
     "clean": "rm -rf dist",
     "bootstrap:admin": "node dist/scripts/bootstrap-admin.js"
   },
@@ -42,6 +42,7 @@
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@types/node": "^22.10.5",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9.39.5",
     "prisma": "^6.2.1",
     "typescript": "^5.7.2",
