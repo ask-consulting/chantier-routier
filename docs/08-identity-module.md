@@ -417,8 +417,9 @@ générer par la plateforme (`generateValue: true`).
   ces deux routes ; c'est une dépendance à ajouter.
 - **Réinitialisation de mot de passe oublié.** Le mécanisme d'invitation est déjà
   la moitié du travail : même table, même modèle de jeton. Il manque l'envoi.
-- ~~**Module de notification.**~~ Fait le 28 août : table `notification_templates`
-  par (sujet, canal, langue), semée par migration, canal email seul actif.
+- ~~**Module de notification.**~~ Fait le 28 août : schéma `notification`, table
+  `notification_templates` par (sujet, canal, langue), semée par migration,
+  canal email seul actif.
   Voir `14-etat-des-lieux.md` §5.2.
 - **Purge des jetons expirés** : `deleteExpired()` existe pour les refresh tokens
   et pour les invitations, mais aucun `@Cron` ne l'appelle encore.

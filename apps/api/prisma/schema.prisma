@@ -7,12 +7,14 @@
 //   - constraints pk_ / fk_ / uq_ / ix_      `pk_worksites`, `ix_worksites_organization_id`
 //   - Prisma side stays PascalCase / camelCase; `@@map` and `@map` bridge the two.
 //
-// Two Postgres schemas, on purpose:
-//   - "identity" — the Identity bounded context (organizations, accounts, sessions).
+// Three Postgres schemas, on purpose — one per bounded context:
+//   - "identity"     — the Identity context (organizations, accounts, sessions).
 //     Self-contained and extractable into its own service: `pg_dump -n identity`.
-//   - "public"   — the business domain (worksites, workers, timesheets, expenses).
+//   - "notification" — what gets sent, in which language, on which channel.
+//     Same deal: `pg_dump -n notification` carries the whole module.
+//   - "public"       — the business domain (worksites, workers, timesheets, expenses).
 //
-// NO foreign key crosses that boundary. Business rows reference `organization_id`
+// NO foreign key crosses those boundaries. Business rows reference `organization_id`
 // (and `app_users.worker_id` references a worker) as opaque UUIDs, exactly as they
 // would across a network call. Referential integrity across contexts is the
 // application's job, not the database's. See docs/08-identity-module.md.
@@ -29,7 +31,7 @@ datasource db {
   // Direct (non-pooled) connection used for migrations. Locally / on a single
   // database, set it to the same value as DATABASE_URL.
   directUrl = env("DIRECT_URL")
-  schemas   = ["identity", "public"]
+  schemas   = ["identity", "notification", "public"]
 }
 
 // ---------------------------------------------------------------------------
@@ -266,11 +268,12 @@ model Expense {
 }
 
 // ---------------------------------------------------------------------------
-// Notification — what gets sent, in which language, on which channel.
+// Notification context — what gets sent, in which language, on which channel.
 //
-// Lives in `public` (the business side), not in `identity`: delivery is not an
-// identity concern, and the module is meant to become its own service. Nothing
-// here references the identity schema — the recipient arrives as plain data.
+// Its own schema rather than a corner of `identity` or of `public`: delivery is
+// neither an identity concern nor business data, and the module is meant to
+// become its own service — one `pg_dump -n notification` has to carry it whole.
+// Nothing here references another schema — the recipient arrives as plain data.
 // ---------------------------------------------------------------------------
 
 /// What a notification is *about*. An enum rather than a free string because a
@@ -280,7 +283,7 @@ enum NotificationSubject {
   invitation
 
   @@map("notification_subject")
-  @@schema("public")
+  @@schema("notification")
 }
 
 /// How it travels. `sms` exists in the schema and in the templates before it can
@@ -291,7 +294,7 @@ enum NotificationChannel {
   sms
 
   @@map("notification_channel")
-  @@schema("public")
+  @@schema("notification")
 }
 
 /// Mirrors `Locale` in @chantia/shared, and deliberately NOT `identity.user_locale`.
@@ -302,7 +305,7 @@ enum NotificationLocale {
   ar
 
   @@map("notification_locale")
-  @@schema("public")
+  @@schema("notification")
 }
 
 /// One row per (subject, channel, locale).
@@ -328,5 +331,5 @@ model NotificationTemplate {
 
   @@unique([subject, channel, locale], map: "uq_notification_templates_subject_channel_locale")
   @@map("notification_templates")
-  @@schema("public")
+  @@schema("notification")
 }

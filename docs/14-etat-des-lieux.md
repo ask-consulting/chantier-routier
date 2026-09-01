@@ -884,8 +884,9 @@ contre un outbox, qui reste ouvert le jour où ça fera mal.
 
 ### 5.2 Le module de notification ✅
 
-*Fait le 28 août.* Une table `notification_templates`, une ligne par **(sujet,
-canal, langue)**, contrainte d'unicité comprise.
+*Fait le 28 août.* Un schéma Postgres `notification` à lui, une table
+`notification_templates` dedans, une ligne par **(sujet, canal, langue)**,
+contrainte d'unicité comprise.
 
 | | |
 |---|---|
@@ -910,7 +911,10 @@ Quatre décisions qui ne se lisent pas dans le schéma :
   soit connu, ce qu'il faut pour inviter quelqu'un qui n'a pas encore de session.
 - **`notification_locale` est un enum distinct de `identity.user_locale`.**
   Aucune dépendance ne traverse la frontière de schéma, les enums compris, sinon
-  `pg_dump -n identity` cesserait d'être autonome.
+  ni `pg_dump -n identity` ni `pg_dump -n notification` ne serait autonome. Le
+  module vit dans son propre schéma pour la même raison : l'envoi n'est ni une
+  affaire d'identité ni de la donnée métier, et il est destiné à devenir un
+  service.
 
 **Un template manquant refuse, il ne se rabat pas.** Chaque combinaison est
 semée, donc une absence est une migration oubliée, pas une traduction manquante.
@@ -929,10 +933,26 @@ pas s'élargir en silence. `NotificationModule` est `@Global`, ce qui évite un
 second import dans `identity.module.ts`. Le jour du `POST /notifications`,
 l'import devient un client HTTP et le bloc disparaît.
 
-**L'expéditeur email écrit dans le journal**, et c'est le défaut voulu : choisir
-un fournisseur demande un compte, un domaine vérifié et une clé, et rien de tout
-ça ne doit se dresser entre un clone frais et un parcours d'invitation qui
-marche. Un vrai expéditeur remplace cette classe et rien d'autre.
+**L'expéditeur email écrit dans le journal en développement**, et c'est le défaut
+voulu : rien ne doit se dresser entre un clone frais et un parcours d'invitation
+qui marche. `EMAIL_PROVIDER` choisit au démarrage — absent, c'est le journal ;
+`brevo`, c'est l'API HTTP de Brevo. Une valeur inconnue refuse de démarrer, parce
+qu'une faute de frappe qui retomberait sur le journal serait une panne d'email
+que personne ne voit.
+
+**Brevo, et par HTTP.** Deux contraintes, pas deux préférences :
+
+- Render **bloque les ports 25, 465 et 587 en sortie** sur les services web
+  gratuits. Un transport SMTP n'y connecte pas — il attend puis expire. Un appel
+  HTTPS passe, donc le fournisseur doit avoir une API.
+- Resend, l'autre candidat, n'envoie gratuitement que **depuis un domaine vérifié
+  par DNS**. Ce projet n'a pas de domaine. Brevo envoie depuis une boîte à soi
+  vérifiée en un clic : 300 emails/jour, sans carte, sans expiration — pour
+  quelques invitations par semaine, la marge est large.
+
+Le fournisseur tient dans un fichier (`brevo-email.sender.ts`) et une valeur du
+type union dans la config. Le port, le cas d'usage et identity ne bougent pas.
+La procédure côté Render est dans [`07`](07-deploiement-render.md) §5.
 
 **Vérifié pour de vrai, pas seulement compilé :** la migration a été appliquée
 sur la base locale — elle a d'ailleurs échoué au premier essai, Postgres ne

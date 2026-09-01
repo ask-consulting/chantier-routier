@@ -17,7 +17,7 @@
 | **Distribution iOS (test)** | **TestFlight** (nécessite compte dev Apple 99$/an) | — | Optionnel : viser Android d'abord |
 | **Nom de domaine** | Sous-domaine gratuit Vercel (`*.vercel.app`) | — | URL de test |
 | **Suivi erreurs** | **Sentry** (Free) | 5k événements/mois | Debug |
-| **Emails transactionnels** | **Resend** / **Brevo** (Free) | ~100-300 emails/jour | Invitations, resets |
+| **Emails transactionnels** | **Brevo** (Free) ⭐ | 300 emails/jour, API HTTP | Invitations, resets — voir [`07`](07-deploiement-render.md) §5 |
 | **CI/CD** | **GitHub Actions** (Free) | 2000 min/mois | Tests + déploiement auto |
 | **Code** | **GitHub** (Free) | — | Dépôt, monorepo |
 

@@ -1,7 +1,7 @@
 # 10 — Conventions de nommage en base
 
 > Inspiré des conventions de `cie-next` (`docs/architecture/database-conventions.md`),
-> adapté à ce projet : deux schémas Postgres, pas de traduction, pas de champs de
+> adapté à ce projet : trois schémas Postgres, pas de traduction, pas de champs de
 > migration legacy, et des identifiants UUID plutôt que CUID.
 >
 > **Règle générale : la base parle `snake_case`, le code parle `camelCase`.** Prisma
@@ -102,10 +102,12 @@ worksite Worksite @relation(fields: [worksiteId], references: [id], onDelete: Ca
 
 ### Aucune clé étrangère ne traverse les contextes
 
-Le schéma a deux espaces Postgres : `identity` (organisations, comptes, sessions) et
-`public` (métier). **Aucune FK ne les relie.** `worksites.organization_id` et
+La base a trois espaces Postgres, un par contexte : `identity` (organisations,
+comptes, sessions), `notification` (templates d'envoi) et `public` (métier).
+**Aucune FK ne les relie.** `worksites.organization_id` et
 `app_users.worker_id` sont des UUID opaques, exactement comme au travers d'un appel
-réseau — c'est ce qui garde le contexte Identity extractible en service autonome.
+réseau — c'est ce qui garde chaque contexte extractible en service autonome
+(`pg_dump -n identity`, `pg_dump -n notification`).
 L'intégrité entre contextes est le travail de l'application.
 
 ## 5. Colonnes systématiques

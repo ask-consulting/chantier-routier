@@ -10,8 +10,9 @@ import { NotificationChannel } from '../../domain/notification.types';
  * an account, a verified domain and a key; none of that should stand between a
  * fresh clone and a working invitation flow.
  *
- * A real sender replaces this class and nothing else: same port, same
- * registration in `notification.module.ts`.
+ * The real sender does not replace it: `EMAIL_PROVIDER` chooses between the two
+ * at boot (`brevo` in production, absent everywhere else), so development keeps
+ * this one and neither the port nor the use case changes.
  *
  * It logs the whole message, link included. That is safe here precisely because
  * it is the *development* transport — the invitation link in a local log is the
