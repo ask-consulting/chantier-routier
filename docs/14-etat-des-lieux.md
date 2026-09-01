@@ -933,10 +933,26 @@ pas s'élargir en silence. `NotificationModule` est `@Global`, ce qui évite un
 second import dans `identity.module.ts`. Le jour du `POST /notifications`,
 l'import devient un client HTTP et le bloc disparaît.
 
-**L'expéditeur email écrit dans le journal**, et c'est le défaut voulu : choisir
-un fournisseur demande un compte, un domaine vérifié et une clé, et rien de tout
-ça ne doit se dresser entre un clone frais et un parcours d'invitation qui
-marche. Un vrai expéditeur remplace cette classe et rien d'autre.
+**L'expéditeur email écrit dans le journal en développement**, et c'est le défaut
+voulu : rien ne doit se dresser entre un clone frais et un parcours d'invitation
+qui marche. `EMAIL_PROVIDER` choisit au démarrage — absent, c'est le journal ;
+`brevo`, c'est l'API HTTP de Brevo. Une valeur inconnue refuse de démarrer, parce
+qu'une faute de frappe qui retomberait sur le journal serait une panne d'email
+que personne ne voit.
+
+**Brevo, et par HTTP.** Deux contraintes, pas deux préférences :
+
+- Render **bloque les ports 25, 465 et 587 en sortie** sur les services web
+  gratuits. Un transport SMTP n'y connecte pas — il attend puis expire. Un appel
+  HTTPS passe, donc le fournisseur doit avoir une API.
+- Resend, l'autre candidat, n'envoie gratuitement que **depuis un domaine vérifié
+  par DNS**. Ce projet n'a pas de domaine. Brevo envoie depuis une boîte à soi
+  vérifiée en un clic : 300 emails/jour, sans carte, sans expiration — pour
+  quelques invitations par semaine, la marge est large.
+
+Le fournisseur tient dans un fichier (`brevo-email.sender.ts`) et une valeur du
+type union dans la config. Le port, le cas d'usage et identity ne bougent pas.
+La procédure côté Render est dans [`07`](07-deploiement-render.md) §5.
 
 **Vérifié pour de vrai, pas seulement compilé :** la migration a été appliquée
 sur la base locale — elle a d'ailleurs échoué au premier essai, Postgres ne

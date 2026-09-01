@@ -46,3 +46,17 @@ services:
       # first few callers would lock out everyone else.
       - key: TRUSTED_PROXY_HOPS
         value: 1
+      # Email. HTTP API rather than SMTP because free web services here cannot
+      # open ports 25, 465 or 587 outbound — an SMTP transport would simply hang.
+      # Brevo's free plan sends 300 a day from a mailbox verified by clicking a
+      # link, which is what this project needs: it owns no domain.
+      - key: EMAIL_PROVIDER
+        value: brevo
+      # v3 API key — app.brevo.com > SMTP & API > API keys.
+      - key: BREVO_API_KEY
+        sync: false
+      # Must be a sender Brevo has verified, or every send comes back HTTP 400.
+      - key: EMAIL_FROM_ADDRESS
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: Chantia

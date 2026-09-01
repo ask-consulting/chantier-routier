@@ -29,6 +29,7 @@ Guide pas-à-pas pour déployer `apps/api` sur **Render** (Free) avec une base
    - `DATABASE_URL` = URL **pooler** Supabase
    - `DIRECT_URL` = URL **directe** Supabase
    - `CORS_ORIGINS` = URL du web (ex. `https://mon-app.vercel.app`) — optionnel au début
+   - `BREVO_API_KEY` et `EMAIL_FROM_ADDRESS` = envoi des emails, voir §5
 5. Lancer le déploiement. Au boot, le conteneur applique les migrations
    (`prisma migrate deploy`) puis démarre le serveur. La migration seed crée
    l'organisation **ELLOUZE construction** (UUID fixe).
@@ -57,7 +58,36 @@ curl -H "Authorization: Bearer $TOKEN" $API/worksites   # → {"items":[],...}
 migrations automatiques. Les migrations étant idempotentes, un redémarrage à
 froid ne recrée pas les données.
 
-## 5. Notes
+## 5. Envoi des emails (Brevo, gratuit)
+
+Sans ça, les invitations partent dans le journal : le compte est bien créé, mais
+personne ne reçoit le lien.
+
+**Pourquoi une API HTTP et pas SMTP.** Render bloque le trafic sortant vers les
+ports 25, 465 et 587 sur les services web gratuits ; un transport `nodemailer`
+n'y connecte jamais, il attend puis expire. Un appel HTTPS passe.
+
+**Pourquoi Brevo et pas Resend.** L'offre gratuite de Resend n'envoie que depuis
+un domaine vérifié par DNS, et ce projet n'a pas de domaine (`*.onrender.com`,
+`*.vercel.app`). Brevo envoie depuis une simple boîte à soi, vérifiée en cliquant
+un lien : **300 emails/jour, sans carte, sans expiration**. Les invitations en
+consomment quelques-unes par semaine.
+
+1. Créer un compte sur [brevo.com](https://www.brevo.com) (gratuit).
+2. **Senders, Domains & Dedicated IPs → Senders → Add a sender** : l'adresse
+   d'expédition (une boîte à laquelle on a accès). Brevo envoie un mail de
+   validation ; tant qu'il n'est pas cliqué, chaque envoi répond `HTTP 400
+   sender not verified`.
+3. **SMTP & API → API keys → Generate a new API key** (v3).
+4. Sur Render, renseigner `BREVO_API_KEY` et `EMAIL_FROM_ADDRESS` (l'expéditeur
+   vérifié). `EMAIL_PROVIDER=brevo` est déjà dans `render.yaml`.
+5. Redéployer, puis vérifier dans les logs la ligne `NotificationModule Email
+   channel: brevo`. Si elle dit `log`, la variable n'est pas passée.
+
+> Le passage à un vrai domaine plus tard ne change rien au code : chez Brevo on
+> vérifie le domaine (SPF/DKIM) et on change `EMAIL_FROM_ADDRESS`.
+
+## 6. Notes
 
 - **PORT** : injecté automatiquement par Render, lu via `process.env.PORT`.
 - **Cold start** : pour l'éviter, un cron externe (ex. GitHub Actions) peut
