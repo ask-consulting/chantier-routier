@@ -41,6 +41,15 @@ export interface IdentityConfig {
    * multi-tenant sign-up will want it back.
    */
   allowSelfRegistration: boolean;
+  /**
+   * Where the web front is reachable, used to turn `invitationPath` into a link
+   * somebody can click in an email.
+   *
+   * It lives here rather than in `app.config` because the context that mints the
+   * link is the one that must know where it points — and it leaves with the
+   * identity service the day it is extracted.
+   */
+  webAppUrl: string;
 }
 
 const FIVE_MINUTES = 5 * 60;
@@ -63,5 +72,8 @@ export default registerAs(
     invitationTtl: positiveInt(process.env.INVITATION_TTL, SEVEN_DAYS),
     // Opt-in, never opt-out: a missing variable must not open registration.
     allowSelfRegistration: process.env.ALLOW_SELF_REGISTRATION === 'true',
+    // Trailing slash trimmed once here, so every caller can concatenate a path
+    // that starts with one without producing `//invitation`.
+    webAppUrl: (process.env.WEB_APP_URL ?? 'http://localhost:3000').replace(/\/+$/, ''),
   }),
 );

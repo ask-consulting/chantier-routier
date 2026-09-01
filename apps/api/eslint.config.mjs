@@ -71,6 +71,26 @@ const noIdentity = {
 
 /** The mirror of the wall: identity/ knows nothing of the business either. */
 const noBusiness = {
+  group: ['@worksite', '@worksite/**', '@notification', '@notification/**'],
+  message:
+    'identity/ leaves with its own service one day. It cannot take a business module with it.',
+};
+
+/**
+ * The one exception in this file, and it is on purpose.
+ *
+ * `invite-user.handler.ts` calls the notification use case in-process, so the
+ * invitation email leaves at all. The alternative — an event nobody subscribes
+ * to — is what the module did for months while invitations were copy-pasted by
+ * hand (`docs/14-etat-des-lieux.md` §5.1).
+ *
+ * It is a debt, written down rather than hidden: the plan is a
+ * `POST /notifications` on its own service, and on that day this import becomes
+ * an HTTP client and this block disappears. Until then the exception is exactly
+ * one file wide — every other file under `identity/` is still refused, so the
+ * hole cannot quietly widen.
+ */
+const noBusinessExceptNotification = {
   group: ['@worksite', '@worksite/**'],
   message:
     'identity/ leaves with its own service one day. It cannot take a business module with it.',
@@ -151,6 +171,18 @@ export default tseslint.config(
   {
     files: ['src/identity/application/**/*.ts'],
     rules: restrict(noInfrastructure, noPresentation, noPersistence, noBusiness),
+  },
+  // The documented exception, one file wide. `no-restricted-imports` does not
+  // merge across configs — this block replaces the one above for this file, so
+  // it restates every pattern that still applies.
+  {
+    files: ['src/identity/application/commands/invite-user.handler.ts'],
+    rules: restrict(
+      noInfrastructure,
+      noPresentation,
+      noPersistence,
+      noBusinessExceptNotification,
+    ),
   },
   {
     files: ['src/app/**/presentation/**/*.ts'],

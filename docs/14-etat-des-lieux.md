@@ -855,29 +855,94 @@ zéro sur les deux.
 
 ## Priorité 5 — Module utilisateurs complet, web et mobile, avec les notifications
 
-### 5.1 Les invitations ne partent pas
+### 5.1 Les invitations partent ✅
 
-Le module crée le lien et publie `UserInvitedEvent`. **Rien ne l'envoie.**
+*Fait le 28 août.* Le module créait le lien et publiait `UserInvitedEvent` ;
+personne n'écoutait. Inviter quelqu'un demandait à l'admin de copier une URL et
+de la transmettre à la main — c'est ce qui gardait l'application à un seul
+utilisateur.
 
-Conséquence : inviter quelqu'un demande à l'admin de copier une URL et de la
-transmettre par un autre canal. Tant que ça dure, l'application reste à un seul
-utilisateur — c'est ce qui bloque tout usage réel, et c'est le plus petit chantier
-de ce document.
+`InviteUserHandler` appelle maintenant le use case d'envoi. **Sans l'attendre :**
 
-`UserInvitedEvent` ne transporte **jamais** le jeton, seulement `invitationPath`.
-Cette contrainte reste : le module de notification reconstruit l'URL, il ne reçoit
-pas un secret par la bande.
+```ts
+this.notifications.executeDetached(new SendNotificationCommand(…));
+return { user, invitationPath, expiresAt };
+```
 
-### 5.2 Le module de notification
+`executeDetached` rend la main tout de suite et ne rejette jamais — un échec
+d'envoi finit en ligne de journal. C'est la propriété que `08-identity-module.md`
+exigeait (« un échec d'envoi ne doit pas annuler la création d'un compte »),
+tenue par **la forme de l'appel** plutôt que par un bus d'événements.
 
-Multi-canal à terme — email, SMS, et davantage — avec des gabarits par langue.
-Pour la première livraison, **le canal email seul suffit** : c'est lui qui débloque
-l'invitation.
+`UserInvitedEvent` reste publié. Il n'est plus le mécanisme d'acheminement mais
+un fait sur ce qui s'est passé : rien ne s'y abonne, et ce qui voudra le faire
+plus tard — un journal d'audit, un fil in-app — le pourra encore.
 
-Les gabarits doivent exister en français et en arabe dès le départ. Le compte porte
-déjà sa langue (`User.locale`), donc le canal sait dans quelle langue écrire — mais
-seulement si les gabarits sont bilingues d'emblée. Les ajouter après coup revient à
-repasser sur chaque gabarit.
+**Le coût accepté, écrit ici plutôt que découvert plus tard :** un envoi perdu
+est perdu. Pas de table d'attente, pas de renvoi. C'était le choix explicite
+contre un outbox, qui reste ouvert le jour où ça fera mal.
+
+### 5.2 Le module de notification ✅
+
+*Fait le 28 août.* Une table `notification_templates`, une ligne par **(sujet,
+canal, langue)**, contrainte d'unicité comprise.
+
+| | |
+|---|---|
+| sujets | `invitation` |
+| canaux | `email`, `sms` |
+| langues | `fr`, `ar` |
+| lignes semées | 4, par migration |
+
+Quatre décisions qui ne se lisent pas dans le schéma :
+
+- **Les templates ne se créent que par migration.** Un template est un contrat
+  entre le code qui remplit les `{{placeholders}}` et le texte qui les lit ;
+  laisser modifier l'un à l'exécution laisse les deux diverger sans rien pour
+  l'attraper. Ajouter un sujet est donc une valeur d'enum **et** une migration.
+- **Le canal `sms` a ses templates et aucun expéditeur.** C'est l'état voulu :
+  la table est ce qu'une migration remplit, et rajouter un canal après coup
+  obligerait à repasser sur chaque ligne. Un envoi SMS échoue bruyamment
+  (`ChannelUnavailableException`), il ne retombe pas en silence sur l'email.
+- **Pas d'`organization_id`.** Un template est du texte produit, pas de la donnée
+  de locataire — et ça le tient hors de l'extension multi-tenant, qui ne filtre
+  que les modèles portant la colonne. Un envoi marche donc avant qu'un locataire
+  soit connu, ce qu'il faut pour inviter quelqu'un qui n'a pas encore de session.
+- **`notification_locale` est un enum distinct de `identity.user_locale`.**
+  Aucune dépendance ne traverse la frontière de schéma, les enums compris, sinon
+  `pg_dump -n identity` cesserait d'être autonome.
+
+**Un template manquant refuse, il ne se rabat pas.** Chaque combinaison est
+semée, donc une absence est une migration oubliée, pas une traduction manquante.
+Se rabattre sur une autre langue enverrait de l'arabe à quelqu'un qui lit le
+français, et masquerait la vraie panne.
+
+**Un placeholder sans valeur refuse aussi.** Rendre `''` ou laisser
+`{{invitationUrl}}` en clair envoie un vrai message à une vraie personne avec un
+trou dedans — pire qu'un message non parti, parce que personne n'est prévenu.
+
+**L'exception à la règle 4, assumée.** `invite-user.handler.ts` importe un module
+métier, ce que le mur autour d'`identity/` interdit. C'est une dette écrite dans
+`eslint.config.mjs` plutôt que cachée : l'exception fait **exactement un fichier
+de large** — tout autre fichier d'`identity/` est refusé, donc le trou ne peut
+pas s'élargir en silence. `NotificationModule` est `@Global`, ce qui évite un
+second import dans `identity.module.ts`. Le jour du `POST /notifications`,
+l'import devient un client HTTP et le bloc disparaît.
+
+**L'expéditeur email écrit dans le journal**, et c'est le défaut voulu : choisir
+un fournisseur demande un compte, un domaine vérifié et une clé, et rien de tout
+ça ne doit se dresser entre un clone frais et un parcours d'invitation qui
+marche. Un vrai expéditeur remplace cette classe et rien d'autre.
+
+**Vérifié pour de vrai, pas seulement compilé :** la migration a été appliquée
+sur la base locale — elle a d'ailleurs échoué au premier essai, Postgres ne
+recollant pas deux littéraux `E''` adjacents — les quatre lignes sont en base,
+l'arabe intact, et l'API démarre avec `NotificationModule dependencies
+initialized`. 23 tests, dont les trois refus ci-dessus, vérifiés en cassant le
+code.
+
+**Réserve** — l'arabe des gabarits n'a pas été relu par un locuteur natif. Un
+email est plus exposé qu'un écran : il part sans qu'on le revoie.
 
 ### 5.3 Ce qui manque au module utilisateurs
 
