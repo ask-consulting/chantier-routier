@@ -884,8 +884,9 @@ contre un outbox, qui reste ouvert le jour où ça fera mal.
 
 ### 5.2 Le module de notification ✅
 
-*Fait le 28 août.* Une table `notification_templates`, une ligne par **(sujet,
-canal, langue)**, contrainte d'unicité comprise.
+*Fait le 28 août.* Un schéma Postgres `notification` à lui, une table
+`notification_templates` dedans, une ligne par **(sujet, canal, langue)**,
+contrainte d'unicité comprise.
 
 | | |
 |---|---|
@@ -910,7 +911,10 @@ Quatre décisions qui ne se lisent pas dans le schéma :
   soit connu, ce qu'il faut pour inviter quelqu'un qui n'a pas encore de session.
 - **`notification_locale` est un enum distinct de `identity.user_locale`.**
   Aucune dépendance ne traverse la frontière de schéma, les enums compris, sinon
-  `pg_dump -n identity` cesserait d'être autonome.
+  ni `pg_dump -n identity` ni `pg_dump -n notification` ne serait autonome. Le
+  module vit dans son propre schéma pour la même raison : l'envoi n'est ni une
+  affaire d'identité ni de la donnée métier, et il est destiné à devenir un
+  service.
 
 **Un template manquant refuse, il ne se rabat pas.** Chaque combinaison est
 semée, donc une absence est une migration oubliée, pas une traduction manquante.
