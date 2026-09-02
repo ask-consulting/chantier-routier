@@ -8,7 +8,12 @@
     "workers": "Ouvriers",
     "timesheets": "Pointages",
     "expenses": "Dépenses",
-    "users": "Comptes"
+    "users": "Comptes",
+    "main": "Navigation principale",
+    "collapse": "Réduire le menu",
+    "expand": "Déployer le menu",
+    "open": "Ouvrir le menu",
+    "close": "Fermer le menu"
   },
   "settings": {
     "theme": "Thème",

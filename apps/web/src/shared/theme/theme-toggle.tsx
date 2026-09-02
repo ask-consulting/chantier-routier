@@ -18,8 +18,11 @@ const OPTIONS = [
 /**
  * Three states rather than a switch: "follow the system" is a distinct choice
  * from "always light", and a two-way toggle cannot express it.
+ *
+ * `orientation` is a layout choice, not a second component: the collapsed
+ * sidebar is 64px wide and three buttons in a row do not fit.
  */
-export function ThemeToggle() {
+export function ThemeToggle({ orientation = 'row' }: { orientation?: 'row' | 'column' }) {
   const { preference, setPreference } = useTheme();
   const t = useTranslations('settings');
 
@@ -27,7 +30,10 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label={t('theme')}
-      className="inline-flex rounded-control border border-border bg-surface-raised p-0.5"
+      className={cn(
+        'inline-flex rounded-control border border-border bg-surface-raised p-0.5',
+        orientation === 'column' && 'flex-col',
+      )}
     >
       {OPTIONS.map(({ value, labelKey, Icon }) => {
         const active = preference === value;
