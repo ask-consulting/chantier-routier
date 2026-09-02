@@ -14,6 +14,7 @@ export * from './security/password-policy';
 export * from './interfaces/worksite.interface';
 export * from './interfaces/organization.interface';
 export * from './interfaces/user.interface';
+export * from './interfaces/invitation.interface';
 export * from './interfaces/auth.interface';
 
 // Pure business computations (reusable on server & offline on mobile)
