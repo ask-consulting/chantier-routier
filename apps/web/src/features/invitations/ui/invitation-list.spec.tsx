@@ -40,6 +40,8 @@ const pending: IInvitationListItem = {
   expiresAt: '2099-01-15T00:00:00.000Z',
   acceptedAt: null,
   createdAt: '2026-09-01T00:00:00.000Z',
+  invitedById: 'admin-1',
+  invitedByName: 'Abdellatif Ellouze',
 };
 
 const accepted: IInvitationListItem = {
@@ -94,6 +96,22 @@ describe('InvitationList', () => {
     expect(screen.getAllByText('karim@exemple.fr').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Acceptée').length).toBeGreaterThan(0);
     expect(screen.getAllByText('En attente').length).toBeGreaterThan(0);
+  });
+
+  it('says who sent each invitation', () => {
+    renderWithProviders(<InvitationList invitations={[pending]} />);
+
+    // Once in the table cell, once in the phone card.
+    expect(screen.getAllByText(/Abdellatif Ellouze/).length).toBe(2);
+  });
+
+  it('falls back to a dash when the admin who invited has left', () => {
+    renderWithProviders(
+      <InvitationList invitations={[{ ...pending, invitedByName: null }]} />,
+    );
+
+    // An empty cell reads as a bug; an invitation outliving its sender does not.
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 
   it('resends without asking — a second mail is harmless', async () => {

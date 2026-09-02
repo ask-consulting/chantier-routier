@@ -154,6 +154,8 @@
       "emailAlreadyUsed": "هذا العنوان مستعمل بالفعل في حساب آخر.",
       "invalidInput": "تحقّق من الحقول: أحدها غير مقبول.",
       "unknown": "تعذّر إنشاء الدعوة."
-    }
+    },
+    "invitedBy": "دعاه",
+    "invitedByName": "دعاه {name}"
   }
 }

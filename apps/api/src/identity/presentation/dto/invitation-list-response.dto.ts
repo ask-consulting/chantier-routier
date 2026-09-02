@@ -19,6 +19,9 @@ export class InvitationListItemDto implements IInvitationListItem {
   @ApiProperty() expiresAt: string;
   @ApiProperty({ nullable: true, type: String }) acceptedAt: string | null;
   @ApiProperty() createdAt: string;
+  @ApiProperty() invitedById: string;
+  @ApiProperty({ nullable: true, type: String, description: 'Null if that account is gone' })
+  invitedByName: string | null;
 
   static fromReadModel(item: InvitationListItem): InvitationListItemDto {
     const dto = new InvitationListItemDto();
@@ -31,6 +34,8 @@ export class InvitationListItemDto implements IInvitationListItem {
     dto.expiresAt = item.expiresAt.toISOString();
     dto.acceptedAt = item.acceptedAt ? item.acceptedAt.toISOString() : null;
     dto.createdAt = item.createdAt.toISOString();
+    dto.invitedById = item.invitedById;
+    dto.invitedByName = item.invitedByName;
     return dto;
   }
 }

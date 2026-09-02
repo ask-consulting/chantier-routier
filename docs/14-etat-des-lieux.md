@@ -938,6 +938,13 @@ d'étape où l'un existe sans l'autre. Deux détails qui comptent :
   confiance à la livraison que la situation ne le mérite.
 - **Le rôle par défaut est `worker`.** Un admin créé par un coup de molette est un
   problème de sécurité, un ouvrier non.
+- **La liste dit qui a invité**, et le nom coûte une requête de plus par page
+  plutôt qu'une seconde relation Prisma : `schema.prisma` refuse de nommer une
+  relation des deux côtés d'`app_users` pour un champ d'audit que rien ne joint.
+  Un `IN` sur les ids distincts de la page est le prix honnête de cette décision,
+  payé côté serveur plutôt que par un second appel du navigateur. Le nom est
+  `null` quand le compte qui a invité n'existe plus — une invitation survit à
+  l'admin qui est parti, et l'écran affiche un tiret plutôt qu'une case vide.
 
 **Un effet de bord assumé, et corrigé au passage :** `revokeOutstandingFor`
 marquait les invitations remplacées comme *acceptées*. Ça les rendait

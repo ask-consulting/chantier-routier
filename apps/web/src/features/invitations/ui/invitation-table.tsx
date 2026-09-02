@@ -46,6 +46,7 @@ function InvitationTable({ invitations }: { invitations: IInvitationListItem[] }
           <TH>{t('name')}</TH>
           <TH>{t('email')}</TH>
           <TH>{t('status')}</TH>
+          <TH>{t('invitedBy')}</TH>
           <TH>{t('expiresAt')}</TH>
           {/* The header of an actions column says nothing useful out loud, and
             * an empty `<th>` is announced as "blank". */}
@@ -66,6 +67,9 @@ function InvitationTable({ invitations }: { invitations: IInvitationListItem[] }
                 {tStatus(invitation.status)}
               </Badge>
             </TD>
+            {/* An em dash rather than an empty cell when the account that sent
+              * it is gone: an invitation outlives the admin who left. */}
+            <TD className="text-fg-muted">{invitation.invitedByName ?? '—'}</TD>
             <TD className="text-fg-muted">{formatDate(invitation.expiresAt, locale)}</TD>
             <TD>
               <InvitationActions invitation={invitation} />
@@ -100,9 +104,10 @@ function InvitationCards({ invitations }: { invitations: IInvitationListItem[] }
                 </Badge>
               </div>
 
-              <p className="text-xs text-fg-muted">
-                {t('expiresOn', { date: formatDate(invitation.expiresAt, locale) })}
-              </p>
+              <div className="flex flex-col gap-0.5 text-xs text-fg-muted">
+                <p>{t('expiresOn', { date: formatDate(invitation.expiresAt, locale) })}</p>
+                <p>{t('invitedByName', { name: invitation.invitedByName ?? '—' })}</p>
+              </div>
 
               <InvitationActions invitation={invitation} compact />
             </CardBody>

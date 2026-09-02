@@ -154,6 +154,8 @@
       "emailAlreadyUsed": "Cette adresse est déjà utilisée par un compte.",
       "invalidInput": "Vérifiez les champs : l’un d’eux n’est pas accepté.",
       "unknown": "L’invitation n’a pas pu être créée."
-    }
+    },
+    "invitedBy": "Invité par",
+    "invitedByName": "Invité par {name}"
   }
 }

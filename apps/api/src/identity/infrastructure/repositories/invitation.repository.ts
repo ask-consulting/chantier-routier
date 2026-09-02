@@ -62,11 +62,39 @@ export class InvitationRepository implements InvitationRepositoryPort {
     ]);
 
     return {
-      items: rows.map((row) => toListItem(row)),
+      items: await this.withInviterNames(rows),
       total,
       page,
       limit: take ?? total,
     };
+  }
+
+  /**
+   * Resolves `invited_by_id` into a name, in one extra query for the page.
+   *
+   * A second Prisma relation would do it in the join — and `schema.prisma` says
+   * why it does not exist: naming a relation on both sides of `app_users` for an
+   * audit field nothing else joins on costs more than it returns. One `IN` query
+   * per page of twenty rows is the honest price of that decision, and it is paid
+   * here rather than by the browser making a second call.
+   *
+   * The account may be gone: an admin who left, invitations still on file. The
+   * name is then `null`, and the screen says so.
+   */
+  private async withInviterNames(rows: InvitationWithUser[]): Promise<InvitationListItem[]> {
+    const inviterIds = [...new Set(rows.map((row) => row.invitedById))];
+    const inviters = inviterIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: inviterIds } },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
+
+    const names = new Map(
+      inviters.map((inviter) => [inviter.id, `${inviter.firstName} ${inviter.lastName}`]),
+    );
+
+    return rows.map((row) => toListItem(row, names.get(row.invitedById) ?? null));
   }
 
   async save(invitation: Invitation): Promise<Invitation> {
@@ -139,7 +167,7 @@ function buildWhere(params: InvitationSearchParams): Prisma.InvitationWhereInput
 
 type InvitationWithUser = Prisma.InvitationGetPayload<{ include: { user: true } }>;
 
-function toListItem(row: InvitationWithUser): InvitationListItem {
+function toListItem(row: InvitationWithUser, invitedByName: string | null): InvitationListItem {
   return {
     id: row.id,
     userId: row.userId,
@@ -150,5 +178,7 @@ function toListItem(row: InvitationWithUser): InvitationListItem {
     expiresAt: row.expiresAt,
     acceptedAt: row.acceptedAt,
     createdAt: row.createdAt,
+    invitedById: row.invitedById,
+    invitedByName,
   };
 }

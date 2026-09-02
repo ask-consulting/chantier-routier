@@ -32,6 +32,14 @@ export interface IInvitationListItem {
   expiresAt: string;
   acceptedAt: string | null;
   createdAt: string;
+  /** The admin who sent it. */
+  invitedById: string;
+  /**
+   * Their name, resolved server-side — `null` when the account that invited has
+   * since been deleted. The invitation outlives the person who sent it, and the
+   * screen has to say so rather than show an empty cell that reads as a bug.
+   */
+  invitedByName: string | null;
 }
 
 /**

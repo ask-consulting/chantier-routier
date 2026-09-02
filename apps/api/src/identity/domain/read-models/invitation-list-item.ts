@@ -23,4 +23,8 @@ export interface InvitationListItem {
   expiresAt: Date;
   acceptedAt: Date | null;
   createdAt: Date;
+  /** The admin who sent it. Stored on the row as a plain id. */
+  invitedById: string;
+  /** Resolved from that id; `null` when their account no longer exists. */
+  invitedByName: string | null;
 }
