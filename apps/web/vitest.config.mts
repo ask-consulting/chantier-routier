@@ -35,6 +35,12 @@ export default defineConfig({
    *
    * Raise them when the real figure rises. Never lower them to make a build
    * pass.
+   *
+   * **La règle depuis le 2 septembre 2026 : +5 points par PR**, sur chaque
+   * paquet que la PR touche. Une PR qui ajoute du code en ajoute donc le test,
+   * plutôt que de repousser la dette au sprint suivant. Les chiffres ci-dessous
+   * sont la mesure du jour arrondie vers le bas, comme toujours — l'exigence
+   * porte sur la progression, pas sur un nombre choisi à l'avance.
    */
     coverage: {
       provider: 'v8',
@@ -43,7 +49,9 @@ export default defineConfig({
       // Next.js pages and layouts: routing and composition, exercised by
       // running the app rather than by a unit test.
       exclude: ['src/app/**'],
-      thresholds: { statements: 17, branches: 11, functions: 10, lines: 17 },
+      // 26 → 36 : le kit du design system, `format.ts` et `i18n/config.ts`,
+      // qui n'avaient aucun test (docs/15 §4).
+      thresholds: { statements: 36, branches: 37, functions: 33, lines: 37 },
     },
   },
 });

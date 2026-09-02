@@ -674,7 +674,14 @@ Les seuils sont **la mesure du jour, arrondie au plancher** — pas un objectif 
 |---|---|---|---|
 | `packages/shared` | 82,6 % | 82 | `src/**`, hors barils |
 | `apps/api` | 25,3 % | 25 | `src/**`, hors `main.ts`, `*.module.ts`, `scripts/` |
-| `apps/web` | 17,5 % | 17 | `src/**`, hors `src/app/**` (pages Next) |
+| `apps/web` | 17,5 % | 17 → **36** (2 sept.) | `src/**`, hors `src/app/**` (pages Next) |
+
+**Le cliquet monte de 5 points par PR** *(règle posée le 2 septembre 2026)*, sur
+chaque paquet que la PR touche. Un cliquet qui ne fait qu'empêcher la descente
+laisse la dette où elle est ; celui-ci oblige chaque livraison à en rendre un
+morceau. Le premier tour a fait +10 sur `apps/web` — le kit du design system,
+`format.ts` et `i18n/config.ts` n'avaient aucun test (`docs/15` §4), donc le
+premier lot était aussi le moins cher.
 
 Deux choses à ne pas se raconter sur ces chiffres :
 
