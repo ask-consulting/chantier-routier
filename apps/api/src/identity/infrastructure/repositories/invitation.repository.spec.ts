@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InvitationStatus } from '@chantia/shared';
+import { InvitationStatus, invitationStatusOf } from '@chantia/shared';
 import { TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
 import { InvitationRepository } from './invitation.repository';
 
@@ -61,8 +61,8 @@ function row(overrides: Record<string, unknown> = {}) {
     expiresAt: new Date(Date.now() + NOW_ISH),
     acceptedAt: null,
     createdAt: new Date(),
-    user: { email: 'karim@exemple.fr', firstName: 'Karim', lastName: 'Benali' },
-    invitedBy: { firstName: 'Abdellatif', lastName: 'Ellouze' },
+    user: { id: 'user-1', email: 'karim@exemple.fr', firstName: 'Karim', lastName: 'Benali' },
+    invitedBy: { id: 'admin-1', email: 'admin@exemple.fr', firstName: 'Abdellatif', lastName: 'Ellouze' },
     ...overrides,
   };
 }
@@ -135,29 +135,42 @@ describe('InvitationRepository.search', () => {
     expect(where.user.OR).toBeUndefined();
   });
 
-  it('joins who invited, in the same query', async () => {
+  it('joins both sides in the same query, and hangs them off the entity', async () => {
     const result = await harness.repository.search({ organizationId: 'org-1' });
 
     const { include } = harness.findMany.mock.calls[0][0] as { include: unknown };
-    // One query for the page, both relations. It used to be a second `IN` query
-    // resolving a bare id; `invited_by_id` is a real foreign key since 2 Sept.
+    // One query for the page. A second one per row to name the inviter would be
+    // the classic N+1 — and it is what this replaced.
     expect(include).toEqual({ user: true, invitedBy: true });
-    expect(result.items[0].invitedByName).toBe('Abdellatif Ellouze');
+    expect(result.items[0].invitee?.email).toBe('karim@exemple.fr');
+    expect(result.items[0].invitedBy?.firstName).toBe('Abdellatif');
     expect(result.items[0].invitedById).toBe('admin-1');
   });
 
-  it('leaves the name null when that account is gone', async () => {
+  it('leaves the inviter null when that account is gone, id included', async () => {
     // `ON DELETE SET NULL`: deleting the manager who invited must not take
-    // somebody else's pending invitation with it.
+    // somebody else's pending invitation with it. Both go null together, which
+    // is what tells this apart from "the relation was not loaded".
     const orphan = setup([row({ invitedById: null, invitedBy: null })]);
 
     const result = await orphan.repository.search({ organizationId: 'org-1' });
 
-    expect(result.items[0].invitedByName).toBeNull();
-    expect(result.items[0].invitedById).toBeNull();
+    expect(result.items[0].invitedBy).toBeNull();
+    expect(result.items[0].hasKnownInviter()).toBe(false);
   });
 
-  it('derives the status of each row it returns', async () => {
+  it('says "not loaded" rather than "gone" when only the relation is missing', async () => {
+    // The write paths read an invitation without its relations; the id is still
+    // there, and that is the difference.
+    const bare = setup([row({ invitedBy: undefined })]);
+
+    const result = await bare.repository.search({ organizationId: 'org-1' });
+
+    expect(result.items[0].invitedBy).toBeNull();
+    expect(result.items[0].hasKnownInviter()).toBe(true);
+  });
+
+  it('returns entities whose status derives from their own dates', async () => {
     const mixed = setup([
       row(),
       row({ id: 'inv-2', acceptedAt: new Date() }),
@@ -166,7 +179,7 @@ describe('InvitationRepository.search', () => {
 
     const result = await mixed.repository.search({ organizationId: 'org-1' });
 
-    expect(result.items.map((item) => item.status)).toEqual([
+    expect(result.items.map((item) => invitationStatusOf(item))).toEqual([
       InvitationStatus.PENDING,
       InvitationStatus.ACCEPTED,
       InvitationStatus.EXPIRED,

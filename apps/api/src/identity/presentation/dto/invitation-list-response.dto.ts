@@ -1,13 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IInvitationListItem, InvitationStatus } from '@chantia/shared';
-import { InvitationListItem } from '../../domain/read-models/invitation-list-item';
+import { IInvitationListItem, InvitationStatus, invitationStatusOf } from '@chantia/shared';
+import { Invitation } from '../../domain/entities/invitation.entity';
 
 /**
  * One row of the invitations screen.
  *
  * The token is absent, in every form — hash included. The screen shows who was
  * invited and where it stands; nothing it displays could ever be used to accept
- * an invitation.
+ * an invitation. That is what this class is *for*: the entity carries the hash,
+ * and the only way it reaches a response is if somebody spreads the object
+ * instead of naming its fields. Here they are named.
+ *
+ * `fromDomain` expects an invitation read with its relations — the list query
+ * asks for both. An invitation loaded on its own would render empty names, which
+ * is why the write paths never build this DTO.
  */
 export class InvitationListItemDto implements IInvitationListItem {
   @ApiProperty() id: string;
@@ -23,19 +29,23 @@ export class InvitationListItemDto implements IInvitationListItem {
   @ApiProperty({ nullable: true, type: String, description: 'Null if that account is gone' })
   invitedByName: string | null;
 
-  static fromReadModel(item: InvitationListItem): InvitationListItemDto {
+  static fromDomain(invitation: Invitation): InvitationListItemDto {
     const dto = new InvitationListItemDto();
-    dto.id = item.id;
-    dto.userId = item.userId;
-    dto.email = item.email;
-    dto.firstName = item.firstName;
-    dto.lastName = item.lastName;
-    dto.status = item.status;
-    dto.expiresAt = item.expiresAt.toISOString();
-    dto.acceptedAt = item.acceptedAt ? item.acceptedAt.toISOString() : null;
-    dto.createdAt = item.createdAt.toISOString();
-    dto.invitedById = item.invitedById;
-    dto.invitedByName = item.invitedByName;
+    dto.id = invitation.id;
+    dto.userId = invitation.userId;
+    dto.email = invitation.invitee?.email ?? '';
+    dto.firstName = invitation.invitee?.firstName ?? '';
+    dto.lastName = invitation.invitee?.lastName ?? '';
+    // Derived here rather than stored, from the same function the web uses to
+    // draw the badge — see `invitationStatusOf`.
+    dto.status = invitationStatusOf(invitation);
+    dto.expiresAt = invitation.expiresAt.toISOString();
+    dto.acceptedAt = invitation.acceptedAt ? invitation.acceptedAt.toISOString() : null;
+    dto.createdAt = (invitation.createdAt ?? invitation.expiresAt).toISOString();
+    dto.invitedById = invitation.invitedById;
+    dto.invitedByName = invitation.invitedBy
+      ? `${invitation.invitedBy.firstName} ${invitation.invitedBy.lastName}`
+      : null;
     return dto;
   }
 }

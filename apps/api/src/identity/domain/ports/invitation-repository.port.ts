@@ -1,7 +1,6 @@
 import { InvitationStatus } from '@chantia/shared';
 import { SearchResult } from '@shared/domain/search.types';
 import { Invitation } from '../entities/invitation.entity';
-import { InvitationListItem } from '../read-models/invitation-list-item';
 
 /** What the invitations screen may narrow its list by. */
 export interface InvitationSearchParams {
@@ -18,10 +17,11 @@ export interface InvitationRepositoryPort {
   findById(id: string): Promise<Invitation | null>;
   findByTokenHash(tokenHash: string): Promise<Invitation | null>;
   /**
-   * The screen's list: invitations of one organization, joined with the person
-   * they were sent to, ordered pending first.
+   * The screen's list: invitations of one organization, ordered pending first,
+   * each carrying its `invitee` and its `invitedBy` — the list shows people, and
+   * a second query per row to name them would be the classic N+1.
    */
-  search(params: InvitationSearchParams): Promise<SearchResult<InvitationListItem>>;
+  search(params: InvitationSearchParams): Promise<SearchResult<Invitation>>;
   save(invitation: Invitation): Promise<Invitation>;
   /**
    * Closes every outstanding invitation of a user by expiring it. Called before

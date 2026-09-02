@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InvitationStatus, invitationStatusOf } from '@chantia/shared';
+import { InvitationStatus } from '@chantia/shared';
 import { Prisma } from '@prisma/client';
 import { SearchResult } from '@shared/domain/search.types';
 import { getPrismaPagination } from '@shared/infrastructure/repositories/search-params';
@@ -9,7 +9,6 @@ import {
   InvitationRepositoryPort,
   InvitationSearchParams,
 } from '../../domain/ports/invitation-repository.port';
-import { InvitationListItem } from '../../domain/read-models/invitation-list-item';
 import { InvitationMapper } from '../mappers/invitation.mapper';
 
 /**
@@ -38,7 +37,7 @@ export class InvitationRepository implements InvitationRepositoryPort {
     return row ? InvitationMapper.toDomain(row) : null;
   }
 
-  async search(params: InvitationSearchParams): Promise<SearchResult<InvitationListItem>> {
+  async search(params: InvitationSearchParams): Promise<SearchResult<Invitation>> {
     const { skip, take, page } = getPrismaPagination(params);
     const where = buildWhere(params);
 
@@ -65,7 +64,7 @@ export class InvitationRepository implements InvitationRepositoryPort {
     ]);
 
     return {
-      items: rows.map((row) => toListItem(row)),
+      items: rows.map((row) => InvitationMapper.toDomain(row)),
       total,
       page,
       limit: take ?? total,
@@ -137,27 +136,5 @@ function buildWhere(params: InvitationSearchParams): Prisma.InvitationWhereInput
         : {}),
     },
     ...status,
-  };
-}
-
-type InvitationWithUser = Prisma.InvitationGetPayload<{
-  include: { user: true; invitedBy: true };
-}>;
-
-function toListItem(row: InvitationWithUser): InvitationListItem {
-  return {
-    id: row.id,
-    userId: row.userId,
-    email: row.user.email,
-    firstName: row.user.firstName,
-    lastName: row.user.lastName,
-    status: invitationStatusOf(row),
-    expiresAt: row.expiresAt,
-    acceptedAt: row.acceptedAt,
-    createdAt: row.createdAt,
-    invitedById: row.invitedById,
-    // Null when that account has been deleted: the foreign key sets the column
-    // to NULL rather than taking the invitation with it.
-    invitedByName: row.invitedBy ? `${row.invitedBy.firstName} ${row.invitedBy.lastName}` : null,
   };
 }

@@ -5,7 +5,7 @@ import {
   INVITATION_REPOSITORY_PORT,
   InvitationRepositoryPort,
 } from '../../domain/ports/invitation-repository.port';
-import { InvitationListItem } from '../../domain/read-models/invitation-list-item';
+import { Invitation } from '../../domain/entities/invitation.entity';
 import { GetInvitationsQuery } from './get-invitations.query';
 
 @QueryHandler(GetInvitationsQuery)
@@ -15,7 +15,7 @@ export class GetInvitationsHandler implements IQueryHandler<GetInvitationsQuery>
     private readonly invitations: InvitationRepositoryPort,
   ) {}
 
-  execute(query: GetInvitationsQuery): Promise<SearchResult<InvitationListItem>> {
+  execute(query: GetInvitationsQuery): Promise<SearchResult<Invitation>> {
     return this.invitations.search(query.params);
   }
 }

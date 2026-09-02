@@ -19,7 +19,7 @@ import { CancelInvitationCommand } from '../../application/commands/cancel-invit
 import { ResendInvitationCommand } from '../../application/commands/resend-invitation.command';
 import type { IssuedInvitationLink } from '../../application/services/invitation-issuer.service';
 import { GetInvitationsQuery } from '../../application/queries/get-invitations.query';
-import { InvitationListItem } from '../../domain/read-models/invitation-list-item';
+import { Invitation } from '../../domain/entities/invitation.entity';
 import { FreshAccountGuard } from '../guards/fresh-account.guard';
 import { GetInvitationsDto } from '../dto/get-invitations.dto';
 import {
@@ -68,10 +68,7 @@ export class InvitationController {
     @CurrentUser() caller: AuthenticatedUser,
     @Query() dto: GetInvitationsDto,
   ): Promise<PaginatedInvitationResponseDto> {
-    const result = await this.queryBus.execute<
-      GetInvitationsQuery,
-      SearchResult<InvitationListItem>
-    >(
+    const result = await this.queryBus.execute<GetInvitationsQuery, SearchResult<Invitation>>(
       new GetInvitationsQuery({
         organizationId: caller.organizationId,
         page: dto.page,
@@ -82,7 +79,7 @@ export class InvitationController {
     );
 
     return {
-      items: result.items.map((item) => InvitationListItemDto.fromReadModel(item)),
+      items: result.items.map((item) => InvitationListItemDto.fromDomain(item)),
       total: result.total,
       page: result.page,
       limit: result.limit,
