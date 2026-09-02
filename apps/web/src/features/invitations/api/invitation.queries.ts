@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   cancelInvitation,
+  createInvitation,
   fetchInvitations,
   resendInvitation,
   type InvitationListParams,
@@ -27,6 +28,14 @@ export function useInvitations(params?: InvitationListParams) {
     queryKey: invitationKeys.list(params),
     queryFn: () => fetchInvitations(params),
     placeholderData: (previous) => previous,
+  });
+}
+
+export function useCreateInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createInvitation,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: invitationKeys.all }),
   });
 }
 

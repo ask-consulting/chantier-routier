@@ -60,9 +60,9 @@ export default defineConfig({
         // the tests as covered-by-tests is how a number stops meaning anything.
         'src/test/**',
       ],
-      // 36 → 49 : la feature `invitations` (filtres, actions, les deux mises en
-      // page) et les composants qu'elle a fait naître.
-      thresholds: { statements: 49, branches: 51, functions: 48, lines: 50 },
+      // 36 → 52 : la feature `invitations` complète — filtres, actions, création,
+      // les deux mises en page — et les composants qu'elle a fait naître.
+      thresholds: { statements: 52, branches: 55, functions: 51, lines: 53 },
     },
   },
 });

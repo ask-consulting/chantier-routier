@@ -268,11 +268,24 @@ place qu'elle n'explique.
 Le jour où un filtre demande du multi-select ou de la recherche, c'est un autre
 composant avec un autre nom, pas une réécriture de celui-ci.
 
+### `Dialog`
+
+La coquille modale : `<dialog>` natif, un titre, un corps, un pied. Le navigateur
+apporte le piège à focus, Échap, l'inertie de l'arrière-plan et un vrai
+`::backdrop` ; `showModal()` est appelé depuis un effet parce que l'ouverture est
+un état React — l'attribut `open` de l'élément ouvrirait en **non-modal**, ce qui
+se voit pareil et se comporte autrement.
+
+`initialFocus` dit qui prend le focus à l'ouverture. Sans lui le navigateur
+choisit le premier élément focusable, ce qui sur une question destructrice met le
+bouton dangereux à un Tab. Le corps défile dans sa propre boîte : un formulaire
+long ne doit pas pousser ses propres boutons hors de l'écran d'un téléphone.
+
 ### `ConfirmDialog`
 
-Une question modale à deux réponses, dont une destructrice. `<dialog>` natif
-comme `NavDrawer` : piège à focus, Échap et arrière-plan inerte viennent du
-navigateur.
+Une question modale à deux réponses, dont une destructrice — `Dialog` avec deux
+boutons et une phrase, pour qu'il n'y ait **qu'une** implémentation de `<dialog>`
+dans le dépôt.
 
 Deux règles portées par le composant plutôt que par ses appelants :
 

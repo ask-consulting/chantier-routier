@@ -1,4 +1,4 @@
-import type { IInvitationListItem, InvitationStatus } from '@chantia/shared';
+import type { ICreateUser, IInvitation, IInvitationListItem, InvitationStatus } from '@chantia/shared';
 import { apiFetch, type Paginated } from '@/shared/api/http-client';
 
 /**
@@ -20,6 +20,22 @@ export interface InvitationListParams {
 export interface ResentInvitation {
   invitationPath: string;
   expiresAt: string;
+}
+
+/**
+ * Inviting somebody is `POST /users`, not `POST /invitations`.
+ *
+ * The call creates the account *and* issues the link — inviting a person is how
+ * an account comes into existence in this product, and there is no step where
+ * one exists without the other. The endpoint lives here rather than in a
+ * `users` feature because this screen is its only caller today; it moves the
+ * day an accounts screen needs it, and the move is one import.
+ */
+export function createInvitation(payload: ICreateUser): Promise<IInvitation> {
+  return apiFetch<IInvitation>('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export function fetchInvitations(

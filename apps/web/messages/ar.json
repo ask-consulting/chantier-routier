@@ -133,6 +133,27 @@
     "noResultTitle": "لا توجد دعوة مطابقة",
     "noResultDescription": "جرّب اسماً آخر، أو غيّر الحالة.",
     "loadError": "تعذّر تحميل الدعوات: {reason}",
-    "unknownError": "خطأ غير معروف"
+    "unknownError": "خطأ غير معروف",
+    "create": "دعوة جديدة",
+    "createTitle": "دعوة شخص",
+    "createdTitle": "تم إرسال الدعوة",
+    "createdDescription": "تمت دعوة {name}. يُرسَل بريد إلى {email}.",
+    "linkLabel": "رابط الدعوة",
+    "linkHint": "يُعرض مرة واحدة فقط: لا يُحفظ منه سوى بصمته. انسخه إن أردت إرساله بنفسك — عبر واتساب أو مباشرة.",
+    "copyLink": "نسخ الرابط",
+    "copied": "تم النسخ",
+    "done": "تم",
+    "send": "إرسال الدعوة",
+    "close": "إغلاق",
+    "firstName": "الاسم",
+    "lastName": "اللقب",
+    "role": "الدور",
+    "locale": "اللغة",
+    "localeHint": "لغة البريد والواجهة.",
+    "error": {
+      "emailAlreadyUsed": "هذا العنوان مستعمل بالفعل في حساب آخر.",
+      "invalidInput": "تحقّق من الحقول: أحدها غير مقبول.",
+      "unknown": "تعذّر إنشاء الدعوة."
+    }
   }
 }

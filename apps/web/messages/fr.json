@@ -133,6 +133,27 @@
     "noResultTitle": "Aucune invitation ne correspond",
     "noResultDescription": "Essayez un autre nom, ou changez le statut.",
     "loadError": "Impossible de charger les invitations : {reason}",
-    "unknownError": "erreur inconnue"
+    "unknownError": "erreur inconnue",
+    "create": "Nouvelle invitation",
+    "createTitle": "Inviter quelqu’un",
+    "createdTitle": "Invitation envoyée",
+    "createdDescription": "{name} a été invité·e. Un email part vers {email}.",
+    "linkLabel": "Le lien d’invitation",
+    "linkHint": "Affiché une seule fois : seule son empreinte est conservée. Copiez-le si vous voulez le transmettre vous-même — par WhatsApp, ou de la main à la main.",
+    "copyLink": "Copier le lien",
+    "copied": "Copié",
+    "done": "Terminé",
+    "send": "Envoyer l’invitation",
+    "close": "Fermer",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "role": "Rôle",
+    "locale": "Langue",
+    "localeHint": "Langue du mail et de l’interface.",
+    "error": {
+      "emailAlreadyUsed": "Cette adresse est déjà utilisée par un compte.",
+      "invalidInput": "Vérifiez les champs : l’un d’eux n’est pas accepté.",
+      "unknown": "L’invitation n’a pas pu être créée."
+    }
   }
 }

@@ -20,6 +20,16 @@ import { InvitationList } from './invitation-table';
  *      active search, the first one is a lie the reader can act on.
  */
 
+/**
+ * The screen asks `auth` what the reader may do, to hide the actions a role
+ * cannot perform. Here the answer is always yes: what is under test is the list,
+ * not the permission matrix — which has its own tests in `@chantia/shared`.
+ */
+vi.mock('@/features/auth', () => ({
+  Can: ({ children }: { children: React.ReactNode }) => children,
+  usePermission: () => true,
+}));
+
 const pending: IInvitationListItem = {
   id: 'inv-1',
   userId: 'user-1',

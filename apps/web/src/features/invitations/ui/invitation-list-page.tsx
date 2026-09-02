@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { InvitationStatus } from '@chantia/shared';
+import { InvitationStatus, Permission } from '@chantia/shared';
 import { Alert, Button, EmptyState, Field, Select, Skeleton } from '@/shared/ui';
+import { CreateIcon } from '@/shared/lib/icons';
+import { Can } from '@/features/auth';
 import { useInvitations } from '../api/invitation.queries';
 import { INVITATION_STATUS_ORDER } from '../model/invitation-display';
 import { useInvitationFilters } from '../model/use-invitation-filters';
 import { InvitationList } from './invitation-table';
+import { InviteDialog } from './invite-dialog';
 
 /**
  * The invitations screen.
@@ -24,6 +28,7 @@ export function InvitationListPage() {
   const t = useTranslations('invitations');
   const tStatus = useTranslations('invitationStatus');
   const filters = useInvitationFilters();
+  const [inviting, setInviting] = useState(false);
   const { data, isPending, isError, error, isPlaceholderData } = useInvitations(filters.params);
 
   const statusOptions = [
@@ -33,10 +38,22 @@ export function InvitationListPage() {
 
   return (
     <section className="flex flex-col gap-section">
-      <header className="flex items-baseline gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        {data && <span className="text-sm text-fg-muted">{data.total}</span>}
+      <header className="flex flex-wrap items-baseline justify-between gap-stack">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+          {data && <span className="text-sm text-fg-muted">{data.total}</span>}
+        </div>
+        {/* Hidden for anyone who may read accounts but not manage them. The API
+          * enforces the same rule; this only spares a pointless 403. */}
+        <Can permission={Permission.USER_MANAGE}>
+          <Button variant="primary" onClick={() => setInviting(true)}>
+            <CreateIcon className="size-4 shrink-0" aria-hidden />
+            {t('create')}
+          </Button>
+        </Can>
       </header>
+
+      <InviteDialog open={inviting} onClose={() => setInviting(false)} />
 
       {/* Stacked on a phone, side by side from `sm`. The search takes the room
         * that is left, because a name is longer than a status. */}
@@ -85,7 +102,19 @@ export function InvitationListPage() {
       )}
 
       {data && data.items.length === 0 && !filters.isFiltering && (
-        <EmptyState title={t('emptyTitle')} description={t('emptyDescription')} />
+        <EmptyState
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+          // An empty state without a way out is a dead end — and here the way
+          // out is the very action the screen exists for.
+          action={
+            <Can permission={Permission.USER_MANAGE}>
+              <Button variant="primary" onClick={() => setInviting(true)}>
+                {t('create')}
+              </Button>
+            </Can>
+          }
+        />
       )}
 
       {data && data.items.length === 0 && filters.isFiltering && (

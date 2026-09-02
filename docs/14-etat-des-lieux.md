@@ -922,6 +922,20 @@ composants :
   base ne l'empêche : la cloison est dans les handlers, et un « interdit »
   confirmerait l'existence de la ligne à qui a deviné un identifiant.
 
+**La création vit dans le même écran**, derrière « Nouvelle invitation » : un
+formulaire modal (email, prénom, nom, rôle, langue) qui appelle `POST /users` —
+inviter quelqu'un *est* la façon dont un compte naît dans ce produit, il n'y a pas
+d'étape où l'un existe sans l'autre. Deux détails qui comptent :
+
+- **Le lien est affiché après l'envoi.** L'API le donne une seule fois — seule
+  son empreinte est stockée — donc ce moment est le seul où il existe. Le mail
+  est parti, mais un mail rebondit, tombe en spam, ou arrive dans une boîte que
+  personne n'ouvre ; un admin à côté de la personne doit pouvoir le passer de la
+  main à la main. Le cacher parce qu'« un email a été envoyé » ferait plus
+  confiance à la livraison que la situation ne le mérite.
+- **Le rôle par défaut est `worker`.** Un admin créé par un coup de molette est un
+  problème de sécurité, un ouvrier non.
+
 **Un effet de bord assumé, et corrigé au passage :** `revokeOutstandingFor`
 marquait les invitations remplacées comme *acceptées*. Ça les rendait
 inutilisables, ce qui était le but — mais ça racontait qu'une personne avait
