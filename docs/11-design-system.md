@@ -3,6 +3,10 @@
 > Les jetons et les composants du front (`apps/web`), en Tailwind CSS v4.
 > La référence vivante est la page **`/design-system`** : elle rend chaque jeton et
 > chaque composant, dans les deux thèmes. Un contraste cassé s'y voit tout de suite.
+>
+> Ce document décrit le système tel qu'il est voulu.
+> [`15-audit-design-system.md`](15-audit-design-system.md) mesure ce qu'il fait —
+> contrastes calculés, écarts, et l'ordre dans lequel les combler.
 
 ## 1. Deux couches, et une seule règle
 
@@ -128,8 +132,10 @@ français vit ici, au bord.
 
 ## 7. Les composants
 
-Tous dans `src/components/ui/`, tous exposent `className` en dernier pour qu'un
-appelant puisse ajuster sans forker. Référence vivante avec extraits copiables :
+Tous dans `src/shared/ui/`, tous exposent `className` en dernier pour qu'un
+appelant puisse ajuster sans forker (avec la réserve mesurée en
+[`15`](15-audit-design-system.md) §3 : un `className` *ajoute*, il ne remplace
+pas une propriété que la variante possède déjà). Référence vivante avec extraits copiables :
 **`/design-system`**.
 
 ### `Button`
