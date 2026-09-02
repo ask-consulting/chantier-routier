@@ -5,6 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ChangePasswordHandler } from './application/commands/change-password.handler';
 import { AcceptInvitationHandler } from './application/commands/accept-invitation.handler';
 import { InviteUserHandler } from './application/commands/invite-user.handler';
+import { ResendInvitationHandler } from './application/commands/resend-invitation.handler';
+import { CancelInvitationHandler } from './application/commands/cancel-invitation.handler';
 import { UpdatePreferencesHandler } from './application/commands/update-preferences.handler';
 import { DeleteUserHandler } from './application/commands/delete-user.handler';
 import { LoginHandler } from './application/commands/login.handler';
@@ -13,8 +15,10 @@ import { RefreshSessionHandler } from './application/commands/refresh-session.ha
 import { RegisterHandler } from './application/commands/register.handler';
 import { UpdateUserHandler } from './application/commands/update-user.handler';
 import { GetInvitationHandler } from './application/queries/get-invitation.handler';
+import { GetInvitationsHandler } from './application/queries/get-invitations.handler';
 import { GetUserByIdHandler } from './application/queries/get-user-by-id.handler';
 import { GetUsersHandler } from './application/queries/get-users.handler';
+import { InvitationIssuer } from './application/services/invitation-issuer.service';
 import { SessionIssuer } from './application/services/session-issuer.service';
 import identityConfig from './config/identity.config';
 import { INVITATION_REPOSITORY_PORT } from './domain/ports/invitation-repository.port';
@@ -31,6 +35,7 @@ import { UserRepository } from './infrastructure/repositories/user.repository';
 import { JwtTokenIssuer } from './infrastructure/security/jwt-token-issuer';
 import { ScryptPasswordHasher } from './infrastructure/security/scrypt-password-hasher';
 import { AuthController } from './presentation/controllers/auth.controller';
+import { InvitationController } from './presentation/controllers/invitation.controller';
 import { FreshAccountGuard } from './presentation/guards/fresh-account.guard';
 import { UserController } from './presentation/controllers/user.controller';
 
@@ -41,13 +46,20 @@ const CommandHandlers = [
   LogoutHandler,
   ChangePasswordHandler,
   InviteUserHandler,
+  ResendInvitationHandler,
+  CancelInvitationHandler,
   AcceptInvitationHandler,
   UpdatePreferencesHandler,
   UpdateUserHandler,
   DeleteUserHandler,
 ];
 
-const QueryHandlers = [GetUsersHandler, GetUserByIdHandler, GetInvitationHandler];
+const QueryHandlers = [
+  GetUsersHandler,
+  GetUserByIdHandler,
+  GetInvitationHandler,
+  GetInvitationsHandler,
+];
 
 const Adapters = [
   { provide: USER_REPOSITORY_PORT, useClass: UserRepository },
@@ -72,10 +84,11 @@ const Adapters = [
  */
 @Module({
   imports: [ConfigModule.forFeature(identityConfig), CqrsModule, JwtModule.register({})],
-  controllers: [AuthController, UserController],
+  controllers: [AuthController, UserController, InvitationController],
   providers: [
     IdentityPrismaService,
     SessionIssuer,
+    InvitationIssuer,
     FreshAccountGuard,
     ...CommandHandlers,
     ...QueryHandlers,

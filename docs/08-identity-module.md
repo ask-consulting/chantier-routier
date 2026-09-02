@@ -421,6 +421,14 @@ générer par la plateforme (`generateValue: true`).
   `notification_templates` par (sujet, canal, langue), semée par migration,
   canal email seul actif.
   Voir `14-etat-des-lieux.md` §5.2.
+- ~~**Écran des invitations.**~~ Fait le 2 septembre : `GET /invitations`
+  (filtres statut + recherche, tri « en attente » d'abord en SQL),
+  `POST /invitations/:id/resend` et `DELETE /invitations/:id`. Trois décisions
+  qui ne se lisent pas dans les routes : supprimer **expire** au lieu d'effacer
+  (la trace de qui a invité qui survit), renvoyer **émet un nouveau lien** et
+  ferme l'ancien (le jeton en clair n'a jamais été stocké), et une invitation
+  d'un autre locataire répond **404** et jamais 403 — `invitations` ne porte pas
+  d'`organization_id`, la cloison est donc dans les handlers.
 - **Purge des jetons expirés** : `deleteExpired()` existe pour les refresh tokens
   et pour les invitations, mais aucun `@Cron` ne l'appelle encore.
 - **Front web** : `apps/web` appelle encore l'API sans jeton (il envoyait

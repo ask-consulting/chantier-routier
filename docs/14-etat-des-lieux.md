@@ -897,6 +897,38 @@ plus tard — un journal d'audit, un fil in-app — le pourra encore.
 est perdu. Pas de table d'attente, pas de renvoi. C'était le choix explicite
 contre un outbox, qui reste ouvert le jour où ça fera mal.
 
+### 5.1 bis L'écran des invitations ✅
+
+*Fait le 2 septembre.* La liste de ce qui a été envoyé, avec deux actions et
+deux filtres. Quatre décisions qui ne se lisent ni dans les routes ni dans les
+composants :
+
+- **« Supprimer » expire, il n'efface pas.** Le lien dans la boîte de l'invité
+  cesse de fonctionner tout de suite — c'est le but du bouton — et la ligne
+  reste : qui a invité qui, quand, et que ça a été annulé. Un compte créé par
+  erreur puis annulé est exactement l'historique qu'un admin relit trois mois
+  plus tard.
+- **« Renvoyer » émet un nouveau lien et ferme l'ancien.** Le jeton en clair
+  n'est stocké nulle part, donc le premier mail est irreproductible par
+  construction ; et il ne faudrait pas le reproduire, puisque quelqu'un qui
+  demande un renvoi se plaint le plus souvent d'un lien sur le point d'expirer.
+- **Le statut est calculé, jamais stocké.** `acceptedAt` et `expiresAt` disent
+  tout ; une colonne demanderait un travail périodique pour rester vraie, et
+  serait fausse entre deux passages. La règle vit dans `@chantia/shared` et sert
+  aux deux côtés — l'API refuse et l'interface n'affiche pas le bouton, à partir
+  de la même fonction. Deux implémentations donneraient un bouton qui répond 409.
+- **Une invitation d'un autre locataire répond 404, jamais 403.** `invitations`
+  ne porte pas d'`organization_id` (elle pend de `app_users`), donc rien dans la
+  base ne l'empêche : la cloison est dans les handlers, et un « interdit »
+  confirmerait l'existence de la ligne à qui a deviné un identifiant.
+
+**Un effet de bord assumé, et corrigé au passage :** `revokeOutstandingFor`
+marquait les invitations remplacées comme *acceptées*. Ça les rendait
+inutilisables, ce qui était le but — mais ça racontait qu'une personne avait
+rejoint alors qu'elle n'avait rien fait. Invisible tant que rien n'affichait ces
+lignes ; le premier écran qui les affiche l'a rendu faux à l'œil nu. Elles sont
+désormais expirées.
+
 ### 5.2 Le module de notification ✅
 
 *Fait le 28 août.* Un schéma Postgres `notification` à lui, une table

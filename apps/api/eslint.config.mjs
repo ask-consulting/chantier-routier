@@ -79,8 +79,8 @@ const noBusiness = {
 /**
  * The one exception in this file, and it is on purpose.
  *
- * `invite-user.handler.ts` calls the notification use case in-process, so the
- * invitation email leaves at all. The alternative — an event nobody subscribes
+ * `invitation-issuer.service.ts` calls the notification use case in-process, so
+ * the invitation email leaves at all. The alternative — an event nobody subscribes
  * to — is what the module did for months while invitations were copy-pasted by
  * hand (`docs/14-etat-des-lieux.md` §5.1).
  *
@@ -176,7 +176,7 @@ export default tseslint.config(
   // merge across configs — this block replaces the one above for this file, so
   // it restates every pattern that still applies.
   {
-    files: ['src/identity/application/commands/invite-user.handler.ts'],
+    files: ['src/identity/application/services/invitation-issuer.service.ts'],
     rules: restrict(
       noInfrastructure,
       noPresentation,

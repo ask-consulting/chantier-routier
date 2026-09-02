@@ -1,12 +1,36 @@
+import { InvitationStatus } from '@chantia/shared';
+import { SearchResult } from '@shared/domain/search.types';
 import { Invitation } from '../entities/invitation.entity';
+import { InvitationListItem } from '../read-models/invitation-list-item';
+
+/** What the invitations screen may narrow its list by. */
+export interface InvitationSearchParams {
+  /** Always set by the controller from the caller's token, never from the request. */
+  organizationId: string;
+  page?: number;
+  limit?: number;
+  /** Free text over first name, last name and email. */
+  search?: string;
+  status?: InvitationStatus;
+}
 
 export interface InvitationRepositoryPort {
+  findById(id: string): Promise<Invitation | null>;
   findByTokenHash(tokenHash: string): Promise<Invitation | null>;
+  /**
+   * The screen's list: invitations of one organization, joined with the person
+   * they were sent to, ordered pending first.
+   */
+  search(params: InvitationSearchParams): Promise<SearchResult<InvitationListItem>>;
   save(invitation: Invitation): Promise<Invitation>;
   /**
-   * Cancels every outstanding invitation of a user. Called before issuing a new
-   * one, so re-inviting somebody invalidates the link already sent — otherwise a
-   * forwarded old link would stay live alongside the new one.
+   * Closes every outstanding invitation of a user by expiring it. Called before
+   * issuing a new one, so re-inviting somebody invalidates the link already
+   * sent — otherwise a forwarded old link would stay live alongside the new one.
+   *
+   * Expired rather than accepted: both make the token unusable, but only one of
+   * them is true. Marking a link "accepted" that nobody ever accepted made the
+   * invitations screen lie about the one thing it exists to show.
    */
   revokeOutstandingFor(userId: string, at?: Date): Promise<void>;
   /** Housekeeping: drops rows that can no longer be used. */
