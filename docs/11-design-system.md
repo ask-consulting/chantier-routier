@@ -255,6 +255,43 @@ cul-de-sac.
 Bloc de code pour les pages du design system. Défile dans sa propre boîte, même
 règle que `Table`.
 
+### `Select`
+
+Un `<select>` **natif**, étiqueté comme `Field` — `htmlFor`, `aria-describedby`,
+`aria-invalid`. Une liste maison devrait réimplémenter le focus au clavier, la
+saisie prédictive, le tactile et la sémantique de lecteur d'écran que l'élément
+possède déjà ; et sur un téléphone, la roue du navigateur bat tout ce qu'on
+dessinerait. `labelHidden` garde l'étiquette pour les lecteurs d'écran sans la
+peindre — pour une barre de filtres, où une rangée d'étiquettes coûte plus de
+place qu'elle n'explique.
+
+Le jour où un filtre demande du multi-select ou de la recherche, c'est un autre
+composant avec un autre nom, pas une réécriture de celui-ci.
+
+### `ConfirmDialog`
+
+Une question modale à deux réponses, dont une destructrice. `<dialog>` natif
+comme `NavDrawer` : piège à focus, Échap et arrière-plan inerte viennent du
+navigateur.
+
+Deux règles portées par le composant plutôt que par ses appelants :
+
+- **La description dit ce qui va se passer**, pas « êtes-vous sûr ? ». Une
+  question sans information se répond par réflexe, ce qu'une confirmation est
+  censée empêcher.
+- **`Annuler` prend le focus** à l'ouverture. Le bouton dangereux n'est jamais à
+  un Entrée de quelqu'un qui a ouvert la boîte par erreur. Sur téléphone, les
+  deux boutons s'empilent et le destructeur passe sous le pouce.
+
+### `Sidebar` et `NavDrawer`
+
+Le rail de gauche (desktop, réductible) et le tiroir du téléphone. Ils ne
+connaissent aucun domaine : les destinations et le pied sont passés par la route
+qui les compose. `SidebarNavGroup` ajoute une section repliable — l'en-tête est
+un bouton, pas un lien, parce qu'il ouvre et ne va nulle part. Rail réduit, le
+groupe s'efface et ses enfants restent : 64 px tiennent une icône, pas une icône
+plus un chevron plus une indentation.
+
 ## 8. Pièges rencontrés
 
 **Les classes construites dynamiquement ne produisent rien.** Tailwind lit le
@@ -431,9 +468,12 @@ Détail complet : `12-internationalisation.md`.
 
 ## 13. Reste à faire
 
-- Composants de saisie au-delà de `Field` : `Select`, `Textarea`, `Checkbox`.
-- Navigation : barre latérale, fil d'Ariane, onglets.
-- `Dialog` et `Toast` (jetons `surface-overlay` et `shadow-overlay` déjà en place).
+- ~~`Select`~~ *(2 sept.)*, `Textarea`, `Checkbox`, champ date.
+- ~~Barre latérale~~ *(1ᵉʳ sept.)* ; fil d'Ariane, onglets.
+- ~~`Dialog`~~ *(2 sept. — `ConfirmDialog`, qui consomme enfin `surface-overlay`,
+  `shadow-overlay` et le nouveau jeton `scrim`)*. `Toast` reste à faire : les
+  actions des invitations rendent leur retour à côté du bouton, ce qui suffit
+  pour une ligne et ne suffira plus pour une action de masse.
 - Graphiques budget / coûts — palette de visualisation à définir, elle ne se
   déduit pas des cinq tons.
 - La table `USER_ROLE` rejoint `domain-display.ts` quand l'authentification arrive

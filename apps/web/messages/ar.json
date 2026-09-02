@@ -13,7 +13,8 @@
     "collapse": "تصغير القائمة",
     "expand": "توسيع القائمة",
     "open": "فتح القائمة",
-    "close": "إغلاق القائمة"
+    "close": "إغلاق القائمة",
+    "invitations": "الدعوات"
   },
   "settings": {
     "theme": "المظهر",
@@ -98,5 +99,40 @@
   },
   "session": {
     "signOut": "تسجيل الخروج"
+  },
+  "invitationStatus": {
+    "pending": "في الانتظار",
+    "accepted": "مقبولة",
+    "expired": "منتهية"
+  },
+  "invitations": {
+    "title": "الدعوات",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "status": "الحالة",
+    "expiresAt": "تنتهي في",
+    "expiresOn": "تنتهي في {date}",
+    "actions": "إجراءات",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "الاسم أو اللقب أو البريد",
+    "statusLabel": "الحالة",
+    "allStatuses": "كل الحالات",
+    "clearFilters": "مسح عوامل التصفية",
+    "resend": "إعادة الإرسال",
+    "resendFor": "إعادة إرسال الدعوة إلى {name}",
+    "resent": "تمت إعادة إرسال الدعوة",
+    "cancel": "حذف",
+    "cancelFor": "حذف دعوة {name}",
+    "cancelTitle": "حذف هذه الدعوة؟",
+    "cancelDescription": "سيتوقف الرابط المرسل إلى {name} عن العمل فوراً. أما الحساب فيبقى: يمكنك إرسال دعوة جديدة لاحقاً.",
+    "cancelConfirm": "حذف الدعوة",
+    "cancelDismiss": "إلغاء",
+    "actionFailed": "فشل الإجراء",
+    "emptyTitle": "لا توجد دعوات",
+    "emptyDescription": "ادعُ شخصاً من شاشة الحسابات: يُرسل الرابط بالبريد الإلكتروني.",
+    "noResultTitle": "لا توجد دعوة مطابقة",
+    "noResultDescription": "جرّب اسماً آخر، أو غيّر الحالة.",
+    "loadError": "تعذّر تحميل الدعوات: {reason}",
+    "unknownError": "خطأ غير معروف"
   }
 }

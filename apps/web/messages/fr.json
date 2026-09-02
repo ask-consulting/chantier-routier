@@ -13,7 +13,8 @@
     "collapse": "Réduire le menu",
     "expand": "Déployer le menu",
     "open": "Ouvrir le menu",
-    "close": "Fermer le menu"
+    "close": "Fermer le menu",
+    "invitations": "Invitations"
   },
   "settings": {
     "theme": "Thème",
@@ -98,5 +99,40 @@
   },
   "session": {
     "signOut": "Se déconnecter"
+  },
+  "invitationStatus": {
+    "pending": "En attente",
+    "accepted": "Acceptée",
+    "expired": "Expirée"
+  },
+  "invitations": {
+    "title": "Invitations",
+    "name": "Nom",
+    "email": "Email",
+    "status": "Statut",
+    "expiresAt": "Expire le",
+    "expiresOn": "Expire le {date}",
+    "actions": "Actions",
+    "searchLabel": "Rechercher",
+    "searchPlaceholder": "Nom, prénom ou email",
+    "statusLabel": "Statut",
+    "allStatuses": "Tous les statuts",
+    "clearFilters": "Effacer les filtres",
+    "resend": "Renvoyer",
+    "resendFor": "Renvoyer l’invitation à {name}",
+    "resent": "Invitation renvoyée",
+    "cancel": "Supprimer",
+    "cancelFor": "Supprimer l’invitation de {name}",
+    "cancelTitle": "Supprimer cette invitation ?",
+    "cancelDescription": "Le lien envoyé à {name} cessera immédiatement de fonctionner. Le compte, lui, reste : vous pourrez renvoyer une invitation plus tard.",
+    "cancelConfirm": "Supprimer l’invitation",
+    "cancelDismiss": "Annuler",
+    "actionFailed": "L’action a échoué",
+    "emptyTitle": "Aucune invitation",
+    "emptyDescription": "Invitez quelqu’un depuis l’écran des comptes : le lien part par email.",
+    "noResultTitle": "Aucune invitation ne correspond",
+    "noResultDescription": "Essayez un autre nom, ou changez le statut.",
+    "loadError": "Impossible de charger les invitations : {reason}",
+    "unknownError": "erreur inconnue"
   }
 }
