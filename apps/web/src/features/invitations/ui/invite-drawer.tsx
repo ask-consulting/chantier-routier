@@ -3,14 +3,20 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Locale, UserRole } from '@chantia/shared';
-import { Alert, Button, Dialog, Field, Select, Snippet } from '@/shared/ui';
+import { Alert, Button, Drawer, Field, Select, Snippet } from '@/shared/ui';
 import { LOCALE_LABELS, LOCALES } from '@/shared/i18n/config';
 import { useInviteForm } from '../model/use-invite-form';
 
 /**
  * The form that creates an invitation — and, once it has, the link it produced.
  *
- * **Two states in one dialog, on purpose.** Closing on success and showing the
+ * **A drawer rather than a centred box.** The list stays visible beside it, so
+ * somebody sending a third invitation can see the two already waiting; and a
+ * form gets the full height of the screen instead of a box that has to scroll
+ * inside itself. A question keeps the centred `ConfirmDialog`: one sentence and
+ * an answer should land under the eye, not off to one side.
+ *
+ * **Two states in one panel, on purpose.** Closing on success and showing the
  * link somewhere else would mean either a second modal or a banner the reader
  * has to find. The link is handed over exactly once by the API — only its hash
  * is stored — so the moment it appears is the only moment it exists.
@@ -20,7 +26,7 @@ import { useInviteForm } from '../model/use-invite-form';
  * to the person can hand the link over directly. Hiding it because "an email was
  * sent" trusts the delivery more than the situation deserves.
  */
-export function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function InviteDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations('invitations');
   const tRole = useTranslations('userRole');
   const form = useInviteForm();
@@ -51,7 +57,7 @@ export function InviteDialog({ open, onClose }: { open: boolean; onClose: () => 
   };
 
   return (
-    <Dialog
+    <Drawer
       open={open}
       size="md"
       title={form.issued ? t('createdTitle') : t('createTitle')}
@@ -157,6 +163,6 @@ export function InviteDialog({ open, onClose }: { open: boolean; onClose: () => 
           </div>
         </form>
       )}
-    </Dialog>
+    </Drawer>
   );
 }

@@ -10,7 +10,7 @@ import { useInvitations } from '../api/invitation.queries';
 import { INVITATION_STATUS_ORDER } from '../model/invitation-display';
 import { useInvitationFilters } from '../model/use-invitation-filters';
 import { InvitationList } from './invitation-table';
-import { InviteDialog } from './invite-dialog';
+import { InviteDrawer } from './invite-drawer';
 
 /**
  * The invitations screen.
@@ -53,7 +53,7 @@ export function InvitationListPage() {
         </Can>
       </header>
 
-      <InviteDialog open={inviting} onClose={() => setInviting(false)} />
+      <InviteDrawer open={inviting} onClose={() => setInviting(false)} />
 
       {/* Stacked on a phone, side by side from `sm`. The search takes the room
         * that is left, because a name is longer than a status. */}

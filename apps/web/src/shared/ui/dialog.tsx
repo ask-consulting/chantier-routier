@@ -17,6 +17,15 @@ export interface DialogProps {
   busy?: boolean;
   /** Wider, for a form. The default suits a question. */
   size?: 'sm' | 'md';
+  /**
+   * Where the panel sits.
+   *
+   * `center` for a question — it is a single sentence and an answer, and the eye
+   * should land on it. `end` for anything with fields in it: a drawer keeps the
+   * list visible beside the form, so somebody typing a third invitation can see
+   * the two they already sent, and it has the full height a form actually wants.
+   */
+  placement?: 'center' | 'start' | 'end';
   /** Accessible name of the close button — `shared/ui` holds no wording. */
   closeLabel: string;
   /**
@@ -48,6 +57,7 @@ export function Dialog({
   onClose,
   busy = false,
   size = 'sm',
+  placement = 'center',
   closeLabel,
   initialFocus,
 }: DialogProps) {
@@ -92,15 +102,25 @@ export function Dialog({
         }
       }}
       className={cn(
-        'm-auto w-4/5 rounded-surface border border-border bg-surface-overlay p-0',
-        'text-fg shadow-overlay backdrop:bg-scrim',
+        'border-border bg-surface-overlay p-0 text-fg shadow-overlay backdrop:bg-scrim',
         size === 'md' ? 'max-w-lg' : 'max-w-md',
+        placement === 'center' && 'm-auto w-4/5 rounded-surface border',
+        // Anchored to an edge: full height, and the border only on the side that
+        // faces the page. `ms-auto` / `me-auto` are logical, so the panel comes
+        // from the right in French and from the left in Arabic — the side the
+        // reader's eye leaves from, whichever way they read.
+        // `max-h-none` is not decoration: the user-agent stylesheet caps a
+        // <dialog> at `calc(100% - 6px - 2em)`, so without it a full-height
+        // panel is 38px shorter than it thinks and its footer sits below the
+        // fold — buttons half visible, and no scrollbar to reach them.
+        placement === 'end' && 'ms-auto me-0 my-0 h-dvh max-h-none w-4/5 border-s',
+        placement === 'start' && 'me-auto ms-0 my-0 h-dvh max-h-none w-4/5 border-e',
       )}
     >
       {/* `max-h-dvh` rather than a percentage: it caps the panel at the visible
         * viewport — the *dynamic* one, so a phone's address bar sliding away
         * does not leave the footer under it. The body below scrolls inside. */}
-      <div className="flex max-h-dvh flex-col">
+      <div className={cn('flex max-h-dvh flex-col', placement !== 'center' && 'h-full')}>
         <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <h2 id={titleId} className="text-lg font-semibold tracking-tight">
             {title}
@@ -118,4 +138,16 @@ export function Dialog({
       </div>
     </dialog>
   );
+}
+
+/**
+ * A `Dialog` anchored to the reading edge — the shape a form wants.
+ *
+ * Not a second component so much as a name: a drawer is a modal that came from
+ * the side, and giving it its own file would mean a second `<dialog>` to keep in
+ * step with this one. The list stays visible next to it, which is the reason to
+ * prefer it over a centred box for anything the reader fills in.
+ */
+export function Drawer(props: Omit<DialogProps, 'placement'>) {
+  return <Dialog {...props} placement="end" />;
 }

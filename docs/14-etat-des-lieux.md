@@ -923,7 +923,10 @@ composants :
   confirmerait l'existence de la ligne à qui a deviné un identifiant.
 
 **La création vit dans le même écran**, derrière « Nouvelle invitation » : un
-formulaire modal (email, prénom, nom, rôle, langue) qui appelle `POST /users` —
+**tiroir** (email, prénom, nom, rôle, langue) qui appelle `POST /users` —
+un tiroir et pas une boîte centrée, pour que la liste reste lisible à côté et que
+le formulaire ait toute la hauteur ; la confirmation de suppression, elle, reste
+centrée, parce qu'une question doit tomber sous l'œil —
 inviter quelqu'un *est* la façon dont un compte naît dans ce produit, il n'y a pas
 d'étape où l'un existe sans l'autre. Deux détails qui comptent :
 

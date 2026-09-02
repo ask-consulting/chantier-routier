@@ -281,6 +281,22 @@ choisit le premier élément focusable, ce qui sur une question destructrice met
 bouton dangereux à un Tab. Le corps défile dans sa propre boîte : un formulaire
 long ne doit pas pousser ses propres boutons hors de l'écran d'un téléphone.
 
+`placement` décide de la géométrie — et le choix n'est pas décoratif :
+
+| | |
+|---|---|
+| `center` | **une question**. Une phrase et une réponse doivent tomber sous l'œil |
+| `end` (`Drawer`) | **un formulaire**. La liste reste visible à côté, donc on voit les deux invitations déjà envoyées en tapant la troisième — et le formulaire a toute la hauteur de l'écran au lieu d'une boîte qui défile dans elle-même |
+
+`ms-auto` / `me-auto` sont logiques : le tiroir vient de la droite en français et
+de la gauche en arabe, sans une seule classe directionnelle.
+
+> **Piège corrigé une fois, à ne pas réintroduire.** La feuille de style du
+> navigateur plafonne un `<dialog>` à `calc(100% - 6px - 2em)`. Sans
+> `max-h-none`, un panneau pleine hauteur fait 38 px de moins qu'il ne le croit :
+> son pied passe sous la ligne de flottaison, et il n'y a pas d'ascenseur pour
+> l'atteindre. Trouvé à l'écran, pas en test.
+
 ### `ConfirmDialog`
 
 Une question modale à deux réponses, dont une destructrice — `Dialog` avec deux

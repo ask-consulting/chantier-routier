@@ -2,7 +2,7 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserRole } from '@chantia/shared';
 import { renderWithProviders } from '@/test/render';
-import { InviteDialog } from './invite-dialog';
+import { InviteDrawer } from './invite-drawer';
 
 /**
  * Creating an invitation, and the one thing that must not be lost on the way.
@@ -58,9 +58,9 @@ afterEach(() => {
   cleanup();
 });
 
-describe('InviteDialog', () => {
+describe('InviteDrawer', () => {
   it('cannot be sent while a required field is empty', () => {
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
 
     const submit = screen.getByRole('button', { name: 'Envoyer l’invitation' }) as HTMLButtonElement;
     expect(submit.disabled).toBe(true);
@@ -70,7 +70,7 @@ describe('InviteDialog', () => {
   });
 
   it('creates the account through POST /users, trimmed', async () => {
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
     fireEvent.change(screen.getByLabelText('Email'), {
       target: { value: '  karim@exemple.fr  ' },
@@ -95,7 +95,7 @@ describe('InviteDialog', () => {
   });
 
   it('shows the link afterwards, because the API hands it over only once', async () => {
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
 
@@ -108,7 +108,7 @@ describe('InviteDialog', () => {
   it('copies the link to the clipboard', async () => {
     const writeText = vi.fn(async () => {});
     vi.stubGlobal('navigator', { clipboard: { writeText } });
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
     await screen.findByText(/jeton-en-clair/);
@@ -121,7 +121,7 @@ describe('InviteDialog', () => {
 
   it('says the address is taken rather than "something went wrong"', async () => {
     fetchMock.mockResolvedValue(json({ message: 'Email already used' }, 409));
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
 
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
@@ -133,7 +133,7 @@ describe('InviteDialog', () => {
 
   it('clears the refusal as soon as a field changes', async () => {
     fetchMock.mockResolvedValue(json({ message: 'Email already used' }, 409));
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
     await screen.findByText('Cette adresse est déjà utilisée par un compte.');
@@ -147,7 +147,7 @@ describe('InviteDialog', () => {
 
   it('reports an unexpected failure without pretending it was the address', async () => {
     fetchMock.mockResolvedValue(json({ message: 'boom' }, 500));
-    renderWithProviders(<InviteDialog open onClose={() => {}} />);
+    renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
 
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
