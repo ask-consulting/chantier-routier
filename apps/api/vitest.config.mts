@@ -73,7 +73,7 @@ export default defineConfig({
       // 25 → 44 : le parcours d'authentification (arrivé par develop) et le
       // module invitation — renvoi, annulation, cloison entre locataires, et la
       // traduction du statut en SQL côté repository.
-      thresholds: { statements: 44, branches: 45, functions: 43, lines: 44 },
+      thresholds: { statements: 46, branches: 47, functions: 44, lines: 46 },
     },
   },
 });
