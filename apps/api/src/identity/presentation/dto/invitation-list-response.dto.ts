@@ -19,7 +19,7 @@ export class InvitationListItemDto implements IInvitationListItem {
   @ApiProperty() expiresAt: string;
   @ApiProperty({ nullable: true, type: String }) acceptedAt: string | null;
   @ApiProperty() createdAt: string;
-  @ApiProperty() invitedById: string;
+  @ApiProperty({ nullable: true, type: String }) invitedById: string | null;
   @ApiProperty({ nullable: true, type: String, description: 'Null if that account is gone' })
   invitedByName: string | null;
 

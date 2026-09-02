@@ -938,13 +938,15 @@ d'étape où l'un existe sans l'autre. Deux détails qui comptent :
   confiance à la livraison que la situation ne le mérite.
 - **Le rôle par défaut est `worker`.** Un admin créé par un coup de molette est un
   problème de sécurité, un ouvrier non.
-- **La liste dit qui a invité**, et le nom coûte une requête de plus par page
-  plutôt qu'une seconde relation Prisma : `schema.prisma` refuse de nommer une
-  relation des deux côtés d'`app_users` pour un champ d'audit que rien ne joint.
-  Un `IN` sur les ids distincts de la page est le prix honnête de cette décision,
-  payé côté serveur plutôt que par un second appel du navigateur. Le nom est
-  `null` quand le compte qui a invité n'existe plus — une invitation survit à
-  l'admin qui est parti, et l'écran affiche un tiret plutôt qu'une case vide.
+- **La liste dit qui a invité**, et `invited_by_id` est devenu une **vraie clé
+  étrangère** le 2 septembre. Il était un UUID nu à dessein : une seconde relation
+  vers `app_users` demande de la nommer des deux côtés, et c'était trop de
+  cérémonie pour un champ d'audit que rien ne joignait. L'écran des invitations
+  en a fait un champ qu'on joint — une fois par page — donc la raison a expiré.
+  Deux choix dans la contrainte : **nullable**, parce qu'une invitation survit à
+  l'admin parti, et **`ON DELETE SET NULL` jamais `CASCADE`**, parce que
+  supprimer un chef ne doit pas emporter l'invitation en attente de quelqu'un
+  d'autre. L'écran affiche alors un tiret plutôt qu'une case vide.
 
 **Un effet de bord assumé, et corrigé au passage :** `revokeOutstandingFor`
 marquait les invitations remplacées comme *acceptées*. Ça les rendait

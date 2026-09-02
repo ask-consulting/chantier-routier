@@ -45,7 +45,10 @@ export class InvitationRepository implements InvitationRepositoryPort {
     const [rows, total] = await Promise.all([
       this.prisma.invitation.findMany({
         where,
-        include: { user: true },
+        // Both relations in the join: the invitee, whose name the screen lists,
+        // and the admin who sent it. `invitedBy` became a real relation on
+        // 2 September — it used to be a bare id resolved by a second query.
+        include: { user: true, invitedBy: true },
         // Pending first, then expired, then accepted — the default the screen
         // asks for, done in SQL rather than after the fact, so page 2 is not a
         // different sort from page 1.
@@ -62,39 +65,11 @@ export class InvitationRepository implements InvitationRepositoryPort {
     ]);
 
     return {
-      items: await this.withInviterNames(rows),
+      items: rows.map((row) => toListItem(row)),
       total,
       page,
       limit: take ?? total,
     };
-  }
-
-  /**
-   * Resolves `invited_by_id` into a name, in one extra query for the page.
-   *
-   * A second Prisma relation would do it in the join — and `schema.prisma` says
-   * why it does not exist: naming a relation on both sides of `app_users` for an
-   * audit field nothing else joins on costs more than it returns. One `IN` query
-   * per page of twenty rows is the honest price of that decision, and it is paid
-   * here rather than by the browser making a second call.
-   *
-   * The account may be gone: an admin who left, invitations still on file. The
-   * name is then `null`, and the screen says so.
-   */
-  private async withInviterNames(rows: InvitationWithUser[]): Promise<InvitationListItem[]> {
-    const inviterIds = [...new Set(rows.map((row) => row.invitedById))];
-    const inviters = inviterIds.length
-      ? await this.prisma.user.findMany({
-          where: { id: { in: inviterIds } },
-          select: { id: true, firstName: true, lastName: true },
-        })
-      : [];
-
-    const names = new Map(
-      inviters.map((inviter) => [inviter.id, `${inviter.firstName} ${inviter.lastName}`]),
-    );
-
-    return rows.map((row) => toListItem(row, names.get(row.invitedById) ?? null));
   }
 
   async save(invitation: Invitation): Promise<Invitation> {
@@ -165,9 +140,11 @@ function buildWhere(params: InvitationSearchParams): Prisma.InvitationWhereInput
   };
 }
 
-type InvitationWithUser = Prisma.InvitationGetPayload<{ include: { user: true } }>;
+type InvitationWithUser = Prisma.InvitationGetPayload<{
+  include: { user: true; invitedBy: true };
+}>;
 
-function toListItem(row: InvitationWithUser, invitedByName: string | null): InvitationListItem {
+function toListItem(row: InvitationWithUser): InvitationListItem {
   return {
     id: row.id,
     userId: row.userId,
@@ -179,6 +156,8 @@ function toListItem(row: InvitationWithUser, invitedByName: string | null): Invi
     acceptedAt: row.acceptedAt,
     createdAt: row.createdAt,
     invitedById: row.invitedById,
-    invitedByName,
+    // Null when that account has been deleted: the foreign key sets the column
+    // to NULL rather than taking the invitation with it.
+    invitedByName: row.invitedBy ? `${row.invitedBy.firstName} ${row.invitedBy.lastName}` : null,
   };
 }

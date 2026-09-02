@@ -15,8 +15,12 @@ export class Invitation {
     public readonly tokenHash: string,
     public readonly expiresAt: Date,
     public readonly acceptedAt: Date | null,
-    /** Who invited them — an audit trail, not a join. */
-    public readonly invitedById: string,
+    /**
+     * Who invited them. Null once that account is deleted — the invitation
+     * outlives the admin who left, and the foreign key sets this to NULL rather
+     * than taking the row with it.
+     */
+    public readonly invitedById: string | null,
     public readonly createdAt?: Date,
   ) {}
 
@@ -25,7 +29,7 @@ export class Invitation {
     userId: string;
     tokenHash: string;
     expiresAt: Date;
-    invitedById: string;
+    invitedById: string | null;
     acceptedAt?: Date | null;
     createdAt?: Date;
   }): Invitation {

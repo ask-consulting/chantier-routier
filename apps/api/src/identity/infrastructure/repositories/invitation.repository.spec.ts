@@ -24,16 +24,22 @@ const NOW_ISH = 1000;
 function setup(rows: unknown[] = []) {
   const findMany = vi.fn(async () => rows);
   const count = vi.fn(async () => rows.length);
-  const userFindMany = vi.fn(async () => [
-    { id: 'admin-1', firstName: 'Abdellatif', lastName: 'Ellouze' },
-  ]);
+  const findUnique = vi.fn(async () => rows[0] ?? null);
+  const updateMany = vi.fn(async () => ({ count: 1 }));
+  const deleteMany = vi.fn(async () => ({ count: 3 }));
 
   const prisma = {
-    invitation: { findMany, count },
-    user: { findMany: userFindMany },
+    invitation: { findMany, count, findUnique, updateMany, deleteMany },
   } as unknown as TenantPrismaClient;
 
-  return { findMany, count, userFindMany, repository: new InvitationRepository(prisma) };
+  return {
+    findMany,
+    count,
+    findUnique,
+    updateMany,
+    deleteMany,
+    repository: new InvitationRepository(prisma),
+  };
 }
 
 /** The shape the assertions read out of the `where` clause Prisma was handed. */
@@ -56,6 +62,7 @@ function row(overrides: Record<string, unknown> = {}) {
     acceptedAt: null,
     createdAt: new Date(),
     user: { email: 'karim@exemple.fr', firstName: 'Karim', lastName: 'Benali' },
+    invitedBy: { firstName: 'Abdellatif', lastName: 'Ellouze' },
     ...overrides,
   };
 }
@@ -128,38 +135,26 @@ describe('InvitationRepository.search', () => {
     expect(where.user.OR).toBeUndefined();
   });
 
-  it('resolves who invited, in one extra query for the page', async () => {
+  it('joins who invited, in the same query', async () => {
     const result = await harness.repository.search({ organizationId: 'org-1' });
 
-    expect(harness.userFindMany).toHaveBeenCalledTimes(1);
+    const { include } = harness.findMany.mock.calls[0][0] as { include: unknown };
+    // One query for the page, both relations. It used to be a second `IN` query
+    // resolving a bare id; `invited_by_id` is a real foreign key since 2 Sept.
+    expect(include).toEqual({ user: true, invitedBy: true });
     expect(result.items[0].invitedByName).toBe('Abdellatif Ellouze');
     expect(result.items[0].invitedById).toBe('admin-1');
   });
 
-  it('asks for each inviter once, however many rows they sent', async () => {
-    const many = setup([row(), row({ id: 'inv-2' }), row({ id: 'inv-3' })]);
-
-    await many.repository.search({ organizationId: 'org-1' });
-
-    const { where } = many.userFindMany.mock.calls[0][0] as { where: { id: { in: string[] } } };
-    expect(where.id.in).toEqual(['admin-1']);
-  });
-
   it('leaves the name null when that account is gone', async () => {
-    const orphan = setup([row({ invitedById: 'admin-parti' })]);
+    // `ON DELETE SET NULL`: deleting the manager who invited must not take
+    // somebody else's pending invitation with it.
+    const orphan = setup([row({ invitedById: null, invitedBy: null })]);
 
     const result = await orphan.repository.search({ organizationId: 'org-1' });
 
     expect(result.items[0].invitedByName).toBeNull();
-  });
-
-  it('does not ask for inviters at all when the page is empty', async () => {
-    const empty = setup([]);
-
-    const result = await empty.repository.search({ organizationId: 'org-1' });
-
-    expect(empty.userFindMany).not.toHaveBeenCalled();
-    expect(result.items).toEqual([]);
+    expect(result.items[0].invitedById).toBeNull();
   });
 
   it('derives the status of each row it returns', async () => {
@@ -176,5 +171,67 @@ describe('InvitationRepository.search', () => {
       InvitationStatus.ACCEPTED,
       InvitationStatus.EXPIRED,
     ]);
+  });
+});
+
+describe('InvitationRepository, the rest of the port', () => {
+  it('reads one invitation by id', async () => {
+    const harness = setup([row()]);
+
+    const invitation = await harness.repository.findById('inv-1');
+
+    expect(invitation?.id).toBe('inv-1');
+    expect(harness.findUnique).toHaveBeenCalledWith({ where: { id: 'inv-1' } });
+  });
+
+  it('reads one by token hash — the only lookup an invitee can trigger', async () => {
+    const harness = setup([row()]);
+
+    await harness.repository.findByTokenHash('sha256');
+
+    expect(harness.findUnique).toHaveBeenCalledWith({ where: { tokenHash: 'sha256' } });
+  });
+
+  it('answers null for an unknown id rather than throwing', async () => {
+    const harness = setup([]);
+
+    expect(await harness.repository.findById('nope')).toBeNull();
+  });
+
+  it('closes outstanding invitations by EXPIRING them, never by accepting them', async () => {
+    const harness = setup();
+    const at = new Date('2026-09-02T10:00:00Z');
+
+    await harness.repository.revokeOutstandingFor('user-1', at);
+
+    // This is the bug that shipped once: marking them accepted made them
+    // unusable — the goal — but told the invitations screen that somebody had
+    // joined when nobody had.
+    expect(harness.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', acceptedAt: null, expiresAt: { gt: at } },
+      data: { expiresAt: at },
+    });
+  });
+
+  it('leaves already-closed invitations alone', async () => {
+    const harness = setup();
+
+    await harness.repository.revokeOutstandingFor('user-1', new Date());
+
+    const { where } = harness.updateMany.mock.calls[0][0] as {
+      where: { acceptedAt: null; expiresAt: { gt: Date } };
+    };
+    // Accepted ones keep their date; already-expired ones keep theirs, so the
+    // row still says *when* it lapsed rather than when somebody pressed a button.
+    expect(where.acceptedAt).toBeNull();
+    expect(where.expiresAt.gt).toBeInstanceOf(Date);
+  });
+
+  it('purges what can no longer be used, and says how many', async () => {
+    const harness = setup();
+    const before = new Date('2026-09-02T10:00:00Z');
+
+    expect(await harness.repository.deleteExpired(before)).toBe(3);
+    expect(harness.deleteMany).toHaveBeenCalledWith({ where: { expiresAt: { lt: before } } });
   });
 });

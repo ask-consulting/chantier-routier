@@ -110,6 +110,14 @@ réseau — c'est ce qui garde chaque contexte extractible en service autonome
 (`pg_dump -n identity`, `pg_dump -n notification`).
 L'intégrité entre contextes est le travail de l'application.
 
+**À l'intérieur d'un contexte, en revanche, les clés étrangères sont la règle.**
+La contrainte porte sur la frontière, pas sur le nombre de relations : deux
+tables du même schéma se lient normalement — `invitations.invited_by_id` →
+`app_users.id` en est un exemple, ajouté le 2 septembre 2026 après avoir vécu
+comme un identifiant nu. Un champ qu'on finit par joindre à chaque affichage
+mérite sa relation ; la garder implicite ne fait qu'en déplacer le coût dans une
+seconde requête.
+
 ## 5. Colonnes systématiques
 
 ```prisma

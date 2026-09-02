@@ -23,8 +23,8 @@ export interface InvitationListItem {
   expiresAt: Date;
   acceptedAt: Date | null;
   createdAt: Date;
-  /** The admin who sent it. Stored on the row as a plain id. */
-  invitedById: string;
-  /** Resolved from that id; `null` when their account no longer exists. */
+  /** The admin who sent it. Null once that account is deleted. */
+  invitedById: string | null;
+  /** Their name, joined from the relation; null for the same reason. */
   invitedByName: string | null;
 }
