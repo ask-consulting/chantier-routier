@@ -131,6 +131,11 @@
 
   --ring: var(--blue-500);
 
+  /* What a modal lays over the page. Tinted with the neutral rather than pure
+   * black: a grey-blue interface behind a black veil reads dirty, the same
+   * reason the shadows are tinted. */
+  --scrim: color-mix(in srgb, var(--slate-900) 45%, transparent);
+
   --shadow-color: 215 25% 27%;
   color-scheme: light;
 }
@@ -178,6 +183,10 @@
 
   --ring: var(--blue-400);
 
+  /* Darker than the light one: the page underneath is already dark, so a 45%
+   * veil would barely separate the two. */
+  --scrim: color-mix(in srgb, var(--slate-950) 70%, transparent);
+
   --shadow-color: 220 60% 2%;
   color-scheme: dark;
 }
@@ -222,6 +231,7 @@
   --color-neutral-on-subtle: var(--neutral-on-subtle);
 
   --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
 
   --color-brand-ring: var(--brand-ring);
   --color-brand-shell: var(--brand-shell);

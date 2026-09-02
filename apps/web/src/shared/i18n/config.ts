@@ -26,6 +26,19 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   ar: 'العربية',
 };
 
+/**
+ * For the 64px sidebar, where "Français" does not fit and overflows the rail.
+ *
+ * ISO codes rather than a shortened word: every abbreviation of "العربية" is
+ * either wrong or unreadable at that size, and `FR`/`AR` are what every airline
+ * and bank site already trains people to recognise. The full name stays in the
+ * button's accessible name, so nothing is lost to a screen reader.
+ */
+export const LOCALE_CODES: Record<Locale, string> = {
+  fr: 'FR',
+  ar: 'AR',
+};
+
 /** Arabic is written right to left; everything else here is not. */
 export function directionOf(locale: Locale): 'ltr' | 'rtl' {
   return locale === 'ar' ? 'rtl' : 'ltr';

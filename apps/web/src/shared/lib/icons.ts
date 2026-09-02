@@ -41,6 +41,9 @@ export {
   ArrowLeft as BackIcon,
   Menu as MenuIcon,
   X as CloseIcon,
+  // Both point left, so both are mirrored in Arabic — see `Sidebar`.
+  PanelLeftClose as SidebarCollapseIcon,
+  PanelLeftOpen as SidebarExpandIcon,
 
   // --- Feedback -------------------------------------------------------------
   TriangleAlert as WarningIcon,
