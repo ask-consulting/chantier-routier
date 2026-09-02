@@ -72,6 +72,22 @@ export class InvalidInvitationException extends DomainException {
 }
 
 /**
+ * An admin acted on an invitation that is no longer pending.
+ *
+ * `conflict`, not `not-found`: the row exists and the admin can see it in the
+ * list — what has changed is its state, most likely because the invitee accepted
+ * between the page loading and the button being pressed. The message says which
+ * state, because "impossible" without a reason sends somebody to support.
+ */
+export class InvitationNotPendingException extends DomainException {
+  readonly kind: DomainErrorKind = 'conflict';
+
+  constructor(status: string) {
+    super(`This invitation is ${status} — only a pending invitation can be resent or cancelled`);
+  }
+}
+
+/**
  * Self-registration is closed.
  *
  * `not-found` rather than `forbidden`: the route does not exist as far as a

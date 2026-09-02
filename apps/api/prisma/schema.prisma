@@ -100,9 +100,12 @@ model User {
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "fk_app_users_organizations")
-  refreshTokens RefreshToken[]
-  invitations   Invitation[]
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "fk_app_users_organizations")
+  refreshTokens   RefreshToken[]
+  invitations     Invitation[]   @relation("InvitationInvitee")
+  /// Invitations this account sent. Nulled — not cascaded — when it is deleted:
+  /// an invitation outlives the admin who left.
+  invitationsSent Invitation[]   @relation("InvitationInviter")
 
   @@index([organizationId], map: "ix_app_users_organization_id")
   @@map("app_users")
@@ -138,9 +141,8 @@ model RefreshToken {
 /// handed over once and only its SHA-256 is kept, so a database leak yields
 /// nothing usable. Single-use and time-limited.
 ///
-/// Delivery is deliberately absent. The API issues the token and emits an event;
-/// sending it — email, SMS, anything else — belongs to a notification module
-/// that does not exist yet and must not be assumed here.
+/// Delivery goes through the notification module: the API issues the token and
+/// hands the render to `SendNotificationCommand` (docs/14 §5.2).
 model Invitation {
   id          String    @id(map: "pk_invitations") @default(uuid()) @db.Uuid
   userId      String    @map("user_id") @db.Uuid
@@ -148,14 +150,24 @@ model Invitation {
   tokenHash   String    @unique(map: "uq_invitations_token_hash") @map("token_hash")
   expiresAt   DateTime  @map("expires_at")
   acceptedAt  DateTime? @map("accepted_at")
-  /// Who invited them. A plain id, not a foreign key: a second relation to
-  /// `User` would need naming on both sides for an audit field nothing joins on.
-  invitedById String    @map("invited_by_id") @db.Uuid
+  /// Who invited them.
+  ///
+  /// A real relation since 2 September 2026. It was a bare id at first — a
+  /// second relation to `User` needs naming on both sides, for an audit field
+  /// nothing joined on. The invitations screen made it something we *do* join
+  /// on, several times a page, so the reason expired.
+  ///
+  /// Nullable, and `SetNull` rather than `Cascade`: an invitation outlives the
+  /// admin who sent it and then left, and deleting a manager must never take
+  /// somebody else's pending invitation with it.
+  invitedById String?   @map("invited_by_id") @db.Uuid
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_invitations_app_users")
+  user      User  @relation("InvitationInvitee", fields: [userId], references: [id], onDelete: Cascade, map: "fk_invitations_app_users")
+  invitedBy User? @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: SetNull, map: "fk_invitations_invited_by")
 
   @@index([userId], map: "ix_invitations_user_id")
+  @@index([invitedById], map: "ix_invitations_invited_by_id")
   @@index([expiresAt], map: "ix_invitations_expires_at")
   @@map("invitations")
   @@schema("identity")

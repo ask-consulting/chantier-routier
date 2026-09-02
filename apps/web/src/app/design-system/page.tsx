@@ -9,8 +9,11 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  ConfirmDialog,
+  Drawer,
   EmptyState,
   Field,
+  Select,
   Skeleton,
   Snippet,
   TD,
@@ -24,6 +27,7 @@ import * as Icons from '@/shared/lib/icons';
 import { WORKSITE_STATUS_TONE, varianceTone } from '@/features/worksites';
 import { formatAmount } from '@/shared/lib/format';
 import { useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { Locale } from '@/shared/i18n/config';
 
 /**
@@ -64,6 +68,10 @@ function Section({ title, note, children }: { title: string; note?: string; chil
 }
 
 export default function DesignSystemPage() {
+  // The confirmation is the one component on this page that has a state worth
+  // showing: a dialog drawn permanently open is not the thing it documents.
+  const [confirming, setConfirming] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   // The design-system pages are internal tooling and stay in French, but the
   // components they demonstrate must be exercised with real translated data.
   const tStatus = useTranslations('worksiteStatus');
@@ -433,6 +441,139 @@ const tStatus = useTranslations('worksiteStatus');
 />
 
 // Toujours une action : un état vide sans issue est un cul-de-sac.`}</Snippet>
+      </Section>
+
+      <Section
+        title="Listes déroulantes"
+        note="Un <select> natif, étiqueté comme un champ. Sur téléphone, la roue du navigateur bat tout ce qu’on dessinerait."
+      >
+        <Card>
+          <CardBody className="grid gap-4 sm:grid-cols-2">
+            <Select
+              label="Statut"
+              options={[
+                { value: 'all', label: 'Tous les statuts' },
+                { value: 'pending', label: 'En attente' },
+                { value: 'accepted', label: 'Acceptée' },
+              ]}
+            />
+            <Select
+              label="Rôle"
+              hint="L’étiquette peut être masquée dans une barre de filtres."
+              options={[
+                { value: 'admin', label: 'Administrateur' },
+                { value: 'worker', label: 'Ouvrier' },
+              ]}
+            />
+          </CardBody>
+        </Card>
+        <Snippet>{`import { Select } from '@/shared/ui';
+
+<Select
+  label="Statut"
+  options={[{ value: 'pending', label: 'En attente' }]}
+  value={status}
+  onChange={(event) => setStatus(event.target.value)}
+/>
+
+// labelHidden garde l'étiquette pour les lecteurs d'écran sans la peindre.`}</Snippet>
+      </Section>
+
+      <Section
+        title="Confirmation"
+        note="Pour tout ce qui détruit ou révoque. La description dit ce qui va se passer — pas « êtes-vous sûr ? »."
+      >
+        <Card>
+          <CardBody className="flex flex-wrap items-center gap-3">
+            <Button variant="danger" onClick={() => setConfirming(true)}>
+              Supprimer l’invitation
+            </Button>
+            <span className="text-sm text-fg-muted">
+              Annuler prend le focus : le bouton dangereux n’est jamais à un Entrée d’un clic
+              accidentel.
+            </span>
+          </CardBody>
+        </Card>
+        <ConfirmDialog
+          open={confirming}
+          title="Supprimer cette invitation ?"
+          description="Le lien envoyé cessera immédiatement de fonctionner. Le compte, lui, reste : vous pourrez renvoyer une invitation plus tard."
+          confirmLabel="Supprimer l’invitation"
+          cancelLabel="Annuler"
+          tone="danger"
+          onConfirm={() => setConfirming(false)}
+          onCancel={() => setConfirming(false)}
+        />
+        <Snippet>{`import { ConfirmDialog } from '@/shared/ui';
+
+<ConfirmDialog
+  open={confirming}
+  title="Supprimer cette invitation ?"
+  description="Le lien cessera de fonctionner. Le compte, lui, reste."
+  confirmLabel="Supprimer l'invitation"
+  cancelLabel="Annuler"
+  tone="danger"
+  onConfirm={remove}
+  onCancel={() => setConfirming(false)}
+/>
+
+// <dialog> natif : piège à focus, Échap et fond inerte viennent du navigateur.`}</Snippet>
+      </Section>
+
+      <Section
+        title="Tiroir"
+        note="Pour un formulaire : la liste reste lisible à côté, et le panneau a toute la hauteur. Vient de la droite en français, de la gauche en arabe."
+      >
+        <Card>
+          <CardBody className="flex flex-wrap items-center gap-3">
+            <Button variant="primary" onClick={() => setDrawerOpen(true)}>
+              Ouvrir le tiroir
+            </Button>
+            <span className="text-sm text-fg-muted">
+              Une question reste centrée ; un formulaire va sur le côté.
+            </span>
+          </CardBody>
+        </Card>
+        <Drawer
+          open={drawerOpen}
+          size="md"
+          title="Inviter quelqu’un"
+          closeLabel="Fermer"
+          onClose={() => setDrawerOpen(false)}
+          footer={
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={() => setDrawerOpen(false)}>
+                Annuler
+              </Button>
+              <Button variant="primary" onClick={() => setDrawerOpen(false)}>
+                Envoyer l’invitation
+              </Button>
+            </div>
+          }
+        >
+          <div className="flex flex-col gap-stack">
+            <Field label="Email" type="email" />
+            <div className="grid gap-stack sm:grid-cols-2">
+              <Field label="Prénom" />
+              <Field label="Nom" />
+            </div>
+          </div>
+        </Drawer>
+        <Snippet>{`import { Drawer } from '@/shared/ui';
+
+<Drawer
+  open={open}
+  size="md"
+  title="Inviter quelqu'un"
+  closeLabel="Fermer"
+  onClose={close}
+  footer={<Button variant="primary" type="submit" form="invite-form">Envoyer</Button>}
+>
+  <form id="invite-form" onSubmit={submit}>…</form>
+</Drawer>
+
+// Le pied est hors du <form> : \`form="invite-form"\` les relie, donc Entrée
+// dans n'importe quel champ soumet.`}</Snippet>
       </Section>
     </div>
   );

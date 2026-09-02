@@ -897,6 +897,64 @@ plus tard — un journal d'audit, un fil in-app — le pourra encore.
 est perdu. Pas de table d'attente, pas de renvoi. C'était le choix explicite
 contre un outbox, qui reste ouvert le jour où ça fera mal.
 
+### 5.1 bis L'écran des invitations ✅
+
+*Fait le 2 septembre.* La liste de ce qui a été envoyé, avec deux actions et
+deux filtres. Quatre décisions qui ne se lisent ni dans les routes ni dans les
+composants :
+
+- **« Supprimer » expire, il n'efface pas.** Le lien dans la boîte de l'invité
+  cesse de fonctionner tout de suite — c'est le but du bouton — et la ligne
+  reste : qui a invité qui, quand, et que ça a été annulé. Un compte créé par
+  erreur puis annulé est exactement l'historique qu'un admin relit trois mois
+  plus tard.
+- **« Renvoyer » émet un nouveau lien et ferme l'ancien.** Le jeton en clair
+  n'est stocké nulle part, donc le premier mail est irreproductible par
+  construction ; et il ne faudrait pas le reproduire, puisque quelqu'un qui
+  demande un renvoi se plaint le plus souvent d'un lien sur le point d'expirer.
+- **Le statut est calculé, jamais stocké.** `acceptedAt` et `expiresAt` disent
+  tout ; une colonne demanderait un travail périodique pour rester vraie, et
+  serait fausse entre deux passages. La règle vit dans `@chantia/shared` et sert
+  aux deux côtés — l'API refuse et l'interface n'affiche pas le bouton, à partir
+  de la même fonction. Deux implémentations donneraient un bouton qui répond 409.
+- **Une invitation d'un autre locataire répond 404, jamais 403.** `invitations`
+  ne porte pas d'`organization_id` (elle pend de `app_users`), donc rien dans la
+  base ne l'empêche : la cloison est dans les handlers, et un « interdit »
+  confirmerait l'existence de la ligne à qui a deviné un identifiant.
+
+**La création vit dans le même écran**, derrière « Nouvelle invitation » : un
+**tiroir** (email, prénom, nom, rôle, langue) qui appelle `POST /users` —
+un tiroir et pas une boîte centrée, pour que la liste reste lisible à côté et que
+le formulaire ait toute la hauteur ; la confirmation de suppression, elle, reste
+centrée, parce qu'une question doit tomber sous l'œil —
+inviter quelqu'un *est* la façon dont un compte naît dans ce produit, il n'y a pas
+d'étape où l'un existe sans l'autre. Deux détails qui comptent :
+
+- **Le lien est affiché après l'envoi.** L'API le donne une seule fois — seule
+  son empreinte est stockée — donc ce moment est le seul où il existe. Le mail
+  est parti, mais un mail rebondit, tombe en spam, ou arrive dans une boîte que
+  personne n'ouvre ; un admin à côté de la personne doit pouvoir le passer de la
+  main à la main. Le cacher parce qu'« un email a été envoyé » ferait plus
+  confiance à la livraison que la situation ne le mérite.
+- **Le rôle par défaut est `worker`.** Un admin créé par un coup de molette est un
+  problème de sécurité, un ouvrier non.
+- **La liste dit qui a invité**, et `invited_by_id` est devenu une **vraie clé
+  étrangère** le 2 septembre. Il était un UUID nu à dessein : une seconde relation
+  vers `app_users` demande de la nommer des deux côtés, et c'était trop de
+  cérémonie pour un champ d'audit que rien ne joignait. L'écran des invitations
+  en a fait un champ qu'on joint — une fois par page — donc la raison a expiré.
+  Deux choix dans la contrainte : **nullable**, parce qu'une invitation survit à
+  l'admin parti, et **`ON DELETE SET NULL` jamais `CASCADE`**, parce que
+  supprimer un chef ne doit pas emporter l'invitation en attente de quelqu'un
+  d'autre. L'écran affiche alors un tiret plutôt qu'une case vide.
+
+**Un effet de bord assumé, et corrigé au passage :** `revokeOutstandingFor`
+marquait les invitations remplacées comme *acceptées*. Ça les rendait
+inutilisables, ce qui était le but — mais ça racontait qu'une personne avait
+rejoint alors qu'elle n'avait rien fait. Invisible tant que rien n'affichait ces
+lignes ; le premier écran qui les affiche l'a rendu faux à l'œil nu. Elles sont
+désormais expirées.
+
 ### 5.2 Le module de notification ✅
 
 *Fait le 28 août.* Un schéma Postgres `notification` à lui, une table

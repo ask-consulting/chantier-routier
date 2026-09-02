@@ -70,7 +70,10 @@ export default defineConfig({
       ],
       // +5 points à chaque PR qui touche ce paquet, jusqu'à 80 % — voir
       // `docs/14-etat-des-lieux.md` §2.3. Au-delà de 80, le cliquet tient sans monter.
-      thresholds: { statements: 25, branches: 25, functions: 22, lines: 25 },
+      // 25 → 44 : le parcours d'authentification (arrivé par develop) et le
+      // module invitation — renvoi, annulation, cloison entre locataires, et la
+      // traduction du statut en SQL côté repository.
+      thresholds: { statements: 44, branches: 45, functions: 43, lines: 44 },
     },
   },
 });

@@ -54,10 +54,15 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       // Next.js pages and layouts: routing and composition, exercised by
       // running the app rather than by a unit test.
-      exclude: ['src/app/**'],
-      // 26 → 36 : le kit du design system, `format.ts` et `i18n/config.ts`,
-      // qui n'avaient aucun test (docs/15 §4).
-      thresholds: { statements: 36, branches: 37, functions: 33, lines: 37 },
+      exclude: [
+        'src/app/**',
+        // Test scaffolding, not product code: counting the harness that runs
+        // the tests as covered-by-tests is how a number stops meaning anything.
+        'src/test/**',
+      ],
+      // 36 → 52 : la feature `invitations` complète — filtres, actions, création,
+      // les deux mises en page — et les composants qu'elle a fait naître.
+      thresholds: { statements: 52, branches: 55, functions: 51, lines: 53 },
     },
   },
 });

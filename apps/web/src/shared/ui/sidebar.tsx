@@ -12,7 +12,12 @@ import {
   type SVGProps,
 } from 'react';
 import { cn } from '@/shared/lib/cn';
-import { SidebarCollapseIcon, SidebarExpandIcon } from '@/shared/lib/icons';
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  SidebarCollapseIcon,
+  SidebarExpandIcon,
+} from '@/shared/lib/icons';
 
 /**
  * The application's left rail: logo at the top, navigation in the middle,
@@ -168,5 +173,63 @@ export function SidebarNavItem({ href, label, icon: Icon }: SidebarNavItemProps)
       <Icon className="size-4 shrink-0" aria-hidden />
       <span className={cn(collapsed && 'sr-only')}>{label}</span>
     </Link>
+  );
+}
+
+export interface SidebarNavGroupProps {
+  label: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  /** `SidebarNavItem`s. */
+  children: ReactNode;
+  /**
+   * Open on arrival. The caller decides, because only it knows whether one of
+   * the children is the page being read — a section that hides the current page
+   * behind a closed chevron is worse than no section at all.
+   */
+  defaultOpen?: boolean;
+}
+
+/**
+ * A section of the menu that holds other destinations.
+ *
+ * **The header is a button, not a link.** It opens and closes; it goes nowhere.
+ * A header that both navigates and toggles has to guess which one a click meant,
+ * and guesses wrong on touch.
+ *
+ * **Collapsed, the group disappears and its children stay.** Sixty-four pixels
+ * hold an icon, not an icon plus a chevron plus an indent — and a flyout that
+ * opens on hover is a menu of its own, with its own focus and touch problems.
+ * Every destination stays one click away, which is the promise that matters.
+ */
+export function SidebarNavGroup({ label, icon: Icon, children, defaultOpen = false }: SidebarNavGroupProps) {
+  const collapsed = useContext(CollapsedContext);
+  const [open, setOpen] = useState(defaultOpen);
+
+  if (collapsed) {
+    return <>{children}</>;
+  }
+
+  const ChevronIcon = open ? ChevronDownIcon : ChevronRightIcon;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={() => setOpen((previous) => !previous)}
+        aria-expanded={open}
+        className={cn(
+          'flex h-10 items-center gap-3 rounded-control px-3 text-sm font-medium',
+          'text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg',
+        )}
+      >
+        <Icon className="size-4 shrink-0" aria-hidden />
+        <span className="flex-1 text-start">{label}</span>
+        {/* Points along the reading direction when closed, down when open. */}
+        <ChevronIcon className="size-4 shrink-0 rtl:-scale-x-100" aria-hidden />
+      </button>
+
+      {/* Indented on the starting side, so Arabic indents from the right. */}
+      {open && <div className="flex flex-col gap-1 ps-4">{children}</div>}
+    </div>
   );
 }
