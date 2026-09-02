@@ -37,10 +37,16 @@ export default defineConfig({
    * pass.
    *
    * **La règle depuis le 2 septembre 2026 : +5 points par PR**, sur chaque
-   * paquet que la PR touche. Une PR qui ajoute du code en ajoute donc le test,
-   * plutôt que de repousser la dette au sprint suivant. Les chiffres ci-dessous
-   * sont la mesure du jour arrondie vers le bas, comme toujours — l'exigence
-   * porte sur la progression, pas sur un nombre choisi à l'avance.
+   * paquet que la PR touche, **jusqu'à 80 %**. Une PR qui ajoute du code en
+   * ajoute donc le test, plutôt que de repousser la dette au sprint suivant.
+   * Les chiffres ci-dessous sont la mesure du jour arrondie vers le bas, comme
+   * toujours — l'exigence porte sur la progression, pas sur un nombre choisi à
+   * l'avance.
+   *
+   * **80 % est le but, pas une étape.** Au-delà, la montée s'arrête : ce qui
+   * reste non couvert à ce niveau, ce sont les branches défensives et le
+   * câblage, et les tester coûte plus qu'il ne rapporte. Un paquet à 80 %
+   * garde son cliquet — il ne peut pas redescendre — mais ne doit plus rien.
    */
     coverage: {
       provider: 'v8',

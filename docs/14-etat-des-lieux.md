@@ -683,6 +683,14 @@ morceau. Le premier tour a fait +10 sur `apps/web` — le kit du design system,
 `format.ts` et `i18n/config.ts` n'avaient aucun test (`docs/15` §4), donc le
 premier lot était aussi le moins cher.
 
+**La cible est 80 %, et pas davantage.** À ce niveau la montée s'arrête : ce qui
+reste non couvert, ce sont les branches défensives, les gardes de type et le
+câblage — les tester coûte plus qu'il ne rapporte, et une exigence de 100 %
+produit surtout des tests écrits pour la mesure. Un paquet arrivé à 80 % garde
+son cliquet, il ne peut donc pas redescendre, mais il ne doit plus rien.
+`packages/shared` (82 %) y est déjà ; `apps/web` (36 %) et `apps/api` (25 %) ont
+encore la montée devant eux.
+
 Deux choses à ne pas se raconter sur ces chiffres :
 
 - **La couverture basse de l'API est réelle**, pas un artefact de comptage.

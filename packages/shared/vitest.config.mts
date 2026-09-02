@@ -27,6 +27,8 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       // Barrels re-export; there is nothing in them to exercise.
       exclude: ['**/index.ts'],
+      // Au-dessus de 80 % : le cliquet tient, il ne monte plus. La règle des
+      // +5 par PR s'arrête là — voir `docs/14-etat-des-lieux.md` §2.3.
       thresholds: { statements: 82, branches: 77, functions: 78, lines: 81 },
     },
   },
