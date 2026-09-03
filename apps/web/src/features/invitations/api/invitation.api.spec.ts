@@ -34,6 +34,13 @@ afterEach(() => {
 });
 
 describe('fetchInvitations', () => {
+  it('sends no content type either — a GET carries nothing', async () => {
+    await fetchInvitations();
+
+    const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(headers['Content-Type']).toBeUndefined();
+  });
+
   it('asks for the plain list when nothing is filtered', async () => {
     await fetchInvitations();
 
@@ -63,6 +70,27 @@ describe('fetchInvitations', () => {
 });
 
 describe('resendInvitation and cancelInvitation', () => {
+  /**
+   * The header is the whole test here.
+   *
+   * Both calls carry no body, and Fastify — which the API runs on — refuses a
+   * request that announces JSON and carries nothing: `400 Body cannot be empty
+   * when content-type is set to 'application/json'`. Both actions answered 400
+   * in production while the list beside them worked, because a mocked `fetch`
+   * has no opinion about headers and a `curl` written by hand does not send one.
+   */
+  it('announces no content type when there is no content', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await resendInvitation('inv-1');
+    await cancelInvitation('inv-1');
+
+    for (const call of fetchMock.mock.calls) {
+      const headers = (call[1] as RequestInit).headers as Record<string, string>;
+      expect(headers['Content-Type']).toBeUndefined();
+    }
+  });
+
   it('resends with a POST on the invitation', async () => {
     fetchMock.mockResolvedValue(ok({ invitationPath: '/invitation/x', expiresAt: 'x' }));
 

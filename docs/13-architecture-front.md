@@ -32,6 +32,21 @@ Trois dossiers par feature, et chacun répond à une seule question :
 depuis un test ou un script. `ui/` ne connaît aucune URL. C'est la même discipline
 que le back : `presentation → application → domain`.
 
+## Un piège du client HTTP
+
+**`Content-Type: application/json` ne part que s'il y a un corps.** L'API tourne
+sur Fastify, qui refuse une requête annonçant du JSON et n'en portant pas :
+`400 Body cannot be empty when content-type is set to 'application/json'`.
+
+Ça a coûté les deux actions de l'écran des invitations en production — « Renvoyer »
+et « Supprimer », toutes deux sans corps, toutes deux en 400 — pendant que la
+liste à côté fonctionnait. La suite de tests est restée verte du début à la fin :
+un `fetch` bouchonné n'a pas d'avis sur les en-têtes, et un `curl` écrit à la main
+pour vérifier n'en envoie pas.
+
+La leçon vaut au-delà de cet en-tête : ce qui n'est vrai que *dans un vrai
+navigateur contre un vrai serveur* ne se teste pas avec un double.
+
 ## Les six règles
 
 1. **Une feature ne s'atteint que par son `index.ts`.** `@/features/worksites/api/…`
