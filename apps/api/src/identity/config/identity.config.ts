@@ -61,6 +61,36 @@ function positiveInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/**
+ * Where the invitation link points — and the one setting whose default is
+ * *dangerous* in production rather than merely wrong.
+ *
+ * It fell back to `http://localhost:3000` everywhere, so a deployment that
+ * forgot the variable sent perfectly well-formed invitation emails pointing at
+ * the recipient's own machine. Nothing failed, nothing was logged: the account
+ * was created, the mail left, and the link was dead on arrival. That happened on
+ * 2 September 2026, and the only reason it was caught is that somebody clicked.
+ *
+ * So the default survives for development, where it is right, and production
+ * refuses to boot without the real value. A crash on deploy is cheap; an
+ * invitation that silently goes nowhere is not.
+ */
+function readWebAppUrl(): string {
+  const configured = process.env.WEB_APP_URL?.trim();
+
+  if (!configured) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'WEB_APP_URL is required in production — without it, invitation emails ' +
+          'link to http://localhost:3000 and every invitation silently fails.',
+      );
+    }
+    return 'http://localhost:3000';
+  }
+
+  return configured.replace(/\/+$/, '');
+}
+
 export default registerAs(
   'identity',
   (): IdentityConfig => ({
@@ -74,6 +104,6 @@ export default registerAs(
     allowSelfRegistration: process.env.ALLOW_SELF_REGISTRATION === 'true',
     // Trailing slash trimmed once here, so every caller can concatenate a path
     // that starts with one without producing `//invitation`.
-    webAppUrl: (process.env.WEB_APP_URL ?? 'http://localhost:3000').replace(/\/+$/, ''),
+    webAppUrl: readWebAppUrl(),
   }),
 );

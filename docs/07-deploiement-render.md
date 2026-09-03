@@ -30,6 +30,11 @@ Guide pas-à-pas pour déployer `apps/api` sur **Render** (Free) avec une base
    - `DIRECT_URL` = URL **directe** Supabase
    - `CORS_ORIGINS` = URL du web (ex. `https://mon-app.vercel.app`) — optionnel au début
    - `BREVO_API_KEY` et `EMAIL_FROM_ADDRESS` = envoi des emails, voir §5
+   - `WEB_APP_URL` est dans `render.yaml` avec sa valeur (l'URL Vercel) : c'est
+     elle qui transforme un chemin d'invitation en lien cliquable dans le mail.
+     Son absence a envoyé des invitations pointant vers `http://localhost:3000`
+     le 2 septembre 2026 — l'API retombait sur son défaut de développement sans
+     rien dire. Elle refuse désormais de démarrer sans, en production.
 5. Lancer le déploiement. Au boot, le conteneur applique les migrations
    (`prisma migrate deploy`) puis démarre le serveur. La migration seed crée
    l'organisation **ELLOUZE construction** (UUID fixe).
