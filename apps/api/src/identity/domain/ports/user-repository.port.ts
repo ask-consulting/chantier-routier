@@ -14,6 +14,15 @@ export interface UserRepositoryPort {
   /** Lookup by login identifier. The email is expected already normalised. */
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
+  /**
+   * The account attached to an HR record, if there is one.
+   *
+   * `app_users.worker_id` is unique, so this returns at most one row. Used when
+   * a worker is deleted: the column is a **soft** reference — no foreign key
+   * crosses the schema boundary — so nothing in the database clears it, and the
+   * application has to.
+   */
+  findByWorkerId(workerId: string): Promise<User | null>;
   search(params: SearchParams): Promise<SearchResult<User>>;
   /**
    * Guards the "an organization always keeps one way in" invariant, checked

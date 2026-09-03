@@ -24,6 +24,11 @@ export class UserRepository implements UserRepositoryPort {
     return row ? UserMapper.toDomain(row) : null;
   }
 
+  async findByWorkerId(workerId: string): Promise<User | null> {
+    const row = await this.prisma.user.findUnique({ where: { workerId } });
+    return row ? UserMapper.toDomain(row) : null;
+  }
+
   async search(params: SearchParams): Promise<SearchResult<User>> {
     const { skip, take, page } = getPrismaPagination(params);
     // No tenant clause here: the extension adds it to both queries below, and
