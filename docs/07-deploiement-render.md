@@ -112,13 +112,25 @@ D'où le `ignoreCommand` dans `apps/web/vercel.json`, qui remplace la détection
 automatique :
 
 ```bash
-git diff --quiet HEAD^ HEAD -- apps/web packages/shared apps/web/vercel.json
+npx turbo-ignore @chantia/web
 ```
 
-> La convention Vercel est inversée, et c'est ce qui la rend lisible ici :
-> **sortie 0 = on saute, sortie 1 = on construit.** `git diff --quiet` sort 0
-> quand rien n'a bougé dans ces chemins — donc on saute — et 1 dès qu'un fichier
-> y change — donc on construit.
+> La convention Vercel est inversée : **sortie 0 = on saute, sortie 1 = on
+> construit.** `turbo-ignore` respecte cette convention et répond à la bonne
+> question — « ce commit affecte-t-il `@chantia/web` **ou l'un de ses paquets
+> dont il dépend** ? » — en interrogeant le graphe Turborepo. Une modification de
+> `packages/shared` déclenche donc le build sans qu'on ait à l'énumérer.
+
+> ⚠️ **Le piège qui a coûté une demi-journée.** La première version était un
+> `git diff --quiet HEAD^ HEAD -- apps/web packages/shared`. Elle n'a **jamais**
+> construit : Vercel exécute cette commande **depuis le dossier racine du
+> projet**, donc `apps/web` — et `git diff -- apps/web` y cherche
+> `apps/web/apps/web`, ne trouve rien, et sort 0, c'est-à-dire « saute ». Le
+> symptôme est le pire possible : aucune erreur, aucun build rouge, juste une
+> production qui reste en arrière pendant que les previews des branches, elles,
+> se construisent normalement. Si un chemin doit être écrit à la main, il est
+> relatif à `apps/web` (`.` et `../../packages/shared`) — raison de plus de
+> laisser `turbo-ignore` le faire.
 
 **Le bouton « Redeploy » ne rattrape pas un déploiement manqué** : il rejoue le
 *même commit*, pas la tête de la branche. Pour repartir sur le dernier état de
