@@ -9,6 +9,7 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  Checkbox,
   ConfirmDialog,
   Drawer,
   EmptyState,
@@ -477,6 +478,26 @@ const tStatus = useTranslations('worksiteStatus');
 />
 
 // labelHidden garde l'étiquette pour les lecteurs d'écran sans la peindre.`}</Snippet>
+      </Section>
+
+      <Section
+        title="Case à cocher"
+        note="Un input natif de type case à cocher — accent-color plutôt qu'une case redessinée."
+      >
+        <Card>
+          <CardBody className="flex flex-col gap-3">
+            <Checkbox label="Actif" hint="Décochez si la personne a quitté l’entreprise — l’historique est conservé." defaultChecked />
+          </CardBody>
+        </Card>
+        <Snippet>{`import { Checkbox } from '@/shared/ui';
+
+<Checkbox
+  label="Actif"
+  checked={active}
+  onChange={(event) => setActive(event.target.checked)}
+/>
+
+// L'étiquette est à droite de la case, comme sur un formulaire papier.`}</Snippet>
       </Section>
 
       <Section
