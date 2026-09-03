@@ -14,19 +14,18 @@ import { Worker } from '../domain/entities/worker.entity';
 import { WorkerRepositoryPort } from '../domain/ports/worker-repository.port';
 
 /**
- * The payroll's two load-bearing rules.
+ * The payroll's load-bearing rule: deleting a worker never removes the row.
  *
- * **A worker with hours is deactivated, not deleted.** `timesheets.worker_id`
- * cascades, so an actual deletion would take the hours with it — and with them
- * the labour cost of every worksite this person appeared on. A month closed in
- * March would change value in September, silently. Soft-deleting keeps every
- * row exactly as it was; only `active` moves.
+ * `timesheets.worker_id` cascades, so an actual `DELETE` would take the hours
+ * with it — and with them the labour cost of every worksite this person
+ * appeared on. A month closed in March would change value in September,
+ * silently. `worker.deleted()` sets `deletedAt` instead; the repository's
+ * reads are what keep the row from ever surfacing again (see its own spec).
  *
- * **Only a real deletion tells identity.** `app_users.worker_id` is a soft
- * reference: no foreign key crosses the schema boundary, so nothing in the
- * database clears it. A soft-deleted worker still exists, so an account
- * pointed at it must stay linked — the event fires only when the row is
- * actually gone.
+ * The account is still unlinked, though. From the product's point of view the
+ * worker is gone — no list, no lookup, no way back through this API — so
+ * `app_users.worker_id` stops pointing at them exactly as it would after a
+ * real delete. Only the row survives; the relationship does not.
  */
 
 const ORG = 'org-1';
@@ -43,16 +42,14 @@ function existing(overrides: Partial<Worker> = {}): Worker {
   });
 }
 
-function setup(options: { worker?: Worker | null; timesheets?: number } = {}) {
+function setup(options: { worker?: Worker | null } = {}) {
   const saved: Worker[] = [];
   const repository = {
     findById: vi.fn(async () => (options.worker === undefined ? existing() : options.worker)),
-    countTimesheets: vi.fn(async () => options.timesheets ?? 0),
     save: vi.fn(async (worker: Worker) => {
       saved.push(worker);
       return worker;
     }),
-    delete: vi.fn(async () => {}),
     search: vi.fn(),
   } as unknown as WorkerRepositoryPort;
 
@@ -127,56 +124,44 @@ describe('UpdateWorkerHandler', () => {
 });
 
 describe('DeleteWorkerHandler', () => {
-  it('deletes somebody who was never counted — the row is really gone', async () => {
-    const { remove, repository, publish } = setup({ timesheets: 0 });
+  it('never removes the row — it sets deletedAt', async () => {
+    const { remove, saved } = setup();
 
     await remove.execute(new DeleteWorkerCommand('worker-1'));
 
-    expect(repository.delete).toHaveBeenCalledWith('worker-1');
-    // Only reached because the row is truly gone: an account pointed at it
-    // must not keep believing it still exists.
-    expect(publish).toHaveBeenCalledWith(new WorkerDeletedEvent('worker-1', ORG));
+    expect(saved[0].deletedAt).toBeInstanceOf(Date);
+    expect(saved[0].isDeleted()).toBe(true);
   });
 
-  it('deactivates instead, as soon as one timesheet points at them', async () => {
-    const { remove, repository, saved } = setup({ timesheets: 1 });
-
-    const result = await remove.execute(new DeleteWorkerCommand('worker-1'));
-
-    // Nothing removed: the timesheet, the rate it was paid at, the person's
-    // name — all of it stays exactly as it was.
-    expect(repository.delete).not.toHaveBeenCalled();
-    expect(saved[0].active).toBe(false);
-    expect(result.active).toBe(false);
-  });
-
-  it('does not tell identity when the worker was only deactivated', async () => {
-    const { remove, publish } = setup({ timesheets: 3 });
-
-    await remove.execute(new DeleteWorkerCommand('worker-1'));
-
-    // The row still exists, so an account pointed at it must stay linked —
-    // unlinking here would be exactly the bug this event exists to avoid.
-    expect(publish).not.toHaveBeenCalled();
-  });
-
-  it('deactivating does not touch name, rate or qualification', async () => {
-    const { remove, saved } = setup({ timesheets: 5 });
+  it('keeps name, rate, qualification and active exactly as they were', async () => {
+    const { remove, saved } = setup();
 
     await remove.execute(new DeleteWorkerCommand('worker-1'));
 
     expect(saved[0].name).toBe('Karim Benali');
     expect(saved[0].hourlyRate).toBe(18.5);
     expect(saved[0].qualification).toBe('Maçon');
+    expect(saved[0].active).toBe(true);
   });
 
-  it('refuses an unknown worker before counting anything', async () => {
-    const { remove, repository } = setup({ worker: null });
+  it('unlinks the account regardless — the worker is gone from the product’s point of view', async () => {
+    const { remove, publish } = setup();
 
+    await remove.execute(new DeleteWorkerCommand('worker-1'));
+
+    expect(publish).toHaveBeenCalledWith(new WorkerDeletedEvent('worker-1', ORG));
+  });
+
+  it('refuses an unknown worker — another tenant’s, or already deleted', async () => {
+    const { remove, saved, publish } = setup({ worker: null });
+
+    // `findById` already excludes soft-deleted rows, so this is also what
+    // deleting twice looks like: the second call finds nothing.
     await expect(remove.execute(new DeleteWorkerCommand('worker-1'))).rejects.toBeInstanceOf(
       ResourceNotFoundException,
     );
-    expect(repository.countTimesheets).not.toHaveBeenCalled();
+    expect(saved).toHaveLength(0);
+    expect(publish).not.toHaveBeenCalled();
   });
 });
 

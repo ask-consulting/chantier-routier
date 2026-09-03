@@ -22,10 +22,13 @@ export class WorkerRepository implements WorkerRepositoryPort {
     const { where, orderBy } = buildPrismaSearchQuery(params, 'name', {
       searchableFields: ['name', 'qualification'],
     });
+    // Not optional: a soft-deleted worker exists only to keep past timesheets
+    // computable, and must never surface in a payroll listing.
+    const notDeleted = { ...where, deletedAt: null };
 
     const [rows, total] = await Promise.all([
-      this.prisma.worker.findMany({ where, orderBy, skip, take }),
-      this.prisma.worker.count({ where }),
+      this.prisma.worker.findMany({ where: notDeleted, orderBy, skip, take }),
+      this.prisma.worker.count({ where: notDeleted }),
     ]);
 
     return {
@@ -37,7 +40,10 @@ export class WorkerRepository implements WorkerRepositoryPort {
   }
 
   async findById(id: string): Promise<Worker | null> {
-    const row = await this.prisma.worker.findUnique({ where: { id } });
+    // A soft-deleted worker must read as gone here too — the same rule
+    // `search` follows, so a caller cannot reach one by id that it would
+    // never see in a list.
+    const row = await this.prisma.worker.findUnique({ where: { id, deletedAt: null } });
     return row ? WorkerMapper.toDomain(row) : null;
   }
 
@@ -49,13 +55,5 @@ export class WorkerRepository implements WorkerRepositoryPort {
       update: data,
     });
     return WorkerMapper.toDomain(row);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.worker.delete({ where: { id } });
-  }
-
-  countTimesheets(workerId: string): Promise<number> {
-    return this.prisma.timesheet.count({ where: { workerId } });
   }
 }

@@ -10,23 +10,21 @@ import {
 import { DeleteWorkerCommand } from './delete-worker.command';
 
 /**
- * "Delete" always succeeds — what it does depends on whether there is
- * anything to lose.
+ * Removes a worker — from every list, from every lookup — without ever
+ * issuing a `DELETE` against the row.
  *
- * **A worker with timesheets is deactivated, not deleted.**
- * `timesheets.worker_id` cascades, so an actual deletion would erase the hours
- * with it — and with them the labour cost of every worksite this person
- * appeared on. A month closed in March would change value in September, with
- * nothing to explain it. Setting `active: false` keeps every row exactly as
- * it was: the timesheets, the rate they were paid at the time, the person's
- * name. `active` is the same flag somebody leaving the company sets by hand;
- * a blocked delete simply flips it for them.
+ * `timesheets.worker_id` cascades, so an actual deletion would erase the
+ * hours with it, and with them the labour cost of every worksite this person
+ * appeared on: a month closed in March would change value in September, with
+ * nothing to explain it. `worker.deleted()` sets `deletedAt` instead — the
+ * row, the timesheets, the rate they were paid at the time all survive
+ * untouched; `WorkerRepositoryPort.findById` and `.search` are what make sure
+ * nobody sees the row again through the ordinary API.
  *
- * **A worker with no history is actually removed**, row and all — there is
- * nothing behind it to protect. That is also the one case where the identity
- * side needs telling: a soft-deleted worker still exists, so an account
- * pointed at it (`app_users.worker_id`) still points at something real, and
- * must not be unlinked. Only a real deletion publishes `WorkerDeletedEvent`.
+ * The account is still unlinked. From the product's point of view the worker
+ * is gone — no list, no lookup, no way back through this API — so
+ * `app_users.worker_id` must stop pointing at them exactly as it would after
+ * a real delete. Only the *row* survives; the relationship does not.
  */
 @CommandHandler(DeleteWorkerCommand)
 export class DeleteWorkerHandler implements ICommandHandler<DeleteWorkerCommand> {
@@ -44,17 +42,10 @@ export class DeleteWorkerHandler implements ICommandHandler<DeleteWorkerCommand>
       throw new ResourceNotFoundException('Worker', workerId);
     }
 
-    const timesheets = await this.repository.countTimesheets(workerId);
-    if (timesheets > 0) {
-      return this.repository.save(worker.with({ active: false }));
-    }
+    const deleted = await this.repository.save(worker.deleted());
 
-    await this.repository.delete(workerId);
-
-    // Only reached when the worker is truly gone: an account must not lose
-    // its link to a worker that a soft delete left standing.
     this.events.publish(new WorkerDeletedEvent(workerId, worker.organizationId));
 
-    return worker;
+    return deleted;
   }
 }

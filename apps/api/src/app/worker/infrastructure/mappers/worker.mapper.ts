@@ -12,6 +12,7 @@ export class WorkerMapper {
       // rate at two decimals is nowhere near the precision that would hurt.
       hourlyRate: row.hourlyRate.toNumber(),
       active: row.active,
+      deletedAt: row.deletedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -25,6 +26,7 @@ export class WorkerMapper {
       qualification: worker.qualification,
       hourlyRate: worker.hourlyRate,
       active: worker.active,
+      deletedAt: worker.deletedAt,
     };
   }
 }

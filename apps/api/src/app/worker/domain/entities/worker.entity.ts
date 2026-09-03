@@ -17,7 +17,21 @@ export class Worker {
     public readonly qualification: string | null,
     /** Cost of one hour of this person's time. Feeds every labour cost. */
     public readonly hourlyRate: number,
+    /**
+     * Still on the payroll — reversible, voluntary, set by hand (on leave,
+     * seasonal work). Distinct from `deletedAt`: this one the admin *chooses*
+     * and can undo; `deletedAt` is neither.
+     */
     public readonly active: boolean,
+    /**
+     * When this worker was removed, or `null` while current.
+     *
+     * Set instead of an actual row delete: `timesheets.worker_id` cascades, so
+     * a real `DELETE` would erase the hours with it — silently rewriting the
+     * labour cost of every worksite this person appeared on. The row survives
+     * on purpose; only the repository's reads know to filter it out.
+     */
+    public readonly deletedAt: Date | null = null,
     public readonly createdAt?: Date,
     public readonly updatedAt?: Date,
   ) {}
@@ -29,6 +43,7 @@ export class Worker {
     qualification?: string | null;
     hourlyRate: number;
     active?: boolean;
+    deletedAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
   }): Worker {
@@ -39,9 +54,14 @@ export class Worker {
       props.qualification ?? null,
       props.hourlyRate,
       props.active ?? true,
+      props.deletedAt ?? null,
       props.createdAt,
       props.updatedAt,
     );
+  }
+
+  isDeleted(): boolean {
+    return this.deletedAt !== null;
   }
 
   /**
@@ -66,6 +86,27 @@ export class Worker {
       changes.qualification === undefined ? this.qualification : changes.qualification,
       changes.hourlyRate ?? this.hourlyRate,
       changes.active ?? this.active,
+      this.deletedAt,
+      this.createdAt,
+      this.updatedAt,
+    );
+  }
+
+  /**
+   * Marks this worker removed, without discarding it.
+   *
+   * The only state change `DELETE /workers/:id` ever makes — there is no path
+   * in this module that issues a real `DELETE` statement.
+   */
+  deleted(at: Date = new Date()): Worker {
+    return new Worker(
+      this.id,
+      this.organizationId,
+      this.name,
+      this.qualification,
+      this.hourlyRate,
+      this.active,
+      at,
       this.createdAt,
       this.updatedAt,
     );

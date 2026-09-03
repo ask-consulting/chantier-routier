@@ -121,22 +121,16 @@ describe('WorkerController', () => {
     expect(command.data).toEqual({ active: false });
   });
 
-  it('deletes through the command that decides between removing and deactivating', async () => {
+  it('deletes through the soft-delete command, and returns nothing to reach', async () => {
     const { controller, commandBus } = build();
 
-    await controller.remove('worker-1');
+    const result = await controller.remove('worker-1');
 
     expect((commandBus.execute as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBeInstanceOf(
       DeleteWorkerCommand,
     );
-  });
-
-  it('reports the resulting state — active:false says the row was kept, not removed', async () => {
-    const deactivated = Worker.create({ ...aWorker(), active: false });
-    const { controller } = build(deactivated);
-
-    const result = await controller.remove('worker-1');
-
-    expect(onTheWire(result).active).toBe(false);
+    // 204: the row survives behind the scenes, but there is nothing left the
+    // caller can do with it through this API.
+    expect(result).toBeUndefined();
   });
 });

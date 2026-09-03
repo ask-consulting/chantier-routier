@@ -6,22 +6,18 @@ import { Worker } from '../entities/worker.entity';
  * Prisma layer injects the tenant filter (see docs/09-multi-tenant.md), so no
  * signature carries an `organizationId`. A row belonging to another tenant is
  * simply not found.
+ *
+ * **No `delete`.** `workers.deleted_at` exists precisely so nothing here ever
+ * issues a real `DELETE` — see `schema.prisma`. Removing a worker is
+ * `save(worker.deleted())`, the same write path as any other change; `search`
+ * and `findById` are what keep a soft-deleted row from ever being seen again.
  */
 export interface WorkerRepositoryPort {
+  /** Excludes soft-deleted rows — `deleted_at is null` is not optional here. */
   search(params: SearchParams): Promise<SearchResult<Worker>>;
+  /** Excludes soft-deleted rows too: a deleted worker must read as gone. */
   findById(id: string): Promise<Worker | null>;
   save(worker: Worker): Promise<Worker>;
-  delete(id: string): Promise<void>;
-  /**
-   * How many hours this person has already been paid for.
-   *
-   * Asked before every deletion, and the reason is in `schema.prisma`:
-   * `timesheets.worker_id` cascades. Deleting a worker would therefore erase his
-   * timesheets — and with them, silently, the labour cost of every worksite he
-   * ever worked on. A closed month would change value with nothing to show for
-   * it.
-   */
-  countTimesheets(workerId: string): Promise<number>;
 }
 
 export const WORKER_REPOSITORY_PORT = Symbol('WorkerRepositoryPort');
