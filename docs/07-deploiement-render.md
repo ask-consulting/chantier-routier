@@ -87,7 +87,39 @@ consomment quelques-unes par semaine.
 > Le passage à un vrai domaine plus tard ne change rien au code : chez Brevo on
 > vérifie le domaine (SPF/DKIM) et on change `EMAIL_FROM_ADDRESS`.
 
-## 6. Notes
+## 6. Le front sur Vercel — quand un déploiement est sauté
+
+Vercel construit `apps/web` à chaque poussée sur `develop`, qui est sa branche de
+production. Dans un monorepo il saute les commits qui ne concernent pas le
+projet — ce qu'on veut : un refactor du back n'a pas à reconstruire le front.
+
+**Sa détection automatique ne regarde que le dossier racine du projet**, donc
+`apps/web`. Deux conséquences, et la seconde a mordu le 2 septembre 2026 :
+
+- Une PR qui ne touche que `packages/shared` — un contrat, un enum, une règle
+  partagée — serait sautée, et le front resterait sur l'ancienne version du
+  paquet pendant que l'API, elle, aurait bougé.
+- Sur un commit de fusion, la comparaison `HEAD^..HEAD` peut prendre le mauvais
+  parent et conclure « rien de changé ». Le merge de la PR #30 n'a produit aucun
+  déploiement alors qu'il touchait 29 fichiers d'`apps/web`.
+
+D'où le `ignoreCommand` dans `apps/web/vercel.json`, qui remplace la détection
+automatique :
+
+```bash
+git diff --quiet HEAD^ HEAD -- apps/web packages/shared apps/web/vercel.json
+```
+
+> La convention Vercel est inversée, et c'est ce qui la rend lisible ici :
+> **sortie 0 = on saute, sortie 1 = on construit.** `git diff --quiet` sort 0
+> quand rien n'a bougé dans ces chemins — donc on saute — et 1 dès qu'un fichier
+> y change — donc on construit.
+
+**Le bouton « Redeploy » ne rattrape pas un déploiement manqué** : il rejoue le
+*même commit*, pas la tête de la branche. Pour repartir sur le dernier état de
+`develop`, il faut une nouvelle poussée — ou `npx vercel --prod` depuis le poste.
+
+## 7. Notes
 
 - **PORT** : injecté automatiquement par Render, lu via `process.env.PORT`.
 - **Cold start** : pour l'éviter, un cron externe (ex. GitHub Actions) peut
