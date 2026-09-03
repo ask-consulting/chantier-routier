@@ -948,6 +948,16 @@ d'étape où l'un existe sans l'autre. Deux détails qui comptent :
   supprimer un chef ne doit pas emporter l'invitation en attente de quelqu'un
   d'autre. L'écran affiche alors un tiret plutôt qu'une case vide.
 
+**Le défaut qui a mordu en production, le 2 septembre.** `WEB_APP_URL` n'était
+pas dans `render.yaml`, et `identity.config.ts` retombait sur
+`http://localhost:3000` — partout, sans un mot. Les invitations partaient donc
+bien formées, avec un lien pointant vers la machine du destinataire : compte
+créé, mail délivré, lien mort, rien dans les journaux. C'est le mode d'échec le
+plus coûteux de ce projet, celui où *tout a l'air de marcher*. Le défaut survit
+en développement, où il est juste ; en production l'API refuse maintenant de
+démarrer sans la valeur. Un plantage au déploiement coûte moins cher qu'une
+invitation qui ne mène nulle part.
+
 **Un effet de bord assumé, et corrigé au passage :** `revokeOutstandingFor`
 marquait les invitations remplacées comme *acceptées*. Ça les rendait
 inutilisables, ce qui était le but — mais ça racontait qu'une personne avait

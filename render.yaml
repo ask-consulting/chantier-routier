@@ -32,6 +32,14 @@ services:
       # Comma-separated allowed origins (e.g. your Vercel web URL).
       - key: CORS_ORIGINS
         sync: false
+      # Where the front is reachable — this is what turns an invitation path into
+      # a clickable link inside the email. Its absence is why invitations sent
+      # from production on 2 September pointed at http://localhost:3000: the API
+      # fell back to its development default and said nothing. It now refuses to
+      # boot without it, and the value lives here rather than in the dashboard so
+      # the next environment cannot forget it silently.
+      - key: WEB_APP_URL
+        value: https://chantier-routier.vercel.app
       # HS256 secret signing the access tokens. `generateValue` lets Render mint
       # it once and keep it out of git; the API refuses to boot without it.
       # Rotating this value invalidates every live access token — users simply
