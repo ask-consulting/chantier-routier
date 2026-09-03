@@ -2,5 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @chantia/shared build && pnpm --filter @chantia/web build"
+  "buildCommand": "pnpm --filter @chantia/shared build && pnpm --filter @chantia/web build",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web packages/shared apps/web/vercel.json"
 }
