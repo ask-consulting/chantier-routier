@@ -268,6 +268,14 @@ place qu'elle n'explique.
 Le jour où un filtre demande du multi-select ou de la recherche, c'est un autre
 composant avec un autre nom, pas une réécriture de celui-ci.
 
+### `Checkbox`
+
+Un `<input type="checkbox">` **natif**, étiqueté à sa droite plutôt qu'au-dessus
+— une case à cocher se lit à côté de son nom, comme sur un formulaire papier, pas
+sous une question. `accent-color` (via `accent-primary`) lui donne la couleur de
+marque sans reconstruire le focus au clavier, la barre d'espace ou la sémantique
+`role="checkbox"` qu'une case dessinée à la main devrait réimplémenter.
+
 ### `Dialog`
 
 La coquille modale : `<dialog>` natif, un titre, un corps, un pied. Le navigateur
@@ -497,7 +505,7 @@ Détail complet : `12-internationalisation.md`.
 
 ## 13. Reste à faire
 
-- ~~`Select`~~ *(2 sept.)*, `Textarea`, `Checkbox`, champ date.
+- ~~`Select`~~ *(2 sept.)*, ~~`Checkbox`~~ *(3 sept.)*, `Textarea`, champ date.
 - ~~Barre latérale~~ *(1ᵉʳ sept.)* ; fil d'Ariane, onglets.
 - ~~`Dialog`~~ *(2 sept. — `ConfirmDialog`, qui consomme enfin `surface-overlay`,
   `shadow-overlay` et le nouveau jeton `scrim`)*. `Toast` reste à faire : les

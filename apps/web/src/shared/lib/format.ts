@@ -9,12 +9,22 @@ import { intlLocale, type Locale } from '@/shared/i18n/config';
  * entirely. See `shared/i18n/config.ts`.
  *
  * These live in `shared` rather than in a feature because a euro is a euro
- * whatever the screen: a worksite budget, a worker's day rate and an expense all
+ * whatever the screen: a worksite budget, an expense and an hourly rate all
  * read the same way. Anything that formats *a particular domain* — the colour of
  * a status, the sign of a variance — belongs to that feature's `model/` instead.
  */
 
-export function formatAmount(value: number | null | undefined, locale: Locale): string {
+export function formatAmount(
+  value: number | null | undefined,
+  locale: Locale,
+  /**
+   * Zero by default — a worksite budget in the tens of thousands does not
+   * want cents. An hourly rate does: 18,50 € rounded to 19 € is not a display
+   * choice, it is 50 centimes lost on every hour the person works, silently
+   * compounding across a payroll. Pass 2 for anything paid by the hour.
+   */
+  maximumFractionDigits = 0,
+): string {
   // An em dash for a missing amount — never `0 €`, which is a real figure.
   if (value === null || value === undefined) {
     return '—';
@@ -22,7 +32,7 @@ export function formatAmount(value: number | null | undefined, locale: Locale): 
   return new Intl.NumberFormat(intlLocale(locale), {
     style: 'currency',
     currency: 'EUR',
-    maximumFractionDigits: 0,
+    maximumFractionDigits,
   }).format(value);
 }
 

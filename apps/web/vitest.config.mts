@@ -60,10 +60,10 @@ export default defineConfig({
         // the tests as covered-by-tests is how a number stops meaning anything.
         'src/test/**',
       ],
-      // 52 → 54 : `http-client.ts`, le fichier par lequel tout passe et qui
-      // n'avait presque aucun test — c'est ce qui a laissé passer le 400 sur les
-      // deux actions d'invitation.
-      thresholds: { statements: 54, branches: 58, functions: 53, lines: 54 },
+      // 54 → 62 : l'écran des ouvriers — liste, tiroir de création/édition,
+      // suppression douce — qui réutilise et teste les mêmes composants que
+      // l'écran des invitations.
+      thresholds: { statements: 62, branches: 65, functions: 62, lines: 62 },
     },
   },
 });

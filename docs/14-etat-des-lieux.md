@@ -965,6 +965,47 @@ rejoint alors qu'elle n'avait rien fait. Invisible tant que rien n'affichait ces
 lignes ; le premier écran qui les affiche l'a rendu faux à l'œil nu. Elles sont
 désormais expirées.
 
+### 5.1 ter L'écran des ouvriers ✅
+
+*Fait le 3 septembre.* Liste, recherche, filtre actif/inactif, création et
+édition dans un tiroir, suppression douce. Troisième client des composants nés
+avec les invitations — `Select`, `ConfirmDialog`, `Drawer`, les deux mises en
+page tableau/cartes — et le premier à en faire naître un nouveau : `Checkbox`,
+pour la case « Actif » du formulaire d'édition.
+
+- **Le tiroir sert à la fois la création et l'édition.** Un `worker: IWorker |
+  null` en décide ; `null` crée, une fiche édite. La case « Actif » n'apparaît
+  qu'en édition — un ouvrier qui vient de naître n'a pas encore d'état à
+  choisir, et poser la question serait une question sans mauvaise réponse qui
+  se pose quand même.
+- **Chaque changement de cible remonte le formulaire à zéro** via un `key` posé
+  par la page (`worker?.id ?? 'create'`), plutôt qu'un `useEffect` qui
+  resynchronise des valeurs internes — la même réponse qu'ailleurs à « l'état a
+  changé sous le composant ».
+- **Supprimer n'a plus d'état qui l'empêche.** Contrairement à une invitation,
+  chaque ligne porte les deux actions, active ou non : un ouvrier désactivé
+  reste modifiable et supprimable comme n'importe quel autre. Seule une ligne
+  déjà supprimée serait exclue, et elle n'atteint jamais cet écran — l'API la
+  filtre avant.
+
+**Un défaut trouvé en le regardant tourner, pas en test.** `formatAmount`
+arrondissait à l'euro près — pensé pour des budgets de chantier à cinq
+chiffres — et affichait 19,50 €/h en "20 €". Une demi-heure perdue par écriture
+d'écran, réelle sur une paie. La fonction gagne un troisième paramètre
+(`maximumFractionDigits`, 0 par défaut, 2 pour un taux horaire) plutôt qu'une
+seconde fonction : les appelants existants — budgets, dépenses — ne changent
+pas d'une ligne.
+
+**Un autre, trouvé au même endroit.** La phrase de confirmation de suppression
+disait « le coût des chantiers où **il** a travaillé » — un pronom masculin
+pour n'importe quel nom. Reformulée sans pronom (« des chantiers concernés »),
+dans les deux langues.
+
+Vérifié contre l'API réelle, dans un vrai navigateur : un ouvrier créé (201),
+son taux affiché à deux décimales, son statut basculé en Inactif par le
+formulaire d'édition (200), supprimé (204) et disparu de la liste — cycle
+complet, feuille de route Réseau à l'appui.
+
 ### 5.2 Le module de notification ✅
 
 *Fait le 28 août.* Un schéma Postgres `notification` à lui, une table

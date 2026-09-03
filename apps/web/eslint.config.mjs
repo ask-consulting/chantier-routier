@@ -22,7 +22,7 @@ const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta
  * See `docs/13-architecture-front.md`.
  */
 
-const FEATURES = ['auth', 'invitations', 'worksites'];
+const FEATURES = ['auth', 'invitations', 'workers', 'worksites'];
 
 /**
  * The one feature every other may import — through its index only.
