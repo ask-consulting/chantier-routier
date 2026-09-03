@@ -3,8 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -124,18 +122,20 @@ export class WorkerController {
 
   @Delete(':id')
   @RequirePermissions(Permission.WORKER_MANAGE)
-  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Delete a worker who has never been counted',
+    summary: 'Delete a worker — or deactivate them, if there is history to protect',
     description:
-      'Refused as soon as one timesheet points at them: `timesheets.worker_id` cascades, so the ' +
-      'deletion would erase the hours and silently rewrite the cost of past worksites. Somebody ' +
-      'who leaves the company is **deactivated**, which keeps the history.',
+      'A worker with no timesheet is removed outright. A worker with at least one is ' +
+      '**deactivated instead**: `timesheets.worker_id` cascades, so an actual deletion would ' +
+      'erase the hours with it, silently rewriting the cost of past worksites. `active` in the ' +
+      'response says which happened — `false` means the row was kept and only switched off.',
   })
-  @ApiResponse({ status: 204, description: 'Deleted' })
+  @ApiResponse({ status: 200, type: WorkerResponseDto })
   @ApiResponse({ status: 404, description: 'Unknown worker, or another tenant’s' })
-  @ApiResponse({ status: 409, description: 'Has timesheets — deactivate instead' })
-  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    await this.commandBus.execute(new DeleteWorkerCommand(id));
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<WorkerResponseDto> {
+    const worker = await this.commandBus.execute<DeleteWorkerCommand, Worker>(
+      new DeleteWorkerCommand(id),
+    );
+    return WorkerResponseDto.fromDomain(worker);
   }
 }

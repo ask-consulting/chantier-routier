@@ -11,22 +11,22 @@ import { UpdateWorkerHandler } from './commands/update-worker.handler';
 import { GetWorkerByIdQuery } from './queries/get-worker-by-id.query';
 import { GetWorkerByIdHandler } from './queries/get-worker-by-id.handler';
 import { Worker } from '../domain/entities/worker.entity';
-import { WorkerHasHistoryException } from '../domain/exceptions/worker.exceptions';
 import { WorkerRepositoryPort } from '../domain/ports/worker-repository.port';
 
 /**
  * The payroll's two load-bearing rules.
  *
- * **A worker with hours cannot be deleted.** `timesheets.worker_id` cascades, so
- * the deletion would take the hours with it — and with them the labour cost of
- * every worksite this person appeared on. A month closed in March would change
- * value in September, silently. This is the single most expensive mistake the
- * module can make, and it is one `count` away from happening.
+ * **A worker with hours is deactivated, not deleted.** `timesheets.worker_id`
+ * cascades, so an actual deletion would take the hours with it — and with them
+ * the labour cost of every worksite this person appeared on. A month closed in
+ * March would change value in September, silently. Soft-deleting keeps every
+ * row exactly as it was; only `active` moves.
  *
- * **A deletion tells identity.** `app_users.worker_id` is a soft reference: no
- * foreign key crosses the schema boundary, so nothing in the database clears it.
- * If the event stops being published, accounts keep pointing at rows that no
- * longer exist and nothing complains.
+ * **Only a real deletion tells identity.** `app_users.worker_id` is a soft
+ * reference: no foreign key crosses the schema boundary, so nothing in the
+ * database clears it. A soft-deleted worker still exists, so an account
+ * pointed at it must stay linked — the event fires only when the row is
+ * actually gone.
  */
 
 const ORG = 'org-1';
@@ -127,39 +127,47 @@ describe('UpdateWorkerHandler', () => {
 });
 
 describe('DeleteWorkerHandler', () => {
-  it('deletes somebody who was never counted', async () => {
+  it('deletes somebody who was never counted — the row is really gone', async () => {
     const { remove, repository, publish } = setup({ timesheets: 0 });
 
     await remove.execute(new DeleteWorkerCommand('worker-1'));
 
     expect(repository.delete).toHaveBeenCalledWith('worker-1');
+    // Only reached because the row is truly gone: an account pointed at it
+    // must not keep believing it still exists.
     expect(publish).toHaveBeenCalledWith(new WorkerDeletedEvent('worker-1', ORG));
   });
 
-  it('refuses as soon as one timesheet points at them', async () => {
-    const { remove, repository } = setup({ timesheets: 1 });
+  it('deactivates instead, as soon as one timesheet points at them', async () => {
+    const { remove, repository, saved } = setup({ timesheets: 1 });
 
-    await expect(remove.execute(new DeleteWorkerCommand('worker-1'))).rejects.toBeInstanceOf(
-      WorkerHasHistoryException,
-    );
+    const result = await remove.execute(new DeleteWorkerCommand('worker-1'));
+
+    // Nothing removed: the timesheet, the rate it was paid at, the person's
+    // name — all of it stays exactly as it was.
     expect(repository.delete).not.toHaveBeenCalled();
+    expect(saved[0].active).toBe(false);
+    expect(result.active).toBe(false);
   });
 
-  it('says how many, and what to do instead', async () => {
-    const { remove } = setup({ timesheets: 42 });
-
-    await expect(remove.execute(new DeleteWorkerCommand('worker-1'))).rejects.toThrow(
-      /42 timesheets.*Deactivate them instead/,
-    );
-  });
-
-  it('publishes nothing when the deletion is refused', async () => {
+  it('does not tell identity when the worker was only deactivated', async () => {
     const { remove, publish } = setup({ timesheets: 3 });
 
-    await remove.execute(new DeleteWorkerCommand('worker-1')).catch(() => undefined);
+    await remove.execute(new DeleteWorkerCommand('worker-1'));
 
-    // An account must not lose its link to a worker that is still there.
+    // The row still exists, so an account pointed at it must stay linked —
+    // unlinking here would be exactly the bug this event exists to avoid.
     expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('deactivating does not touch name, rate or qualification', async () => {
+    const { remove, saved } = setup({ timesheets: 5 });
+
+    await remove.execute(new DeleteWorkerCommand('worker-1'));
+
+    expect(saved[0].name).toBe('Karim Benali');
+    expect(saved[0].hourlyRate).toBe(18.5);
+    expect(saved[0].qualification).toBe('Maçon');
   });
 
   it('refuses an unknown worker before counting anything', async () => {
