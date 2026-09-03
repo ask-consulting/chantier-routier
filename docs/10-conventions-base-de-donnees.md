@@ -144,7 +144,7 @@ cette colonne fait basculer la table dans le champ du filtre automatique — voi
 | Convention cie-next | Ici | Pourquoi |
 |---|---|---|
 | `cuid()` | `uuid()` + `@db.Uuid` | Voir §3 |
-| Soft delete `deleted_at` | absent | On utilise `active: boolean` là où le besoin existe (`workers`, `app_users`). Le soft delete généralisé impose de filtrer `deletedAt: null` dans *chaque* requête — un oubli devient une fuite de données supprimées. À réintroduire le jour où un besoin d'audit ou de corbeille apparaît, pas avant. |
+| Soft delete `deleted_at` | **la règle**, depuis le 3 septembre 2026 | Toute entité métier qui peut être référencée ailleurs (des pointages, un budget, un historique) porte un `deletedAt: DateTime?` et n'est **jamais** vraiment supprimée — `DELETE` devient `UPDATE … SET deleted_at = now()`. `workers` l'a le premier : un vrai `DELETE` y cascaderait sur `timesheets` et effacerait, en silence, le coût main-d'œuvre de chantiers déjà clôturés. La discipline que ça impose est réelle — `deletedAt: null` dans *chaque* lecture, un oubli devient une fuite de données supprimées — mais elle coûte moins cher qu'un historique de coût qui change de valeur sans qu'on sache pourquoi. `active: boolean` reste à côté là où il existe déjà (`workers`, `app_users`) : c'est un état **volontaire et réversible** (en congé, compte désactivé), pas la même chose qu'une suppression. |
 | Tables de traduction | absent | Produit monolingue (français). Pas de table de traduction, pas de JSONB. |
 | `legacy_id`, `source_checksum` | absent | Pas de base historique à migrer. |
 

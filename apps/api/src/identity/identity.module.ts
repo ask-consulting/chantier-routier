@@ -16,6 +16,7 @@ import { RegisterHandler } from './application/commands/register.handler';
 import { UpdateUserHandler } from './application/commands/update-user.handler';
 import { GetInvitationHandler } from './application/queries/get-invitation.handler';
 import { GetInvitationsHandler } from './application/queries/get-invitations.handler';
+import { UnlinkDeletedWorkerHandler } from './application/events/unlink-deleted-worker.handler';
 import { GetUserByIdHandler } from './application/queries/get-user-by-id.handler';
 import { GetUsersHandler } from './application/queries/get-users.handler';
 import { InvitationIssuer } from './application/services/invitation-issuer.service';
@@ -53,6 +54,13 @@ const CommandHandlers = [
   UpdateUserHandler,
   DeleteUserHandler,
 ];
+
+/**
+ * Identity reacting to the business side — through an event, the only channel
+ * the wall allows. One entry today: an account loses its link when the worker
+ * record it points at is deleted.
+ */
+const EventHandlers = [UnlinkDeletedWorkerHandler];
 
 const QueryHandlers = [
   GetUsersHandler,
@@ -92,6 +100,7 @@ const Adapters = [
     FreshAccountGuard,
     ...CommandHandlers,
     ...QueryHandlers,
+    ...EventHandlers,
     ...Adapters,
   ],
 })

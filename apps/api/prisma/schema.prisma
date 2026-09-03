@@ -225,15 +225,25 @@ model Worksite {
 }
 
 model Worker {
-  id             String   @id(map: "pk_workers") @default(uuid()) @db.Uuid
+  id             String    @id(map: "pk_workers") @default(uuid()) @db.Uuid
   /// Soft reference to `identity.organizations.id` — no foreign key by design.
-  organizationId String   @map("organization_id") @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
   name           String
   qualification  String?
-  hourlyRate     Decimal  @map("hourly_rate") @db.Decimal(10, 2)
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  hourlyRate     Decimal   @map("hourly_rate") @db.Decimal(10, 2)
+  /// Still on the payroll — a reversible, voluntary state the admin sets by
+  /// hand (on leave, seasonal). Distinct from `deletedAt`: that one is not
+  /// reversible from the interface and is not something the admin "sets".
+  active         Boolean   @default(true)
+  /// Set instead of a real delete: `timesheets.worker_id` cascades, and an
+  /// actual `DELETE` would erase the hours with it — silently rewriting the
+  /// labour cost of every worksite this person appeared on. `null` means
+  /// still current; every query that lists or looks up a worker filters on
+  /// it, which is the discipline docs/10 §5 warns a generalised soft delete
+  /// demands — this is the one table that pays it, and the reason is above.
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   timesheets Timesheet[]
 

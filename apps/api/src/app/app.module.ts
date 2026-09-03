@@ -11,6 +11,7 @@ import { TenantContextMiddleware, TenantModule } from '@shared/tenant';
 import { ThrottlingModule } from '@shared/throttling';
 import { HealthModule } from './health/health.module';
 import { NotificationModule } from './notification/notification.module';
+import { WorkerModule } from './worker/worker.module';
 import { WorksiteModule } from './worksite/worksite.module';
 
 const ENV = process.env.NODE_ENV;
@@ -34,6 +35,7 @@ const ENV = process.env.NODE_ENV;
     // Before IdentityModule: identity calls the send use case directly.
     NotificationModule,
     IdentityModule,
+    WorkerModule,
     WorksiteModule,
   ],
 })
