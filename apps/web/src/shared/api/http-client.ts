@@ -68,7 +68,12 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retry = 
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      // Only when there is something to describe. Fastify — which the API runs
+      // on — refuses a request that announces JSON and carries nothing:
+      // `400 Body cannot be empty when content-type is set to 'application/json'`.
+      // A resend and a cancellation have no body at all, and both answered 400
+      // in production while the list beside them worked.
+      ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...init.headers,
     },
