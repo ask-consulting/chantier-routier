@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvitationStatus, type IInvitationListItem } from '@chantia/shared';
+import { apiClient } from '@/shared/api/http-client';
 import { renderWithProviders } from '@/test/render';
 import { InvitationListPage } from './invitation-list-page';
 import { InvitationList } from './invitation-table';
@@ -54,18 +56,21 @@ const accepted: IInvitationListItem = {
   acceptedAt: '2026-09-02T00:00:00.000Z',
 };
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let mock: MockAdapter;
 
-function listResponse(items: IInvitationListItem[]): Response {
-  return new Response(JSON.stringify({ items, total: items.length, page: 1, limit: 20 }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+function listBody(items: IInvitationListItem[]) {
+  return { items, total: items.length, page: 1, limit: 20 };
+}
+
+/** Handlers only ever add — the first one registered always wins — so a fresh reply means a fresh mock. */
+function mockReply(status: number, body?: unknown): void {
+  mock.reset();
+  mock.onAny().reply(status, body);
 }
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => listResponse([pending, accepted]));
-  vi.stubGlobal('fetch', fetchMock);
+  mock = new MockAdapter(apiClient);
+  mockReply(200, listBody([pending, accepted]));
   // jsdom 30 ships no <dialog> behaviour; the confirmation needs one to open.
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
     this.open = true;
@@ -76,7 +81,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  mock.restore();
   cleanup();
 });
 
@@ -116,19 +121,12 @@ describe('InvitationList', () => {
 
   it('resends without asking — a second mail is harmless', async () => {
     renderWithProviders(<InvitationList invitations={[pending]} />);
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ invitationPath: '/invitation/x', expiresAt: 'x' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    mockReply(200, { invitationPath: '/invitation/x', expiresAt: 'x' });
 
     fireEvent.click(screen.getAllByRole('button', { name: /Renvoyer/ })[0]);
 
     await waitFor(() => {
-      const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(path).toMatch(/\/invitations\/inv-1\/resend$/);
-      expect(init.method).toBe('POST');
+      expect(mock.history.post[0]?.url).toMatch(/\/invitations\/inv-1\/resend$/);
     });
   });
 
@@ -143,20 +141,18 @@ describe('InvitationList', () => {
     expect((await screen.findAllByText(/Karim Benali/)).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Le compte, lui, reste/).length).toBeGreaterThan(0);
     // Nothing has been sent while the question is on screen.
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mock.history).toHaveLength(0);
   });
 
   it('cancels only once confirmed', async () => {
     renderWithProviders(<InvitationList invitations={[pending]} />);
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    mockReply(204);
 
     fireEvent.click(screen.getAllByRole('button', { name: /Supprimer l’invitation/ })[0]);
     fireEvent.click(screen.getAllByRole('button', { name: 'Supprimer l’invitation' })[0]);
 
     await waitFor(() => {
-      const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(path).toMatch(/\/invitations\/inv-1$/);
-      expect(init.method).toBe('DELETE');
+      expect(mock.history.delete[0]?.url).toMatch(/\/invitations\/inv-1$/);
     });
   });
 
@@ -175,7 +171,7 @@ describe('InvitationList', () => {
     await waitFor(() =>
       expect([...document.querySelectorAll('dialog')].every((d) => !d.open)).toBe(true),
     );
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mock.history).toHaveLength(0);
   });
 });
 
@@ -196,13 +192,13 @@ describe('InvitationListPage', () => {
     });
 
     await waitFor(() => {
-      const asked = fetchMock.mock.calls.map((call) => String(call[0]));
+      const asked = mock.history.get.map((request) => String(request.url));
       expect(asked.some((path) => path.includes(`status=${InvitationStatus.ACCEPTED}`))).toBe(true);
     });
   });
 
   it('says "no invitation" when there is none, and offers no way out', async () => {
-    fetchMock.mockResolvedValue(listResponse([]));
+    mockReply(200, listBody([]));
     renderWithProviders(<InvitationListPage />);
 
     expect(await screen.findByText('Aucune invitation')).toBeTruthy();
@@ -210,7 +206,7 @@ describe('InvitationListPage', () => {
   });
 
   it('says "no result" under an active filter, and offers to clear it', async () => {
-    fetchMock.mockResolvedValue(listResponse([]));
+    mockReply(200, listBody([]));
     renderWithProviders(<InvitationListPage />);
     await screen.findByText('Aucune invitation');
 
@@ -223,12 +219,7 @@ describe('InvitationListPage', () => {
   });
 
   it('reports a failed load instead of showing an empty list', async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ message: 'Base injoignable' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    mockReply(500, { message: 'Base injoignable' });
     renderWithProviders(<InvitationListPage />);
 
     expect(await screen.findByRole('alert')).toBeTruthy();

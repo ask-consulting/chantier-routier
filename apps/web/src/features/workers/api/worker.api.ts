@@ -40,14 +40,14 @@ export function fetchWorkers(params?: WorkerListParams): Promise<Paginated<IWork
 export function createWorker(payload: ICreateWorker): Promise<IWorker> {
   return apiFetch<IWorker>('/workers', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
 export function updateWorker(id: string, payload: IUpdateWorker): Promise<IWorker> {
   return apiFetch<IWorker>(`/workers/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 

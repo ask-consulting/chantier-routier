@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserRole } from '@chantia/shared';
+import { apiClient } from '@/shared/api/http-client';
 import { renderWithProviders } from '@/test/render';
 import { InviteDrawer } from './invite-drawer';
 
@@ -25,13 +27,12 @@ const issued = {
   expiresAt: '2026-09-09T00:00:00.000Z',
 };
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let mock: MockAdapter;
 
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+/** Handlers only ever add — the first one registered always wins — so a fresh reply means a fresh mock. */
+function mockReply(status: number, body?: unknown): void {
+  mock.reset();
+  mock.onAny().reply(status, body);
 }
 
 function fill(): void {
@@ -43,8 +44,8 @@ function fill(): void {
 }
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => json(issued));
-  vi.stubGlobal('fetch', fetchMock);
+  mock = new MockAdapter(apiClient);
+  mockReply(200, issued);
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
     this.open = true;
   };
@@ -54,7 +55,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  mock.restore();
   cleanup();
 });
 
@@ -79,10 +80,9 @@ describe('InviteDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
 
     await waitFor(() => {
-      const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(path).toMatch(/\/users$/);
-      expect(init.method).toBe('POST');
-      expect(JSON.parse(init.body as string)).toEqual({
+      const request = mock.history.post[0];
+      expect(request?.url).toMatch(/\/users$/);
+      expect(JSON.parse(request?.data as string)).toEqual({
         email: 'karim@exemple.fr',
         firstName: 'Karim',
         lastName: 'Benali',
@@ -120,7 +120,7 @@ describe('InviteDrawer', () => {
   });
 
   it('says the address is taken rather than "something went wrong"', async () => {
-    fetchMock.mockResolvedValue(json({ message: 'Email already used' }, 409));
+    mockReply(409, { message: 'Email already used' });
     renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
 
@@ -132,7 +132,7 @@ describe('InviteDrawer', () => {
   });
 
   it('clears the refusal as soon as a field changes', async () => {
-    fetchMock.mockResolvedValue(json({ message: 'Email already used' }, 409));
+    mockReply(409, { message: 'Email already used' });
     renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’invitation' }));
@@ -146,7 +146,7 @@ describe('InviteDrawer', () => {
   });
 
   it('reports an unexpected failure without pretending it was the address', async () => {
-    fetchMock.mockResolvedValue(json({ message: 'boom' }, 500));
+    mockReply(500, { message: 'boom' });
     renderWithProviders(<InviteDrawer open onClose={() => {}} />);
     fill();
 

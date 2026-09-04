@@ -1,7 +1,10 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { Locale, UserRole, type IInvitation } from '@chantia/shared';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useCallback, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Locale, UserRole } from '@chantia/shared';
 import { ApiError } from '@/shared/api/http-client';
 import { useCreateInvitation } from '../api/invitation.queries';
 
@@ -15,13 +18,20 @@ import { useCreateInvitation } from '../api/invitation.queries';
  */
 export type InviteErrorKey = 'emailAlreadyUsed' | 'invalidInput' | 'unknown';
 
-export interface InviteFormValues {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  locale: Locale;
-}
+/**
+ * Per-field messages are keys under `form.errors.*` — the same namespace the
+ * password rules already live in — so any form gets the same two words for
+ * "empty" and "not an email" instead of inventing its own.
+ */
+const inviteSchema = z.object({
+  email: z.string().trim().min(1, 'required').email('invalidEmail'),
+  firstName: z.string().trim().min(1, 'required'),
+  lastName: z.string().trim().min(1, 'required'),
+  role: z.nativeEnum(UserRole),
+  locale: z.nativeEnum(Locale),
+});
+
+export type InviteFormValues = z.infer<typeof inviteSchema>;
 
 const EMPTY: InviteFormValues = {
   email: '',
@@ -41,70 +51,69 @@ const EMPTY: InviteFormValues = {
  * or land in spam, and an admin standing next to the person is entitled to pass
  * the link on directly. Losing it silently would be losing the one copy.
  *
- * **Client-side validation stops at "is it filled in".** The real rules —
- * address shape, uniqueness across the product — live in the API, which is the
- * only place that can answer the second one at all. Duplicating the first would
- * mean two regexes with one of them wrong.
+ * **Two validation layers, deliberately not one.** `isComplete` is the same
+ * "is it filled in" check the button always used — synchronous, so the button
+ * enables the instant the last field is typed rather than a tick later. The
+ * zod schema runs alongside it on every change and is what fills `errors` —
+ * shape, not just presence, and only the API can tell address uniqueness apart
+ * from either.
  */
 export function useInviteForm() {
-  const [values, setValues] = useState<InviteFormValues>(EMPTY);
-  const [error, setError] = useState<InviteErrorKey | null>(null);
-  const [issued, setIssued] = useState<IInvitation | null>(null);
   const create = useCreateInvitation();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset: resetFields,
+    formState: { errors },
+  } = useForm<InviteFormValues>({
+    resolver: zodResolver(inviteSchema),
+    mode: 'onChange',
+    defaultValues: EMPTY,
+  });
 
-  const setValue = useCallback(<K extends keyof InviteFormValues>(
-    field: K,
-    value: InviteFormValues[K],
-  ) => {
-    setValues((previous) => ({ ...previous, [field]: value }));
-    // The refusal was about what was in the boxes; the moment one changes, it is
-    // stale. Leaving it up makes the form look broken while it is being fixed.
-    setError(null);
-  }, []);
-
-  const reset = useCallback(() => {
-    setValues(EMPTY);
-    setError(null);
-    setIssued(null);
-    create.reset();
-  }, [create]);
-
+  const values = watch();
   const isComplete =
     values.email.trim().length > 0 &&
     values.firstName.trim().length > 0 &&
     values.lastName.trim().length > 0;
 
-  async function submit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
-    if (!isComplete || create.isPending) {
-      return;
-    }
-    setError(null);
+  // The refusal was about what was in the boxes; the moment one changes, it is
+  // stale. Leaving it up makes the form look broken while it is being fixed.
+  useEffect(() => {
+    const subscription = watch(() => create.reset());
+    return () => subscription.unsubscribe();
+  }, [watch, create]);
 
-    try {
-      const invitation = await create.mutateAsync({
-        email: values.email.trim(),
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim(),
-        role: values.role,
-        locale: values.locale,
-      });
-      setIssued(invitation);
-    } catch (caught) {
-      setError(toErrorKey(caught));
-    }
-  }
+  const reset = useCallback(() => {
+    resetFields(EMPTY);
+    create.reset();
+  }, [create, resetFields]);
+
+  const submit = handleSubmit(async (submitted) => {
+    // `mutateAsync` rejects on failure; the mutation's own `error` is what the
+    // form reads, so the rejection itself has nowhere useful to go.
+    await create
+      .mutateAsync({
+        email: submitted.email.trim(),
+        firstName: submitted.firstName.trim(),
+        lastName: submitted.lastName.trim(),
+        role: submitted.role,
+        locale: submitted.locale,
+      })
+      .catch(() => undefined);
+  });
 
   return {
-    values,
-    setValue,
+    register,
+    errors,
     reset,
     submit,
     isComplete,
     pending: create.isPending,
-    error,
+    error: create.error ? toErrorKey(create.error) : null,
     /** Non-null once it worked: the account, and the link, shown once. */
-    issued,
+    issued: create.data ?? null,
   };
 }
 

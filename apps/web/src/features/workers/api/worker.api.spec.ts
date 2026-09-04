@@ -1,4 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import MockAdapter from 'axios-mock-adapter';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { apiClient } from '@/shared/api/http-client';
 import { createWorker, deleteWorker, fetchWorkers, updateWorker } from './worker.api';
 import { workerKeys } from './worker.keys';
 
@@ -10,34 +12,32 @@ import { workerKeys } from './worker.keys';
  * nobody suspects the URL. Same reasoning as `invitation.api.spec.ts`.
  */
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let mock: MockAdapter;
 
-function ok(body: unknown = {}): Response {
-  return new Response(JSON.stringify(body), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-function url(): string {
-  return String((fetchMock.mock.calls[0] as [string, RequestInit])[0]);
+/** Handlers only ever add — the first one registered always wins — so a fresh reply means a fresh mock. */
+function mockReply(status: number, body?: unknown): void {
+  mock.reset();
+  mock.onAny().reply(status, body);
 }
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => ok({ items: [], total: 0, page: 1, limit: 20 }));
-  vi.stubGlobal('fetch', fetchMock);
+  mock = new MockAdapter(apiClient);
+  mockReply(200, { items: [], total: 0, page: 1, limit: 20 });
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  mock.restore();
 });
+
+function url(): string {
+  return mock.history.get[0]?.url ?? '';
+}
 
 describe('fetchWorkers', () => {
   it('sends no content type — a GET carries nothing', async () => {
     await fetchWorkers();
 
-    const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
-    expect(headers['Content-Type']).toBeUndefined();
+    expect(mock.history.get[0]?.headers?.['Content-Type']).toBeFalsy();
   });
 
   it('asks for the plain list when nothing is filtered', async () => {
@@ -76,25 +76,23 @@ describe('fetchWorkers', () => {
 
 describe('createWorker and updateWorker', () => {
   it('creates with a POST and a JSON body', async () => {
-    fetchMock.mockResolvedValue(ok({ id: 'w-1' }));
+    mockReply(200, { id: 'w-1' });
 
     await createWorker({ name: 'Karim Benali', hourlyRate: 18.5 });
 
-    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(path).toMatch(/\/workers$/);
-    expect(init.method).toBe('POST');
-    expect(JSON.parse(init.body as string)).toEqual({ name: 'Karim Benali', hourlyRate: 18.5 });
+    const request = mock.history.post[0];
+    expect(request?.url).toMatch(/\/workers$/);
+    expect(JSON.parse(request?.data as string)).toEqual({ name: 'Karim Benali', hourlyRate: 18.5 });
   });
 
   it('edits with a PATCH on the worker’s own id', async () => {
-    fetchMock.mockResolvedValue(ok({ id: 'w-1' }));
+    mockReply(200, { id: 'w-1' });
 
     await updateWorker('w-1', { active: false });
 
-    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(path).toMatch(/\/workers\/w-1$/);
-    expect(init.method).toBe('PATCH');
-    expect(JSON.parse(init.body as string)).toEqual({ active: false });
+    const request = mock.history.patch[0];
+    expect(request?.url).toMatch(/\/workers\/w-1$/);
+    expect(JSON.parse(request?.data as string)).toEqual({ active: false });
   });
 });
 
@@ -104,24 +102,20 @@ describe('deleteWorker', () => {
    * announcing JSON without one is a 400 on the API's own framework.
    */
   it('announces no content type — there is nothing to describe', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    mockReply(204);
 
     await deleteWorker('w-1');
 
-    const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
-    expect(headers['Content-Type']).toBeUndefined();
+    expect(mock.history.delete[0]?.headers?.['Content-Type']).toBeFalsy();
   });
 
   it('deletes with a DELETE, and survives the empty 204 body', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    mockReply(204);
 
-    // `apiFetch` cannot parse an empty body and falls back to `{}` rather than
-    // throwing — the same behaviour `cancelInvitation` relies on.
-    await expect(deleteWorker('w-1')).resolves.toBeDefined();
+    await expect(deleteWorker('w-1')).resolves.toBeUndefined();
 
-    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(path).toMatch(/\/workers\/w-1$/);
-    expect(init.method).toBe('DELETE');
+    const request = mock.history.delete[0];
+    expect(request?.url).toMatch(/\/workers\/w-1$/);
   });
 });
 
