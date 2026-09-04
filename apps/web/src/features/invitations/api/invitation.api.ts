@@ -34,7 +34,7 @@ export interface ResentInvitation {
 export function createInvitation(payload: ICreateUser): Promise<IInvitation> {
   return apiFetch<IInvitation>('/users', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 

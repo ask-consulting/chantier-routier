@@ -1,5 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import MockAdapter from 'axios-mock-adapter';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InvitationStatus } from '@chantia/shared';
+import { apiClient } from '@/shared/api/http-client';
 import { cancelInvitation, fetchInvitations, resendInvitation } from './invitation.api';
 import { invitationKeys } from './invitation.keys';
 
@@ -11,34 +13,32 @@ import { invitationKeys } from './invitation.keys';
  * nobody suspects the URL.
  */
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let mock: MockAdapter;
 
-function ok(body: unknown = {}): Response {
-  return new Response(JSON.stringify(body), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-function url(): string {
-  return String((fetchMock.mock.calls[0] as [string, RequestInit])[0]);
+/** Handlers only ever add — the first one registered always wins — so a fresh reply means a fresh mock. */
+function mockReply(status: number, body?: unknown): void {
+  mock.reset();
+  mock.onAny().reply(status, body);
 }
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => ok({ items: [], total: 0, page: 1, limit: 20 }));
-  vi.stubGlobal('fetch', fetchMock);
+  mock = new MockAdapter(apiClient);
+  mockReply(200, { items: [], total: 0, page: 1, limit: 20 });
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  mock.restore();
 });
+
+function url(): string {
+  return mock.history.get[0]?.url ?? '';
+}
 
 describe('fetchInvitations', () => {
   it('sends no content type either — a GET carries nothing', async () => {
     await fetchInvitations();
 
-    const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
-    expect(headers['Content-Type']).toBeUndefined();
+    expect(mock.history.get[0]?.headers?.['Content-Type']).toBeFalsy();
   });
 
   it('asks for the plain list when nothing is filtered', async () => {
@@ -80,35 +80,31 @@ describe('resendInvitation and cancelInvitation', () => {
    * has no opinion about headers and a `curl` written by hand does not send one.
    */
   it('announces no content type when there is no content', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    mockReply(204);
 
     await resendInvitation('inv-1');
     await cancelInvitation('inv-1');
 
-    for (const call of fetchMock.mock.calls) {
-      const headers = (call[1] as RequestInit).headers as Record<string, string>;
-      expect(headers['Content-Type']).toBeUndefined();
-    }
+    expect(mock.history.post[0]?.headers?.['Content-Type']).toBeFalsy();
+    expect(mock.history.delete[0]?.headers?.['Content-Type']).toBeFalsy();
   });
 
   it('resends with a POST on the invitation', async () => {
-    fetchMock.mockResolvedValue(ok({ invitationPath: '/invitation/x', expiresAt: 'x' }));
+    mockReply(200, { invitationPath: '/invitation/x', expiresAt: 'x' });
 
     await resendInvitation('inv-1');
 
-    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(path).toMatch(/\/invitations\/inv-1\/resend$/);
-    expect(init.method).toBe('POST');
+    const request = mock.history.post[0];
+    expect(request?.url).toMatch(/\/invitations\/inv-1\/resend$/);
   });
 
   it('cancels with a DELETE, and survives the empty 204 body', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    mockReply(204);
 
-    await expect(cancelInvitation('inv-1')).resolves.toBeDefined();
+    await expect(cancelInvitation('inv-1')).resolves.toBeUndefined();
 
-    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(path).toMatch(/\/invitations\/inv-1$/);
-    expect(init.method).toBe('DELETE');
+    const request = mock.history.delete[0];
+    expect(request?.url).toMatch(/\/invitations\/inv-1$/);
   });
 });
 
