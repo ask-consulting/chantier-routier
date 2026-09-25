@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { PrismaModule } from '@shared/prisma/prisma.module';
 import { CreateWorksiteHandler } from './application/commands/create-worksite.handler';
+import { DeleteWorksiteHandler } from './application/commands/delete-worksite.handler';
+import { UpdateWorksiteHandler } from './application/commands/update-worksite.handler';
 import { GetWorksiteByIdHandler } from './application/queries/get-worksite-by-id.handler';
 import { GetWorksiteCostsHandler } from './application/queries/get-worksite-costs.handler';
 import { GetWorksitesHandler } from './application/queries/get-worksites.handler';
@@ -11,6 +13,8 @@ import { WorksiteController } from './presentation/controllers/worksite.controll
 
 const Handlers = [
   CreateWorksiteHandler,
+  UpdateWorksiteHandler,
+  DeleteWorksiteHandler,
   GetWorksitesHandler,
   GetWorksiteByIdHandler,
   GetWorksiteCostsHandler,

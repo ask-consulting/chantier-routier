@@ -11,7 +11,6 @@
  */
 
 export { WorksiteListPage } from './ui/worksite-list-page';
-export { WorksiteTable } from './ui/worksite-table';
 
 // Exposed because the design-system page documents the tones, and because a
 // dashboard will want to colour a status without duplicating the mapping.

@@ -2,6 +2,7 @@ import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'node:crypto';
 import { Worksite } from '../../domain/entities/worksite.entity';
+import { InvalidWorksiteScheduleException } from '../../domain/exceptions/worksite.exceptions';
 import {
   WORKSITE_REPOSITORY_PORT,
   WorksiteRepositoryPort,
@@ -32,6 +33,10 @@ export class CreateWorksiteHandler implements ICommandHandler<CreateWorksiteComm
       status: data.status,
       totalBudget: data.totalBudget,
     });
+
+    if (!worksite.hasConsistentSchedule()) {
+      throw new InvalidWorksiteScheduleException();
+    }
 
     return this.repository.save(worksite);
   }

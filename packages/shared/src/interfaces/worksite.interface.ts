@@ -41,6 +41,23 @@ export interface ICreateWorksite {
   totalBudget?: number | null;
 }
 
+/**
+ * Payload to change a worksite. Every field optional — `undefined` leaves it,
+ * `null` clears it, on the fields that may be empty at all.
+ */
+export interface IUpdateWorksite {
+  code?: string;
+  name?: string;
+  client?: string | null;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  plannedStartDate?: string | null;
+  plannedEndDate?: string | null;
+  status?: WorksiteStatus;
+  totalBudget?: number | null;
+}
+
 /** Result of a worksite cost computation (budget vs actual). */
 export interface IWorksiteCosts {
   worksiteId: string;

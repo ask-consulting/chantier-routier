@@ -1,9 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { TENANT_PRISMA, TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
 import { SearchParams, SearchResult } from '@shared/domain/search.types';
 import { getPrismaPagination } from '@shared/infrastructure/repositories/search-params';
 import { buildPrismaSearchQuery } from '@shared/infrastructure/repositories/prisma-search.helper';
 import { Worksite } from '../../domain/entities/worksite.entity';
+import { WorksiteCodeTakenException } from '../../domain/exceptions/worksite.exceptions';
 import {
   WorksiteCostInputs,
   WorksiteRepositoryPort,
@@ -23,10 +25,13 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
     const { where, orderBy } = buildPrismaSearchQuery(params, 'createdAt', {
       searchableFields: ['name', 'code', 'client'],
     });
+    // Not optional: a soft-deleted worksite exists only to keep its hours and
+    // receipts, and must never surface in a listing.
+    const notDeleted = { ...where, deletedAt: null };
 
     const [rows, total] = await Promise.all([
-      this.prisma.worksite.findMany({ where, orderBy, skip, take }),
-      this.prisma.worksite.count({ where }),
+      this.prisma.worksite.findMany({ where: notDeleted, orderBy, skip, take }),
+      this.prisma.worksite.count({ where: notDeleted }),
     ]);
 
     return {
@@ -38,22 +43,29 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
   }
 
   async findById(id: string): Promise<Worksite | null> {
-    const row = await this.prisma.worksite.findUnique({ where: { id } });
+    // The same rule `search` follows: nobody reaches by id a worksite they
+    // would never see in a list.
+    const row = await this.prisma.worksite.findUnique({ where: { id, deletedAt: null } });
     return row ? WorksiteMapper.toDomain(row) : null;
   }
 
   async save(worksite: Worksite): Promise<Worksite> {
     const data = WorksiteMapper.toPersistence(worksite);
-    const row = await this.prisma.worksite.upsert({
-      where: { id: worksite.id },
-      create: data,
-      update: data,
-    });
-    return WorksiteMapper.toDomain(row);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.worksite.delete({ where: { id } });
+    try {
+      const row = await this.prisma.worksite.upsert({
+        where: { id: worksite.id },
+        create: data,
+        update: data,
+      });
+      return WorksiteMapper.toDomain(row);
+    } catch (error) {
+      // The only unique index on the table besides the primary key is
+      // `(organization_id, code)` — so a P2002 here always means the code.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new WorksiteCodeTakenException(worksite.code);
+      }
+      throw error;
+    }
   }
 
   async findCostInputs(worksiteId: string): Promise<WorksiteCostInputs> {

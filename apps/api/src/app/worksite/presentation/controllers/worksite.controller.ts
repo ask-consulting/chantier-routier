@@ -1,11 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -15,6 +18,8 @@ import { IWorksiteCosts, Permission, UserRole, roleHasEveryPermission } from '@c
 import { CurrentUser, RequirePermissions } from '@shared/auth';
 import { SearchResult } from '@shared/domain/search.types';
 import { CreateWorksiteCommand } from '../../application/commands/create-worksite.command';
+import { DeleteWorksiteCommand } from '../../application/commands/delete-worksite.command';
+import { UpdateWorksiteCommand } from '../../application/commands/update-worksite.command';
 import { GetWorksiteByIdQuery } from '../../application/queries/get-worksite-by-id.query';
 import { GetWorksiteCostsQuery } from '../../application/queries/get-worksite-costs.query';
 import { GetWorksitesQuery } from '../../application/queries/get-worksites.query';
@@ -22,6 +27,7 @@ import { Worksite } from '../../domain/entities/worksite.entity';
 import { CreateWorksiteDto } from '../dto/create-worksite.dto';
 import { BUDGET_SORT_FIELDS, GetWorksitesDto } from '../dto/get-worksites.dto';
 import { PaginatedWorksiteResponseDto } from '../dto/paginated-worksite-response.dto';
+import { UpdateWorksiteDto } from '../dto/update-worksite.dto';
 import { WorksiteCostsResponseDto } from '../dto/worksite-costs-response.dto';
 import { WorksiteResponseDto } from '../dto/worksite-response.dto';
 
@@ -125,6 +131,48 @@ export class WorksiteController {
     return WorksiteResponseDto.fromDomain(worksite, {
       includeBudget: this.mayReadBudget(role),
     });
+  }
+
+  @Patch(':id')
+  @RequirePermissions(Permission.WORKSITE_MANAGE)
+  @ApiOperation({
+    summary: 'Change a worksite',
+    description:
+      'Partial: absent fields are left alone, `null` clears a nullable one. Closing a site is ' +
+      'a status (`completed`, `suspended`), not a deletion.',
+  })
+  @ApiResponse({ status: 200, type: WorksiteResponseDto })
+  @ApiResponse({ status: 404, description: 'Unknown worksite, or another tenant’s' })
+  @ApiResponse({ status: 409, description: 'Another current worksite already uses this code' })
+  async update(
+    @CurrentUser('role') role: UserRole,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateWorksiteDto,
+  ): Promise<WorksiteResponseDto> {
+    const worksite = await this.commandBus.execute<UpdateWorksiteCommand, Worksite>(
+      new UpdateWorksiteCommand(id, dto),
+    );
+    // Same reasoning as `create`: a no-op today, a guard against tomorrow's
+    // `ROLE_PERMISSIONS`.
+    return WorksiteResponseDto.fromDomain(worksite, {
+      includeBudget: this.mayReadBudget(role),
+    });
+  }
+
+  @Delete(':id')
+  @RequirePermissions(Permission.WORKSITE_MANAGE)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete a worksite',
+    description:
+      'Never a real row deletion: timesheets and expenses cascade from the worksite, so an ' +
+      'actual `DELETE` would erase hours somebody was paid for. `deletedAt` is set instead — ' +
+      'the worksite stops appearing in any list or lookup, and its code becomes free again.',
+  })
+  @ApiResponse({ status: 204, description: 'Deleted' })
+  @ApiResponse({ status: 404, description: 'Unknown worksite, or another tenant’s' })
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.commandBus.execute(new DeleteWorksiteCommand(id));
   }
 
   @Get(':id/costs')

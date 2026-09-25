@@ -212,12 +212,22 @@ model Worksite {
   plannedEndDate   DateTime?      @map("planned_end_date")
   status           WorksiteStatus @default(upcoming)
   totalBudget      Decimal?       @map("total_budget") @db.Decimal(14, 2)
+  /// Set instead of a real delete: `timesheets` and `expenses` cascade from
+  /// this row, and an actual `DELETE` would erase hours somebody was paid for.
+  /// `null` means current; every query that lists or looks up a worksite
+  /// filters on it — the second table, after `workers`, to pay the discipline
+  /// docs/10 warns a soft delete demands, for the same reason.
+  deletedAt        DateTime?      @map("deleted_at")
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
   timesheets Timesheet[]
   expenses   Expense[]
 
+  /// Partial in the database — `WHERE deleted_at IS NULL`, see migration
+  /// `20260925120000_worksite_soft_delete` — so a deleted worksite frees its
+  /// code. Prisma cannot express the predicate; it reads the index back as a
+  /// plain unique one, which is why declaring it here causes no drift.
   @@unique([organizationId, code], map: "uq_worksites_organization_id_code")
   @@index([organizationId], map: "ix_worksites_organization_id")
   @@map("worksites")
@@ -240,7 +250,7 @@ model Worker {
   /// labour cost of every worksite this person appeared on. `null` means
   /// still current; every query that lists or looks up a worker filters on
   /// it, which is the discipline docs/10 §5 warns a generalised soft delete
-  /// demands — this is the one table that pays it, and the reason is above.
+  /// demands — paid here and on `worksites`, each for the reason above.
   deletedAt      DateTime? @map("deleted_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")

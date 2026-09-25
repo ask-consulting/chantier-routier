@@ -70,10 +70,9 @@ export default defineConfig({
       ],
       // +5 points à chaque PR qui touche ce paquet, jusqu'à 80 % — voir
       // `docs/14-etat-des-lieux.md` §2.3. Au-delà de 80, le cliquet tient sans monter.
-      // 46 → 51 : le module `worker` — la fiche RH, son suppression-par-date
-      // (`deletedAt`) plutôt qu'un vrai DELETE, et le délieur de compte côté
-      // identity.
-      thresholds: { statements: 51, branches: 52, functions: 50, lines: 51 },
+      // 51 → 56 : modifier et supprimer un chantier (`deletedAt`, comme les
+      // ouvriers), et les handlers de lecture du module qui n'étaient pas testés.
+      thresholds: { statements: 56, branches: 57, functions: 55, lines: 56 },
     },
   },
 });
