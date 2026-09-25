@@ -1,10 +1,20 @@
 import { WorksiteStatus } from '@chantia/shared';
 
+/**
+ * The client a worksite is built for, as far as a worksite needs to know it:
+ * enough to name it. Loaded with the worksite on reads; the client's full file
+ * belongs to the client module.
+ */
+export interface WorksiteClient {
+  id: string;
+  displayName: string;
+}
+
 /** The fields a caller may change on a worksite — see `Worksite.with`. */
 export interface WorksiteChanges {
   code?: string;
   name?: string;
-  client?: string | null;
+  clientId?: string | null;
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -21,7 +31,7 @@ export class Worksite {
     public readonly organizationId: string,
     public readonly code: string,
     public readonly name: string,
-    public readonly client: string | null,
+    public readonly clientId: string | null,
     public readonly address: string | null,
     public readonly latitude: number | null,
     public readonly longitude: number | null,
@@ -44,6 +54,12 @@ export class Worksite {
     public readonly deletedAt: Date | null = null,
     public readonly createdAt?: Date,
     public readonly updatedAt?: Date,
+    /**
+     * `null` either when there is no client or when it was not loaded — the
+     * `clientId` says which. After a change of client the summary is dropped
+     * until the worksite is read back, rather than naming the old one.
+     */
+    public readonly client: WorksiteClient | null = null,
   ) {}
 
   static create(props: {
@@ -51,7 +67,8 @@ export class Worksite {
     organizationId: string;
     code: string;
     name: string;
-    client?: string | null;
+    clientId?: string | null;
+    client?: WorksiteClient | null;
     address?: string | null;
     latitude?: number | null;
     longitude?: number | null;
@@ -68,7 +85,7 @@ export class Worksite {
       props.organizationId,
       props.code,
       props.name,
-      props.client ?? null,
+      props.clientId ?? null,
       props.address ?? null,
       props.latitude ?? null,
       props.longitude ?? null,
@@ -79,6 +96,7 @@ export class Worksite {
       props.deletedAt ?? null,
       props.createdAt,
       props.updatedAt,
+      props.client ?? null,
     );
   }
 
@@ -109,13 +127,14 @@ export class Worksite {
    */
   with(changes: WorksiteChanges): Worksite {
     const pick = <T>(next: T | undefined, current: T): T => (next === undefined ? current : next);
+    const clientId = pick(changes.clientId, this.clientId);
 
     return new Worksite(
       this.id,
       this.organizationId,
       changes.code ?? this.code,
       changes.name ?? this.name,
-      pick(changes.client, this.client),
+      clientId,
       pick(changes.address, this.address),
       pick(changes.latitude, this.latitude),
       pick(changes.longitude, this.longitude),
@@ -126,6 +145,7 @@ export class Worksite {
       this.deletedAt,
       this.createdAt,
       this.updatedAt,
+      clientId === this.clientId ? this.client : null,
     );
   }
 
@@ -141,7 +161,7 @@ export class Worksite {
       this.organizationId,
       this.code,
       this.name,
-      this.client,
+      this.clientId,
       this.address,
       this.latitude,
       this.longitude,
@@ -152,6 +172,7 @@ export class Worksite {
       at,
       this.createdAt,
       this.updatedAt,
+      this.client,
     );
   }
 }

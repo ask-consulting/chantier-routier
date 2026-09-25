@@ -47,6 +47,18 @@ describe('ROLE_PERMISSIONS', () => {
   });
 });
 
+describe('client permissions', () => {
+  it('lets the office manage clients, and the foreman only read them', () => {
+    expect(roleHasPermission(UserRole.SITE_MANAGER, Permission.CLIENT_MANAGE)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.CLIENT_READ)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.CLIENT_MANAGE)).toBe(false);
+  });
+
+  it('keeps clients away from a worker account', () => {
+    expect(roleHasPermission(UserRole.WORKER, Permission.CLIENT_READ)).toBe(false);
+  });
+});
+
 describe('roleHasEveryPermission', () => {
   it('requires all of the listed permissions', () => {
     expect(

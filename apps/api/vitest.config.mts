@@ -70,9 +70,9 @@ export default defineConfig({
       ],
       // +5 points à chaque PR qui touche ce paquet, jusqu'à 80 % — voir
       // `docs/14-etat-des-lieux.md` §2.3. Au-delà de 80, le cliquet tient sans monter.
-      // 51 → 56 : modifier et supprimer un chantier (`deletedAt`, comme les
-      // ouvriers), et les handlers de lecture du module qui n'étaient pas testés.
-      thresholds: { statements: 56, branches: 57, functions: 55, lines: 56 },
+      // 56 → 61 : le module client — la fiche, ses contacts dans le même
+      // agrégat, et le chantier qui pointe vers un client au lieu d'un texte libre.
+      thresholds: { statements: 61, branches: 62, functions: 60, lines: 61 },
     },
   },
 });

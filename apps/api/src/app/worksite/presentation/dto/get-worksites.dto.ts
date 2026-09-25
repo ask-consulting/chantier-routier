@@ -48,7 +48,7 @@ export class GetWorksitesDto {
   @IsOptional()
   paginated?: boolean;
 
-  @ApiPropertyOptional({ description: 'Free-text search on name, code, client' })
+  @ApiPropertyOptional({ description: 'Free-text search on name, code, and the client’s name' })
   @IsString()
   @IsOptional()
   search?: string;

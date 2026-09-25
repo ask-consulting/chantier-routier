@@ -8,7 +8,10 @@ import { DeleteWorksiteHandler } from './commands/delete-worksite.handler';
 import { UpdateWorksiteCommand } from './commands/update-worksite.command';
 import { UpdateWorksiteHandler } from './commands/update-worksite.handler';
 import { Worksite } from '../domain/entities/worksite.entity';
-import { InvalidWorksiteScheduleException } from '../domain/exceptions/worksite.exceptions';
+import {
+  InvalidWorksiteScheduleException,
+  UnknownWorksiteClientException,
+} from '../domain/exceptions/worksite.exceptions';
 import { WorksiteRepositoryPort } from '../domain/ports/worksite-repository.port';
 
 /**
@@ -26,7 +29,8 @@ function existing(overrides: Partial<Parameters<typeof Worksite.create>[0]> = {}
     organizationId: 'org-1',
     code: 'RN7-2026',
     name: 'Réfection RN7',
-    client: 'Ville de Casablanca',
+    clientId: 'client-1',
+    client: { id: 'client-1', displayName: 'Municipalité de Sousse' },
     address: 'RN7, PK 12',
     plannedStartDate: new Date('2026-09-01'),
     plannedEndDate: new Date('2026-12-15'),
@@ -36,7 +40,7 @@ function existing(overrides: Partial<Parameters<typeof Worksite.create>[0]> = {}
   });
 }
 
-function setup(options: { worksite?: Worksite | null } = {}) {
+function setup(options: { worksite?: Worksite | null; assignable?: boolean } = {}) {
   const saved: Worksite[] = [];
   const repository = {
     findById: vi.fn(async () => (options.worksite === undefined ? existing() : options.worksite)),
@@ -45,6 +49,7 @@ function setup(options: { worksite?: Worksite | null } = {}) {
       return worksite;
     }),
     search: vi.fn(),
+    isAssignableClient: vi.fn(async () => options.assignable ?? true),
     findCostInputs: vi.fn(),
   } as unknown as WorksiteRepositoryPort;
 
@@ -94,7 +99,8 @@ describe('UpdateWorksiteHandler', () => {
 
     expect(saved[0].status).toBe(WorksiteStatus.COMPLETED);
     expect(saved[0].name).toBe('Réfection RN7');
-    expect(saved[0].client).toBe('Ville de Casablanca');
+    expect(saved[0].clientId).toBe('client-1');
+    expect(saved[0].client?.displayName).toBe('Municipalité de Sousse');
     expect(saved[0].totalBudget).toBe(250_000);
     expect(saved[0].plannedStartDate).toEqual(new Date('2026-09-01'));
   });
@@ -104,12 +110,13 @@ describe('UpdateWorksiteHandler', () => {
 
     await new UpdateWorksiteHandler(repository).execute(
       new UpdateWorksiteCommand('worksite-1', {
-        client: null,
+        clientId: null,
         totalBudget: null,
         plannedEndDate: null,
       }),
     );
 
+    expect(saved[0].clientId).toBeNull();
     expect(saved[0].client).toBeNull();
     expect(saved[0].totalBudget).toBeNull();
     expect(saved[0].plannedEndDate).toBeNull();
@@ -136,6 +143,57 @@ describe('UpdateWorksiteHandler', () => {
         new UpdateWorksiteCommand('nope', { name: 'X' }),
       ),
     ).rejects.toBeInstanceOf(ResourceNotFoundException);
+  });
+});
+
+describe('the client a worksite points at', () => {
+  it('refuses a client that is not assignable — foreign, deleted or unknown', async () => {
+    const { repository } = setup({ assignable: false });
+
+    await expect(
+      new CreateWorksiteHandler(repository).execute(
+        new CreateWorksiteCommand('org-1', { code: 'X', name: 'X', clientId: 'client-9' }),
+      ),
+    ).rejects.toBeInstanceOf(UnknownWorksiteClientException);
+    await expect(
+      new UpdateWorksiteHandler(repository).execute(
+        new UpdateWorksiteCommand('worksite-1', { clientId: 'client-9' }),
+      ),
+    ).rejects.toBeInstanceOf(UnknownWorksiteClientException);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('does not re-check the client the worksite already has', async () => {
+    const { repository, saved } = setup({ assignable: false });
+
+    await new UpdateWorksiteHandler(repository).execute(
+      new UpdateWorksiteCommand('worksite-1', { clientId: 'client-1', name: 'Autre nom' }),
+    );
+
+    expect(repository.isAssignableClient).not.toHaveBeenCalled();
+    expect(saved[0].client?.displayName).toBe('Municipalité de Sousse');
+  });
+
+  it('drops the old client’s name when the client changes', async () => {
+    const { repository, saved } = setup();
+
+    await new UpdateWorksiteHandler(repository).execute(
+      new UpdateWorksiteCommand('worksite-1', { clientId: 'client-2' }),
+    );
+
+    expect(saved[0].clientId).toBe('client-2');
+    // Not the previous client's name under the new id — the read-back fills it.
+    expect(saved[0].client).toBeNull();
+  });
+
+  it('creates without a client without asking about one', async () => {
+    const { repository } = setup();
+
+    await new CreateWorksiteHandler(repository).execute(
+      new CreateWorksiteCommand('org-1', { code: 'X', name: 'X' }),
+    );
+
+    expect(repository.isAssignableClient).not.toHaveBeenCalled();
   });
 });
 

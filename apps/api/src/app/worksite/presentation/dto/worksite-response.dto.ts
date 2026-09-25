@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IWorksite, WorksiteStatus } from '@chantia/shared';
+import { IClientSummary, IWorksite, WorksiteStatus } from '@chantia/shared';
 import { Worksite } from '../../domain/entities/worksite.entity';
 
 export class WorksiteResponseDto implements IWorksite {
@@ -7,7 +7,12 @@ export class WorksiteResponseDto implements IWorksite {
   @ApiProperty() organizationId: string;
   @ApiProperty() code: string;
   @ApiProperty() name: string;
-  @ApiProperty({ nullable: true }) client: string | null;
+  @ApiProperty({ nullable: true }) clientId: string | null;
+  @ApiProperty({
+    nullable: true,
+    description: 'The client’s id and name. The full file is `GET /clients/:id`.',
+  })
+  client: IClientSummary | null;
   @ApiProperty({ nullable: true }) address: string | null;
   @ApiProperty({ nullable: true }) latitude: number | null;
   @ApiProperty({ nullable: true }) longitude: number | null;
@@ -40,7 +45,8 @@ export class WorksiteResponseDto implements IWorksite {
     dto.organizationId = worksite.organizationId;
     dto.code = worksite.code;
     dto.name = worksite.name;
-    dto.client = worksite.client;
+    dto.clientId = worksite.clientId;
+    dto.client = worksite.client ? { ...worksite.client } : null;
     dto.address = worksite.address;
     dto.latitude = worksite.latitude;
     dto.longitude = worksite.longitude;

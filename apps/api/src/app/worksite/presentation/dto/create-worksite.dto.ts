@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
 } from 'class-validator';
 import { ICreateWorksite, WorksiteStatus } from '@chantia/shared';
@@ -20,10 +21,13 @@ export class CreateWorksiteDto implements ICreateWorksite {
   @MaxLength(200)
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
-  @IsString()
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'A client of the same organization. `null` detaches the worksite from it.',
+  })
+  @IsUUID()
   @IsOptional()
-  client?: string | null;
+  clientId?: string | null;
 
   @ApiPropertyOptional({ nullable: true })
   @IsString()
