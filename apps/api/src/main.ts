@@ -8,6 +8,7 @@ import helmet from '@fastify/helmet';
 import { AppModule } from './app/app.module';
 import { AppConfig } from '@config/app.config';
 import { DomainExceptionFilter } from '@shared/presentation/domain-exception.filter';
+import { isAllowedOrigin } from '@shared/security/cors-origins';
 import { securityHeaderOptions } from '@shared/security/security-headers';
 import { ValidationException } from '@shared/presentation/exceptions/validation.exception';
 
@@ -48,7 +49,19 @@ async function bootstrap(): Promise<void> {
 
   const allowedOrigins = ['http://localhost:3000', ...appConfig.corsOrigins];
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // No `Origin` header at all: a server-to-server call, curl, or the
+      // Swagger page served by this same process. Never a browser request that
+      // needs a CORS decision.
+      if (!origin || isAllowedOrigin(origin, allowedOrigins)) {
+        callback(null, true);
+        return;
+      }
+      // Not an error: an error here reaches Fastify's error handler and answers
+      // 500. Refusing is simply answering without CORS headers, and letting the
+      // browser block the response.
+      callback(null, false);
+    },
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
