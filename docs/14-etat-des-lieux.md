@@ -1120,9 +1120,10 @@ Dans l'ordre de dépendance, une fois les cinq priorités ci-dessus tenues.
 **Commencer par les ouvriers** : le pointage et le calcul du coût de main-d'œuvre en
 dépendent tous les deux.
 
-Le module chantier lui-même est incomplet : ni modification ni suppression, et pas
-de budget par poste (terrassement, enrobé, signalisation) alors que le périmètre le
-demande.
+Le module chantier se crée, se modifie et se supprime — la suppression pose
+`deleted_at`, comme pour les ouvriers, parce que pointages et dépenses cascadent
+depuis le chantier. Il manque encore le budget par poste (terrassement, enrobé,
+signalisation) que le périmètre demande.
 
 ---
 
