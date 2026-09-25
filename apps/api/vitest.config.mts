@@ -70,9 +70,9 @@ export default defineConfig({
       ],
       // +5 points à chaque PR qui touche ce paquet, jusqu'à 80 % — voir
       // `docs/14-etat-des-lieux.md` §2.3. Au-delà de 80, le cliquet tient sans monter.
-      // 56 → 61 : le module client — la fiche, ses contacts dans le même
-      // agrégat, et le chantier qui pointe vers un client au lieu d'un texte libre.
-      thresholds: { statements: 61, branches: 62, functions: 60, lines: 61 },
+      // 61 → 66 : le parc matériel — le catalogue fixe, les règles d'acquisition
+      // et le coût journalier, calculé dans shared et testé des deux côtés.
+      thresholds: { statements: 66, branches: 67, functions: 65, lines: 66 },
     },
   },
 });

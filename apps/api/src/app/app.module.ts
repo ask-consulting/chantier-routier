@@ -10,6 +10,7 @@ import { PrismaModule } from '@shared/prisma/prisma.module';
 import { TenantContextMiddleware, TenantModule } from '@shared/tenant';
 import { ThrottlingModule } from '@shared/throttling';
 import { ClientModule } from './client/client.module';
+import { EquipmentModule } from './equipment/equipment.module';
 import { HealthModule } from './health/health.module';
 import { NotificationModule } from './notification/notification.module';
 import { WorkerModule } from './worker/worker.module';
@@ -38,6 +39,7 @@ const ENV = process.env.NODE_ENV;
     IdentityModule,
     WorkerModule,
     ClientModule,
+    EquipmentModule,
     WorksiteModule,
   ],
 })

@@ -25,6 +25,13 @@ export enum Permission {
   CLIENT_READ = 'client:read',
   CLIENT_MANAGE = 'client:manage',
 
+  /**
+   * The fleet: machines owned, leased or hired. Their money — price, payments,
+   * daily cost — is additionally behind `budget:read`.
+   */
+  EQUIPMENT_READ = 'equipment:read',
+  EQUIPMENT_MANAGE = 'equipment:manage',
+
   WORKER_READ = 'worker:read',
   WORKER_MANAGE = 'worker:manage',
 
