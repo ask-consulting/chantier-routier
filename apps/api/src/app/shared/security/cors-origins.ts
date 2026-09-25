@@ -25,11 +25,23 @@
  * cookies. Moving the project to another team means updating this line —
  * previews then fail loudly, which is the safe direction.
  *
- * The hash is a single `[a-z0-9]+` segment, so branch aliases
- * (`chantier-routier-git-<branch>-aellouzes-projects.vercel.app`) are not
- * covered: only per-deployment URLs are.
+ * Two shapes between the anchors, because Vercel mints two URLs per preview:
+ *
+ *   - per deployment — `chantier-routier-<hash>-…`, a single `[a-z0-9]+`;
+ *   - per branch — `chantier-routier-git-<branch>-…`, the one people share,
+ *     since it stays the same across pushes. The branch slug carries hyphens
+ *     (`feat-worksite-crud`), hence `git-[a-z0-9-]+`.
+ *
+ * **What this rests on, and is not verified:** that nobody outside the team
+ * can obtain a `*-aellouzes-projects.vercel.app` hostname. A Vercel project
+ * gets `<project-name>.vercel.app` by default, so a project *named*
+ * `chantier-routier-x-aellouzes-projects` in another team would match —
+ * unless Vercel reserves hostnames ending in a team slug. Both shapes share
+ * that assumption. The way to stop depending on it is a preview domain we
+ * own (Vercel's custom preview deployment suffix), allowed here instead.
  */
-const VERCEL_PREVIEW = /^https:\/\/chantier-routier-[a-z0-9]+-aellouzes-projects\.vercel\.app$/;
+const VERCEL_PREVIEW =
+  /^https:\/\/chantier-routier-(?:[a-z0-9]+|git-[a-z0-9-]+)-aellouzes-projects\.vercel\.app$/;
 
 /**
  * Whether a browser's `Origin` header may reach this API.
