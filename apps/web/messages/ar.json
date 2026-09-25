@@ -48,7 +48,39 @@
     "loadError": "تعذّر تحميل الأوراش: {reason}",
     "unknownError": "خطأ غير معروف",
     "emptyTitle": "لا يوجد أي ورش حالياً",
-    "emptyDescription": "أنشئ أول ورش لك لتتبّع ميزانيته وسجلات الحضور."
+    "emptyDescription": "أنشئ أول ورش لك لتتبّع ميزانيته وسجلات الحضور.",
+    "budgetValue": "الميزانية: {amount}",
+    "address": "العنوان",
+    "plannedStartDate": "تاريخ البدء المتوقع",
+    "plannedEndDate": "تاريخ الانتهاء المتوقع",
+    "actions": "إجراءات",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "الاسم أو الرمز أو العميل",
+    "statusLabel": "الحالة",
+    "allStatuses": "الكل",
+    "clearFilters": "مسح عوامل التصفية",
+    "createTitle": "إنشاء ورش",
+    "editTitle": "تعديل الورش",
+    "edit": "تعديل",
+    "editFor": "تعديل {name}",
+    "delete": "حذف",
+    "deleteFor": "حذف {name}",
+    "deleteTitle": "حذف هذا الورش؟",
+    "deleteDescription": "يختفي «{name}» من كل القوائم، ويصبح رمزه متاحاً من جديد. تبقى سجلات الحضور والمصاريف محفوظة. لورش منتهٍ أو متوقف، غيّر حالته بدلاً من ذلك.",
+    "deleteConfirm": "حذف الورش",
+    "deleteDismiss": "إلغاء",
+    "actionFailed": "فشل الإجراء",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "close": "إغلاق",
+    "codeHint": "فريد داخل الشركة — RN7-2026…",
+    "budgetHint": "المبلغ الإجمالي المتوقع. اتركه فارغاً إن لم يُحدَّد بعد.",
+    "noResultTitle": "لا يوجد ورش مطابق",
+    "noResultDescription": "جرّب اسماً أو رمزاً آخر، أو غيّر الحالة.",
+    "error": {
+      "invalidInput": "تحقّق من الحقول: أحدها غير مقبول.",
+      "unknown": "تعذّر حفظ الورش."
+    }
   },
   "worksiteStatus": {
     "upcoming": "قادم",
@@ -74,7 +106,9 @@
         "special": "يجب أن تحتوي كلمة المرور على رمز خاص",
         "common": "كلمة المرور هذه شائعة جداً — إضافة رقم أو رمز إلى كلمة مرور معروفة لا يكفي",
         "contextual": "يجب ألا تحتوي كلمة المرور على اسمك أو بريدك الإلكتروني أو اسم مؤسستك"
-      }
+      },
+      "worksiteCodeTaken": "هذا الرمز مستخدم لورش آخر",
+      "endBeforeStart": "لا يمكن أن يسبق تاريخ الانتهاء تاريخ البدء"
     }
   },
   "login": {

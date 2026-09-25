@@ -48,7 +48,39 @@
     "loadError": "Impossible de charger les chantiers : {reason}",
     "unknownError": "erreur inconnue",
     "emptyTitle": "Aucun chantier pour l’instant",
-    "emptyDescription": "Créez votre premier chantier pour suivre son budget et ses pointages."
+    "emptyDescription": "Créez votre premier chantier pour suivre son budget et ses pointages.",
+    "budgetValue": "Budget : {amount}",
+    "address": "Adresse",
+    "plannedStartDate": "Début prévu",
+    "plannedEndDate": "Fin prévue",
+    "actions": "Actions",
+    "searchLabel": "Rechercher",
+    "searchPlaceholder": "Nom, code ou client",
+    "statusLabel": "Statut",
+    "allStatuses": "Tous",
+    "clearFilters": "Effacer les filtres",
+    "createTitle": "Créer un chantier",
+    "editTitle": "Modifier le chantier",
+    "edit": "Modifier",
+    "editFor": "Modifier {name}",
+    "delete": "Supprimer",
+    "deleteFor": "Supprimer {name}",
+    "deleteTitle": "Supprimer ce chantier ?",
+    "deleteDescription": "« {name} » disparaît de toutes les listes, et son code redevient libre. Ses pointages et ses dépenses sont conservés. Pour un chantier fini ou arrêté, changez plutôt son statut.",
+    "deleteConfirm": "Supprimer le chantier",
+    "deleteDismiss": "Annuler",
+    "actionFailed": "L’action a échoué",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "codeHint": "Unique dans l’entreprise — RN7-2026…",
+    "budgetHint": "Montant total prévu. Laissez vide s’il n’est pas encore fixé.",
+    "noResultTitle": "Aucun chantier ne correspond",
+    "noResultDescription": "Essayez un autre nom ou code, ou changez le statut.",
+    "error": {
+      "invalidInput": "Vérifiez les champs : l’un d’eux n’est pas accepté.",
+      "unknown": "Le chantier n’a pas pu être enregistré."
+    }
   },
   "worksiteStatus": {
     "upcoming": "À venir",
@@ -74,7 +106,9 @@
         "special": "Le mot de passe doit contenir un caractère spécial",
         "common": "Ce mot de passe est trop courant — ajouter un chiffre ou un symbole à un mot de passe connu ne suffit pas",
         "contextual": "Le mot de passe ne doit pas contenir votre nom, votre email ni le nom de votre organisation"
-      }
+      },
+      "worksiteCodeTaken": "Ce code est déjà utilisé par un autre chantier",
+      "endBeforeStart": "La fin prévue ne peut pas précéder le début"
     }
   },
   "login": {

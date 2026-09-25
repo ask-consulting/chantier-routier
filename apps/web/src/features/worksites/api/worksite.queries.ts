@@ -1,7 +1,15 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { fetchWorksite, fetchWorksites, type WorksiteListParams } from './worksite.api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { IUpdateWorksite } from '@chantia/shared';
+import {
+  createWorksite,
+  deleteWorksite,
+  fetchWorksite,
+  fetchWorksites,
+  updateWorksite,
+  type WorksiteListParams,
+} from './worksite.api';
 import { worksiteKeys } from './worksite.keys';
 
 /**
@@ -13,21 +21,18 @@ import { worksiteKeys } from './worksite.keys';
  * — writes behind React Query's back. The moment two paths exist, one of them
  * forgets to invalidate and the list quietly serves stale rows.
  *
- * Mutations arrive with the create/edit screens. The shape they will take:
+ * All three writes invalidate `worksiteKeys.all` — lists *and* details, by
+ * prefix: an edit changes the row and the detail alike, a delete removes both.
  *
- *   export function useCreateWorksite() {
- *     const queryClient = useQueryClient();
- *     return useMutation({
- *       mutationFn: createWorksite,
- *       onSuccess: () => queryClient.invalidateQueries({ queryKey: worksiteKeys.all }),
- *     });
- *   }
+ * `placeholderData` keeps the previous page on screen while a filter is
+ * applied, so typing does not blink the table away between keystrokes.
  */
 
 export function useWorksites(params?: WorksiteListParams) {
   return useQuery({
     queryKey: worksiteKeys.list(params),
     queryFn: () => fetchWorksites(params),
+    placeholderData: (previous) => previous,
   });
 }
 
@@ -36,5 +41,29 @@ export function useWorksite(id: string) {
     queryKey: worksiteKeys.detail(id),
     queryFn: () => fetchWorksite(id),
     enabled: Boolean(id),
+  });
+}
+
+export function useCreateWorksite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createWorksite,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: worksiteKeys.all }),
+  });
+}
+
+export function useUpdateWorksite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: IUpdateWorksite }) => updateWorksite(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: worksiteKeys.all }),
+  });
+}
+
+export function useDeleteWorksite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteWorksite,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: worksiteKeys.all }),
   });
 }
