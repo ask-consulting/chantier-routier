@@ -60,10 +60,12 @@ export default defineConfig({
         // the tests as covered-by-tests is how a number stops meaning anything.
         'src/test/**',
       ],
-      // 54 → 62 : l'écran des ouvriers — liste, tiroir de création/édition,
-      // suppression douce — qui réutilise et teste les mêmes composants que
-      // l'écran des invitations.
-      thresholds: { statements: 62, branches: 65, functions: 62, lines: 62 },
+      // lines 62 → 63 : migration du client HTTP vers axios (mêmes garanties,
+      // testées à nouveau contre le nouveau transport) et validation temps réel
+      // du formulaire d'invitation (react-hook-form + zod). Statements, branches
+      // et functions ne bougent pas assez pour changer l'entier arrondi — cette
+      // PR reteste plus qu'elle n'ajoute de surface.
+      thresholds: { statements: 62, branches: 65, functions: 62, lines: 63 },
     },
   },
 });

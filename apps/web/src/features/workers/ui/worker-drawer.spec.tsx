@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IWorker } from '@chantia/shared';
+import { apiClient } from '@/shared/api/http-client';
 import { renderWithProviders } from '@/test/render';
 import { WorkerDrawer } from './worker-drawer';
 
@@ -21,13 +23,12 @@ const existing: IWorker = {
   active: true,
 };
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let mock: MockAdapter;
 
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+/** Handlers only ever add — the first one registered always wins — so a fresh reply means a fresh mock. */
+function mockReply(status: number, body?: unknown): void {
+  mock.reset();
+  mock.onAny().reply(status, body);
 }
 
 function fillCreate(): void {
@@ -36,8 +37,8 @@ function fillCreate(): void {
 }
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => json({ id: 'worker-9' }));
-  vi.stubGlobal('fetch', fetchMock);
+  mock = new MockAdapter(apiClient);
+  mockReply(200, { id: 'worker-9' });
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
     this.open = true;
   };
@@ -47,7 +48,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  mock.restore();
   cleanup();
 });
 
@@ -89,10 +90,9 @@ describe('WorkerDrawer, creating', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => {
-      const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(path).toMatch(/\/workers$/);
-      expect(init.method).toBe('POST');
-      expect(JSON.parse(init.body as string)).toEqual({
+      const request = mock.history.post[0];
+      expect(request?.url).toMatch(/\/workers$/);
+      expect(JSON.parse(request?.data as string)).toEqual({
         name: 'Amina Cherif',
         qualification: 'Conductrice d’engin',
         hourlyRate: 16,
@@ -108,8 +108,8 @@ describe('WorkerDrawer, creating', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => {
-      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(JSON.parse(init.body as string).qualification).toBeNull();
+      const request = mock.history.post[0];
+      expect(JSON.parse(request?.data as string).qualification).toBeNull();
     });
   });
 
@@ -124,7 +124,7 @@ describe('WorkerDrawer, creating', () => {
   });
 
   it('reports a refusal without pretending it was something else', async () => {
-    fetchMock.mockResolvedValue(json({ message: 'invalid' }, 400));
+    mockReply(400, { message: 'invalid' });
     renderWithProviders(<WorkerDrawer open onClose={() => {}} />);
     fillCreate();
 
@@ -134,7 +134,7 @@ describe('WorkerDrawer, creating', () => {
   });
 
   it('stays open, filled in, when the save fails', async () => {
-    fetchMock.mockResolvedValue(json({ message: 'invalid' }, 400));
+    mockReply(400, { message: 'invalid' });
     const onClose = vi.fn();
     renderWithProviders(<WorkerDrawer open onClose={onClose} />);
     fillCreate();
@@ -164,10 +164,9 @@ describe('WorkerDrawer, editing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => {
-      const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(path).toMatch(/\/workers\/worker-1$/);
-      expect(init.method).toBe('PATCH');
-      expect(JSON.parse(init.body as string)).toMatchObject({ hourlyRate: 21 });
+      const request = mock.history.patch[0];
+      expect(request?.url).toMatch(/\/workers\/worker-1$/);
+      expect(JSON.parse(request?.data as string)).toMatchObject({ hourlyRate: 21 });
     });
   });
 
@@ -178,8 +177,8 @@ describe('WorkerDrawer, editing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => {
-      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(JSON.parse(init.body as string).active).toBe(false);
+      const request = mock.history.patch[0];
+      expect(JSON.parse(request?.data as string).active).toBe(false);
     });
   });
 

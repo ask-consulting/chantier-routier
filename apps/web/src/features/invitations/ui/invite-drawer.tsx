@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Locale, UserRole } from '@chantia/shared';
+import { UserRole } from '@chantia/shared';
 import { Alert, Button, Drawer, Field, Select, Snippet } from '@/shared/ui';
 import { LOCALE_LABELS, LOCALES } from '@/shared/i18n/config';
 import { useInviteForm } from '../model/use-invite-form';
@@ -29,6 +29,7 @@ import { useInviteForm } from '../model/use-invite-form';
 export function InviteDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations('invitations');
   const tRole = useTranslations('userRole');
+  const tFieldError = useTranslations('form.errors');
   const form = useInviteForm();
   const [copied, setCopied] = useState(false);
 
@@ -118,34 +119,33 @@ export function InviteDrawer({ open, onClose }: { open: boolean; onClose: () => 
             type="email"
             required
             autoComplete="off"
-            value={form.values.email}
-            onChange={(event) => form.setValue('email', event.target.value)}
+            error={form.errors.email && tFieldError(form.errors.email.message as 'required' | 'invalidEmail')}
+            {...form.register('email')}
           />
 
           <div className="grid gap-stack sm:grid-cols-2">
             <Field
               label={t('firstName')}
               required
-              value={form.values.firstName}
-              onChange={(event) => form.setValue('firstName', event.target.value)}
+              error={form.errors.firstName && tFieldError('required')}
+              {...form.register('firstName')}
             />
             <Field
               label={t('lastName')}
               required
-              value={form.values.lastName}
-              onChange={(event) => form.setValue('lastName', event.target.value)}
+              error={form.errors.lastName && tFieldError('required')}
+              {...form.register('lastName')}
             />
           </div>
 
           <div className="grid gap-stack sm:grid-cols-2">
             <Select
               label={t('role')}
-              value={form.values.role}
-              onChange={(event) => form.setValue('role', event.target.value as UserRole)}
               options={Object.values(UserRole).map((role) => ({
                 value: role,
                 label: tRole(role),
               }))}
+              {...form.register('role')}
             />
             <Select
               label={t('locale')}
@@ -153,12 +153,11 @@ export function InviteDrawer({ open, onClose }: { open: boolean; onClose: () => 
               // person will land in — a worker who reads Arabic should not have
               // to find the switcher before understanding the page.
               hint={t('localeHint')}
-              value={form.values.locale}
-              onChange={(event) => form.setValue('locale', event.target.value as Locale)}
               options={LOCALES.map((locale) => ({
                 value: locale,
                 label: LOCALE_LABELS[locale],
               }))}
+              {...form.register('locale')}
             />
           </div>
         </form>

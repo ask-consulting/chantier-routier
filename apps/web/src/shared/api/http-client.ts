@@ -12,6 +12,8 @@
  * `localStorage`.
  */
 
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 /** Set by the session provider. Module-level so every call sees it without prop drilling. */
@@ -45,60 +47,114 @@ export class ApiError extends Error {
   }
 }
 
-async function parse<T>(response: Response): Promise<T> {
-  const body = (await response.json().catch(() => ({}))) as {
-    message?: string;
-    errors?: FieldError[];
-  };
-
-  if (!response.ok) {
-    throw new ApiError(response.status, body.message ?? 'Erreur inattendue', body.errors);
-  }
-  return body as T;
+/** Marks a request that already went through one refresh-and-retry cycle. */
+interface RetriableConfig extends InternalAxiosRequestConfig {
+  _retried?: boolean;
 }
 
 /**
- * A call to the Nest API, carrying the access token.
+ * The Nest API instance.
  *
+ * No default `Content-Type`: axios only sets it when `data` is a plain object,
+ * which is exactly the behaviour Fastify needs. It refuses a request that
+ * announces JSON and carries nothing — `400 Body cannot be empty when
+ * content-type is set to 'application/json'`. Both invitation actions answered
+ * 400 in production while the list beside them worked, because a hand-set
+ * header went out on every request, body or no body.
+ */
+export const apiClient = axios.create({ baseURL: API_URL });
+
+apiClient.interceptors.request.use((config) => {
+  // Axios defaults every POST/PUT/PATCH to `application/x-www-form-urlencoded`
+  // when nothing else claims the header first — data or not. Fastify rejects
+  // exactly that combination when there is no body, so a request with no
+  // `data` explicitly claims the header itself, the same way axios' own XHR
+  // adapter does in a real browser.
+  if (config.data === undefined && !config.headers.has('Content-Type')) {
+    config.headers.setContentType(null);
+  }
+  if (accessToken) {
+    config.headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+  return config;
+});
+
+/**
  * On 401 it refreshes **once** and retries. Once, deliberately: if the second
  * attempt also fails the session is genuinely over, and looping would turn an
  * expired session into a burst of requests.
  */
-export async function apiFetch<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      // Only when there is something to describe. Fastify — which the API runs
-      // on — refuses a request that announces JSON and carries nothing:
-      // `400 Body cannot be empty when content-type is set to 'application/json'`.
-      // A resend and a cancellation have no body at all, and both answered 400
-      // in production while the list beside them worked.
-      ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...init.headers,
-    },
-  });
-
-  if (response.status === 401 && retry && refreshSession) {
-    const renewed = await refreshSession();
-    if (renewed) {
-      return apiFetch<T>(path, init, false);
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: unknown) => {
+    if (!axios.isAxiosError(error) || error.response?.status !== 401) {
+      return Promise.reject(toApiError(error));
     }
-  }
 
-  return parse<T>(response);
+    const original = error.config as RetriableConfig | undefined;
+    if (!refreshSession || !original || original._retried) {
+      return Promise.reject(toApiError(error));
+    }
+
+    const renewed = await refreshSession();
+    if (!renewed) {
+      return Promise.reject(toApiError(error));
+    }
+
+    original._retried = true;
+    return apiClient(original);
+  },
+);
+
+function toApiError(error: unknown): unknown {
+  if (axios.isAxiosError(error) && error.response) {
+    const body = error.response.data as { message?: string; errors?: FieldError[] } | undefined;
+    return new ApiError(error.response.status, body?.message ?? 'Erreur inattendue', body?.errors);
+  }
+  // No response at all — a network failure, not an API answer. Nothing useful
+  // to translate; let the caller see what actually happened.
+  return error;
 }
 
-/** A call to one of Next's own auth handlers. The cookie travels on its own. */
-export async function authFetch<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`/api/auth/${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    // Same origin, but explicit: without the cookie the handler has nothing.
-    credentials: 'same-origin',
+export interface ApiRequestConfig {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  data?: unknown;
+  headers?: Record<string, string>;
+}
+
+/** A call to the Nest API, carrying the access token. */
+export async function apiFetch<T>(path: string, config: ApiRequestConfig = {}): Promise<T> {
+  const response = await apiClient.request<T>({
+    url: path,
+    method: config.method ?? 'GET',
+    data: config.data,
+    headers: config.headers,
   });
-  return parse<T>(response);
+  return response.data;
+}
+
+/**
+ * Next's own auth handlers. The cookie travels on its own — same origin, but
+ * `withCredentials` keeps that explicit rather than relying on the default.
+ */
+export const authClient = axios.create({ baseURL: '/api/auth', withCredentials: true });
+
+authClient.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => Promise.reject(toApiError(error)),
+);
+
+/** A call to one of Next's own auth handlers. */
+export async function authFetch<T>(path: string, body?: unknown): Promise<T> {
+  const response = await authClient.request<T>({
+    url: path,
+    method: 'POST',
+    data: body,
+    // Always announced, unlike `apiFetch`: these are our own Next route
+    // handlers, not Fastify, and they don't reject an empty JSON body.
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return response.data;
 }
 
 /**

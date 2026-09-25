@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IWorker } from '@chantia/shared';
+import { apiClient } from '@/shared/api/http-client';
 import { renderWithProviders } from '@/test/render';
 import { WorkerListPage } from './worker-list-page';
 import { WorkerList } from './worker-table';
@@ -41,18 +43,21 @@ const amina: IWorker = {
   active: false,
 };
 
-let fetchMock: ReturnType<typeof vi.fn>;
+let mock: MockAdapter;
 
-function listResponse(items: IWorker[]): Response {
-  return new Response(JSON.stringify({ items, total: items.length, page: 1, limit: 20 }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+function listBody(items: IWorker[]) {
+  return { items, total: items.length, page: 1, limit: 20 };
+}
+
+/** Handlers only ever add — the first one registered always wins — so a fresh reply means a fresh mock. */
+function mockReply(status: number, body?: unknown): void {
+  mock.reset();
+  mock.onAny().reply(status, body);
 }
 
 beforeEach(() => {
-  fetchMock = vi.fn(async () => listResponse([karim, amina]));
-  vi.stubGlobal('fetch', fetchMock);
+  mock = new MockAdapter(apiClient);
+  mockReply(200, listBody([karim, amina]));
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
     this.open = true;
   };
@@ -62,7 +67,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  mock.restore();
   cleanup();
 });
 
@@ -104,20 +109,18 @@ describe('WorkerList', () => {
 
     expect((await screen.findAllByText(/Karim Benali/)).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/restent inchangés/).length).toBeGreaterThan(0);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mock.history).toHaveLength(0);
   });
 
   it('deletes only once confirmed', async () => {
     renderWithProviders(<WorkerList workers={[karim]} onEdit={() => {}} />);
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    mockReply(204);
 
     fireEvent.click(screen.getAllByRole('button', { name: /Supprimer Karim Benali/ })[0]);
     fireEvent.click(screen.getAllByRole('button', { name: 'Supprimer l’ouvrier' })[0]);
 
     await waitFor(() => {
-      const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(path).toMatch(/\/workers\/worker-1$/);
-      expect(init.method).toBe('DELETE');
+      expect(mock.history.delete[0]?.url).toMatch(/\/workers\/worker-1$/);
     });
   });
 
@@ -134,7 +137,7 @@ describe('WorkerList', () => {
     await waitFor(() =>
       expect([...document.querySelectorAll('dialog')].every((d) => !d.open)).toBe(true),
     );
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mock.history).toHaveLength(0);
   });
 });
 
@@ -153,13 +156,13 @@ describe('WorkerListPage', () => {
     fireEvent.change(screen.getByLabelText('Statut'), { target: { value: 'active' } });
 
     await waitFor(() => {
-      const asked = fetchMock.mock.calls.map((call) => String(call[0]));
+      const asked = mock.history.get.map((request) => String(request.url));
       expect(asked.some((path) => path.includes('active=true'))).toBe(true);
     });
   });
 
   it('says "aucun ouvrier" when there is none, and offers no way out', async () => {
-    fetchMock.mockResolvedValue(listResponse([]));
+    mockReply(200, listBody([]));
     renderWithProviders(<WorkerListPage />);
 
     expect(await screen.findByText('Aucun ouvrier')).toBeTruthy();
@@ -167,7 +170,7 @@ describe('WorkerListPage', () => {
   });
 
   it('says "no result" under an active filter, and offers to clear it', async () => {
-    fetchMock.mockResolvedValue(listResponse([]));
+    mockReply(200, listBody([]));
     renderWithProviders(<WorkerListPage />);
     await screen.findByText('Aucun ouvrier');
 
@@ -178,12 +181,7 @@ describe('WorkerListPage', () => {
   });
 
   it('reports a failed load instead of showing an empty list', async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ message: 'Base injoignable' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    mockReply(500, { message: 'Base injoignable' });
     renderWithProviders(<WorkerListPage />);
 
     expect(await screen.findByRole('alert')).toBeTruthy();
