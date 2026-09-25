@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Permission } from '@chantia/shared';
-import { AccountIcon, WorkerIcon, WorksiteIcon } from '@/shared/lib/icons';
+import { AccountIcon, ClientIcon, WorkerIcon, WorksiteIcon } from '@/shared/lib/icons';
 import { SidebarNavGroup, SidebarNavItem } from '@/shared/ui';
 import { Can } from '@/features/auth';
 
@@ -29,6 +29,7 @@ import { Can } from '@/features/auth';
  */
 export const NAV = [
   { href: '/worksites', key: 'worksites', Icon: WorksiteIcon },
+  { href: '/clients', key: 'clients', Icon: ClientIcon, permission: Permission.CLIENT_READ },
   { href: '/workers', key: 'workers', Icon: WorkerIcon, permission: Permission.WORKER_READ },
 ] as const;
 

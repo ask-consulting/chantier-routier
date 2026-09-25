@@ -5,6 +5,7 @@
   },
   "nav": {
     "worksites": "Chantiers",
+    "clients": "Clients",
     "workers": "Ouvriers",
     "timesheets": "Pointages",
     "expenses": "Dépenses",
@@ -82,11 +83,82 @@
       "unknown": "Le chantier n’a pas pu être enregistré."
     }
   },
+  "clients": {
+    "title": "Clients",
+    "create": "Nouveau client",
+    "createTitle": "Créer une fiche client",
+    "editTitle": "Modifier la fiche client",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "identity": "Identité",
+    "type": "Type",
+    "lastName": "Nom",
+    "firstName": "Prénom",
+    "legalName": "Raison sociale",
+    "legalNameHint": "Société, commune, ministère — tel qu’il doit figurer sur une facture.",
+    "displayNamePreview": "Apparaîtra comme « {name} » dans les listes.",
+    "billingAddress": "Adresse de facturation",
+    "line1": "Adresse",
+    "line2": "Complément d’adresse",
+    "postalCode": "Code postal",
+    "city": "Ville",
+    "country": "Pays",
+    "contacts": "Contacts",
+    "noContact": "Aucun contact pour l’instant.",
+    "addContact": "Ajouter un contact",
+    "contactN": "Contact {n}",
+    "removeContact": "Retirer le contact",
+    "removeContactFor": "Retirer {name}",
+    "contactLastName": "Nom",
+    "contactFirstName": "Prénom",
+    "position": "Fonction",
+    "positionHint": "Directeur technique, secrétaire général…",
+    "mobilePhone": "Mobile",
+    "landlinePhone": "Fixe",
+    "email": "Email",
+    "primaryContact": "Contact principal",
+    "primaryContactHint": "L’interlocuteur à appeler en premier. Pour changer, cochez un autre contact.",
+    "name": "Nom",
+    "actions": "Actions",
+    "noCity": "Ville non renseignée",
+    "edit": "Modifier",
+    "editFor": "Modifier {name}",
+    "delete": "Supprimer",
+    "deleteFor": "Supprimer {name}",
+    "deleteTitle": "Supprimer ce client ?",
+    "deleteDescription": "« {name} » disparaît de toutes les listes, avec ses contacts. Impossible tant qu’un chantier en cours lui est rattaché.",
+    "deleteConfirm": "Supprimer le client",
+    "deleteDismiss": "Annuler",
+    "deleteInUse": "Des chantiers sont encore rattachés à ce client. Changez leur client, ou supprimez-les, d’abord.",
+    "actionFailed": "L’action a échoué",
+    "searchLabel": "Rechercher",
+    "searchPlaceholder": "Nom ou ville",
+    "typeFilterLabel": "Type",
+    "allTypes": "Tous",
+    "clearFilters": "Effacer les filtres",
+    "loadError": "Impossible de charger les clients : {reason}",
+    "unknownError": "erreur inconnue",
+    "emptyTitle": "Aucun client",
+    "emptyDescription": "Créez une première fiche pour y rattacher vos chantiers.",
+    "noResultTitle": "Aucun client ne correspond",
+    "noResultDescription": "Essayez un autre nom ou une autre ville, ou changez le type.",
+    "noClientOption": "Aucun client",
+    "noClientYet": "Aucune fiche client pour l’instant — créez-la depuis l’écran Clients.",
+    "error": {
+      "invalidInput": "Vérifiez les champs : l’un d’eux n’est pas accepté.",
+      "unknown": "Le client n’a pas pu être enregistré."
+    }
+  },
   "worksiteStatus": {
     "upcoming": "À venir",
     "in_progress": "En cours",
     "completed": "Terminé",
     "suspended": "Suspendu"
+  },
+  "clientType": {
+    "individual": "Personne physique",
+    "legal_entity": "Personne morale"
   },
   "userRole": {
     "admin": "Administrateur",
@@ -108,7 +180,8 @@
         "contextual": "Le mot de passe ne doit pas contenir votre nom, votre email ni le nom de votre organisation"
       },
       "worksiteCodeTaken": "Ce code est déjà utilisé par un autre chantier",
-      "endBeforeStart": "La fin prévue ne peut pas précéder le début"
+      "endBeforeStart": "La fin prévue ne peut pas précéder le début",
+      "unknownClient": "Ce client n’existe pas ou plus"
     }
   },
   "login": {

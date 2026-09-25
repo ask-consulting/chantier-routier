@@ -69,7 +69,7 @@ function WorksiteTable({ worksites, onEdit }: RowsProps) {
           <TRow key={worksite.id}>
             <TD className="font-mono text-xs text-fg-muted">{worksite.code}</TD>
             <TD className="font-medium">{worksite.name}</TD>
-            <TD className="text-fg-muted">{worksite.client ?? '—'}</TD>
+            <TD className="text-fg-muted">{worksite.client?.displayName ?? '—'}</TD>
             <TD>
               <Badge tone={WORKSITE_STATUS_TONE[worksite.status]} dot>
                 {tStatus(worksite.status)}
@@ -106,7 +106,7 @@ function WorksiteCards({ worksites, onEdit }: RowsProps) {
                   <p className="truncate font-medium">{worksite.name}</p>
                   <p className="truncate text-sm text-fg-muted">
                     <span className="font-mono text-xs">{worksite.code}</span>
-                    {worksite.client && ` · ${worksite.client}`}
+                    {worksite.client && ` · ${worksite.client.displayName}`}
                   </p>
                 </div>
                 <Badge tone={WORKSITE_STATUS_TONE[worksite.status]} dot>

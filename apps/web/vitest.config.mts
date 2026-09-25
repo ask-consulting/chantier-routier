@@ -60,8 +60,9 @@ export default defineConfig({
         // the tests as covered-by-tests is how a number stops meaning anything.
         'src/test/**',
       ],
-      // 62 → 67 : l'écran des chantiers — création, modification, suppression, filtres.
-      thresholds: { statements: 67, branches: 70, functions: 67, lines: 68 },
+      // 67 → 72 : l'écran des clients — fiche, contacts, adresse — et le sélecteur de
+      // client du chantier, passé par la route.
+      thresholds: { statements: 72, branches: 75, functions: 72, lines: 73 },
     },
   },
 });

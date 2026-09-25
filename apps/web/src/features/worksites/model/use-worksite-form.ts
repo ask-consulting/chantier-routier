@@ -9,12 +9,13 @@ import { useCreateWorksite, useUpdateWorksite } from '../api/worksite.queries';
 export type WorksiteErrorKey = 'invalidInput' | 'unknown';
 
 /** A refusal that belongs next to one field, as a key under `form.errors.*`. */
-export type WorksiteFieldErrorKey = 'worksiteCodeTaken' | 'endBeforeStart';
+export type WorksiteFieldErrorKey = 'worksiteCodeTaken' | 'endBeforeStart' | 'unknownClient';
 
 export interface WorksiteFormValues {
   code: string;
   name: string;
-  client: string;
+  /** A client id, or `''` for none. */
+  clientId: string;
   address: string;
   /** `YYYY-MM-DD`, what `<input type="date">` reads and writes. Empty is "not planned". */
   plannedStartDate: string;
@@ -40,7 +41,7 @@ function valuesOf(worksite: IWorksite | null): WorksiteFormValues {
     ? {
         code: worksite.code,
         name: worksite.name,
-        client: worksite.client ?? '',
+        clientId: worksite.clientId ?? '',
         address: worksite.address ?? '',
         plannedStartDate: toDateInput(worksite.plannedStartDate),
         plannedEndDate: toDateInput(worksite.plannedEndDate),
@@ -53,7 +54,7 @@ function valuesOf(worksite: IWorksite | null): WorksiteFormValues {
     : {
         code: '',
         name: '',
-        client: '',
+        clientId: '',
         address: '',
         plannedStartDate: '',
         plannedEndDate: '',
@@ -141,7 +142,7 @@ export function useWorksiteForm(
     const payload = {
       code: values.code.trim(),
       name: values.name.trim(),
-      client: values.client.trim() || null,
+      clientId: values.clientId || null,
       address: values.address.trim() || null,
       plannedStartDate: values.plannedStartDate || null,
       plannedEndDate: values.plannedEndDate || null,
@@ -185,6 +186,7 @@ export function useWorksiteForm(
 const KNOWN_FIELD_ERRORS: Record<string, WorksiteFieldErrorKey> = {
   'form.errors.worksiteCodeTaken': 'worksiteCodeTaken',
   'form.errors.endBeforeStart': 'endBeforeStart',
+  'form.errors.unknownClient': 'unknownClient',
 };
 
 /**

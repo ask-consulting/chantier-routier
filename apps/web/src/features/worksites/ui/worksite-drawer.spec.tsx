@@ -4,7 +4,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorksiteStatus, type IWorksite } from '@chantia/shared';
 import { apiClient } from '@/shared/api/http-client';
 import { renderWithProviders } from '@/test/render';
-import { WorksiteDrawer } from './worksite-drawer';
+import { WorksiteDrawer, type ClientPickerProps } from './worksite-drawer';
+
+/** Stands in for the clients feature's picker, which the route hands in. */
+function StubClientPicker({ label, value, onChange, error, current }: ClientPickerProps) {
+  return (
+    <label>
+      {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">—</option>
+        {current && <option value={current.id}>{current.displayName}</option>}
+        <option value="client-2">STEG</option>
+      </select>
+      {error && <span>{error}</span>}
+    </label>
+  );
+}
 
 /**
  * One drawer, two doors — create when `worksite` is `null`, edit otherwise.
@@ -28,7 +43,8 @@ const existing: IWorksite = {
   organizationId: 'org-1',
   code: 'RN7-2026',
   name: 'Réfection RN7',
-  client: 'Ville de Casablanca',
+  clientId: 'client-1',
+  client: { id: 'client-1', displayName: 'Municipalité de Sousse' },
   address: null,
   latitude: null,
   longitude: null,
@@ -106,7 +122,7 @@ describe('WorksiteDrawer, creating', () => {
       expect(JSON.parse(request?.data as string)).toEqual({
         code: 'RN7-2026',
         name: 'Réfection RN7',
-        client: null,
+        clientId: null,
         address: null,
         plannedStartDate: null,
         plannedEndDate: null,
@@ -158,7 +174,6 @@ describe('WorksiteDrawer, editing', () => {
     renderWithProviders(<WorksiteDrawer open worksite={existing} onClose={() => {}} />);
 
     expect((screen.getByLabelText('Code') as HTMLInputElement).value).toBe('RN7-2026');
-    expect((screen.getByLabelText('Client') as HTMLInputElement).value).toBe('Ville de Casablanca');
     expect((screen.getByLabelText('Début prévu') as HTMLInputElement).value).toBe('2026-09-01');
     expect((screen.getByLabelText('Fin prévue') as HTMLInputElement).value).toBe('2026-12-15');
     expect((screen.getByLabelText('Statut') as HTMLSelectElement).value).toBe(
@@ -208,5 +223,57 @@ describe('WorksiteDrawer, editing', () => {
     await waitFor(() => {
       expect(JSON.parse(mock.history.patch[0]?.data as string)).not.toHaveProperty('totalBudget');
     });
+  });
+});
+
+describe('WorksiteDrawer, the client', () => {
+  it('offers no client field when no picker is handed in', () => {
+    renderWithProviders(<WorksiteDrawer open onClose={() => {}} />);
+
+    expect(screen.queryByLabelText('Client')).toBeNull();
+  });
+
+  it('prefills the picker with the worksite’s client, and sends the one chosen', async () => {
+    renderWithProviders(
+      <WorksiteDrawer open worksite={existing} onClose={() => {}} ClientPicker={StubClientPicker} />,
+    );
+
+    const picker = screen.getByLabelText('Client') as HTMLSelectElement;
+    expect(picker.value).toBe('client-1');
+
+    fireEvent.change(picker, { target: { value: 'client-2' } });
+    fireEvent.click(save());
+
+    await waitFor(() => {
+      expect(JSON.parse(mock.history.patch[0]?.data as string).clientId).toBe('client-2');
+    });
+  });
+
+  it('sends null when the client is removed', async () => {
+    renderWithProviders(
+      <WorksiteDrawer open worksite={existing} onClose={() => {}} ClientPicker={StubClientPicker} />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Client'), { target: { value: '' } });
+    fireEvent.click(save());
+
+    await waitFor(() => {
+      expect(JSON.parse(mock.history.patch[0]?.data as string).clientId).toBeNull();
+    });
+  });
+
+  it('puts an unknown client under the picker', async () => {
+    mockReply(400, {
+      message: 'Client client-2 does not exist',
+      errors: [{ field: 'clientId', code: 'form.errors.unknownClient', message: '…' }],
+    });
+    renderWithProviders(
+      <WorksiteDrawer open worksite={existing} onClose={() => {}} ClientPicker={StubClientPicker} />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Client'), { target: { value: 'client-2' } });
+    fireEvent.click(save());
+
+    expect(await screen.findByText('Ce client n’existe pas ou plus')).toBeTruthy();
   });
 });
