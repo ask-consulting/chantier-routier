@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
   MinLength,
@@ -33,11 +34,13 @@ export class UpdateWorksiteDto implements IUpdateWorksite {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ nullable: true })
-  @IsString()
-  @MaxLength(200)
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'A client of the same organization. `null` detaches the worksite from it.',
+  })
+  @IsUUID()
   @IsOptional()
-  client?: string | null;
+  clientId?: string | null;
 
   @ApiPropertyOptional({ nullable: true })
   @IsString()

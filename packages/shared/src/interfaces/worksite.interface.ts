@@ -1,4 +1,5 @@
 import { WorksiteStatus } from '../enums/worksite.enums';
+import type { IClientSummary } from './client.interface';
 
 /** Transport representation of a worksite (API response, web/mobile cache). */
 export interface IWorksite {
@@ -6,7 +7,9 @@ export interface IWorksite {
   organizationId: string;
   code: string;
   name: string;
-  client: string | null;
+  clientId: string | null;
+  /** Enough of the client to name it in a list — the full file is `GET /clients/:id`. */
+  client: IClientSummary | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -31,7 +34,8 @@ export interface IWorksite {
 export interface ICreateWorksite {
   code: string;
   name: string;
-  client?: string | null;
+  /** A client of the same organization; `null` detaches it. */
+  clientId?: string | null;
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -48,7 +52,8 @@ export interface ICreateWorksite {
 export interface IUpdateWorksite {
   code?: string;
   name?: string;
-  client?: string | null;
+  /** A client of the same organization; `null` detaches it. */
+  clientId?: string | null;
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;

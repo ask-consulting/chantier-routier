@@ -1,11 +1,37 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { useTranslations } from 'next-intl';
-import { Permission, type IWorksite, type WorksiteStatus } from '@chantia/shared';
+import {
+  Permission,
+  type IClientSummary,
+  type IWorksite,
+  type WorksiteStatus,
+} from '@chantia/shared';
 import { Alert, Button, Drawer, Field, Select } from '@/shared/ui';
 import { usePermission } from '@/features/auth';
 import { WORKSITE_STATUS } from '../model/worksite-display';
 import { useWorksiteForm } from '../model/use-worksite-form';
+
+/**
+ * What this drawer needs from a client picker — and all it knows of one.
+ *
+ * The picker belongs to the clients feature, and features do not import each
+ * other: the `/worksites` route hands it in. Declared here, by the consumer,
+ * so the clients feature satisfies it structurally without either importing
+ * the other.
+ */
+export interface ClientPickerProps {
+  label: string;
+  /** A client id, or `''` for none. */
+  value: string;
+  onChange: (clientId: string) => void;
+  error?: string;
+  /** The worksite's current client, to show even before the list loads. */
+  current?: IClientSummary | null;
+}
+
+export type ClientPicker = ComponentType<ClientPickerProps>;
 
 /**
  * The form that creates a worksite, or edits one — one drawer, two doors,
@@ -21,8 +47,11 @@ export function WorksiteDrawer({
   open,
   worksite = null,
   onClose,
+  ClientPicker,
 }: {
   open: boolean;
+  /** Absent: no client field — a screen that cannot pick one does not offer to. */
+  ClientPicker?: ClientPicker;
   /** `null` creates; anything else edits that worksite. */
   worksite?: IWorksite | null;
   onClose: () => void;
@@ -98,11 +127,15 @@ export function WorksiteDrawer({
           />
         </div>
 
-        <Field
-          label={t('client')}
-          value={form.values.client}
-          onChange={(event) => form.setValue('client', event.target.value)}
-        />
+        {ClientPicker && (
+          <ClientPicker
+            label={t('client')}
+            value={form.values.clientId}
+            current={worksite?.client ?? null}
+            error={form.fieldErrors.clientId && tFieldError(form.fieldErrors.clientId)}
+            onChange={(clientId) => form.setValue('clientId', clientId)}
+          />
+        )}
 
         <Field
           label={t('address')}

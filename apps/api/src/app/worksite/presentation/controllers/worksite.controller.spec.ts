@@ -26,7 +26,7 @@ function aWorksite(): Worksite {
     'org-1',
     'CH-001',
     'Rocade nord',
-    'Ville de Casablanca',
+    null,
     null,
     null,
     null,

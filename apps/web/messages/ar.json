@@ -5,6 +5,7 @@
   },
   "nav": {
     "worksites": "الأوراش",
+    "clients": "العملاء",
     "workers": "العمال",
     "timesheets": "سجلات الحضور",
     "expenses": "المصاريف",
@@ -82,11 +83,82 @@
       "unknown": "تعذّر حفظ الورش."
     }
   },
+  "clients": {
+    "title": "العملاء",
+    "create": "عميل جديد",
+    "createTitle": "إنشاء بطاقة عميل",
+    "editTitle": "تعديل بطاقة العميل",
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "identity": "الهوية",
+    "type": "النوع",
+    "lastName": "اللقب",
+    "firstName": "الاسم",
+    "legalName": "الاسم التجاري",
+    "legalNameHint": "شركة، بلدية، وزارة — كما يجب أن يظهر على الفاتورة.",
+    "displayNamePreview": "سيظهر باسم «{name}» في القوائم.",
+    "billingAddress": "عنوان الفوترة",
+    "line1": "العنوان",
+    "line2": "تكملة العنوان",
+    "postalCode": "الترقيم البريدي",
+    "city": "المدينة",
+    "country": "البلد",
+    "contacts": "جهات الاتصال",
+    "noContact": "لا توجد جهة اتصال حالياً.",
+    "addContact": "إضافة جهة اتصال",
+    "contactN": "جهة اتصال {n}",
+    "removeContact": "حذف جهة الاتصال",
+    "removeContactFor": "حذف {name}",
+    "contactLastName": "اللقب",
+    "contactFirstName": "الاسم",
+    "position": "الوظيفة",
+    "positionHint": "مدير تقني، كاتب عام…",
+    "mobilePhone": "الجوّال",
+    "landlinePhone": "الهاتف القار",
+    "email": "البريد الإلكتروني",
+    "primaryContact": "جهة الاتصال الرئيسية",
+    "primaryContactHint": "أول من يُتّصل به. للتغيير، حدّد جهة اتصال أخرى.",
+    "name": "الاسم",
+    "actions": "إجراءات",
+    "noCity": "المدينة غير محددة",
+    "edit": "تعديل",
+    "editFor": "تعديل {name}",
+    "delete": "حذف",
+    "deleteFor": "حذف {name}",
+    "deleteTitle": "حذف هذا العميل؟",
+    "deleteDescription": "يختفي «{name}» من كل القوائم مع جهات اتصاله. غير ممكن ما دام هناك ورش جارٍ مرتبط به.",
+    "deleteConfirm": "حذف العميل",
+    "deleteDismiss": "إلغاء",
+    "deleteInUse": "لا تزال هناك أوراش مرتبطة بهذا العميل. غيّر عميلها أو احذفها أولاً.",
+    "actionFailed": "فشل الإجراء",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "الاسم أو المدينة",
+    "typeFilterLabel": "النوع",
+    "allTypes": "الكل",
+    "clearFilters": "مسح عوامل التصفية",
+    "loadError": "تعذّر تحميل العملاء: {reason}",
+    "unknownError": "خطأ غير معروف",
+    "emptyTitle": "لا يوجد عملاء",
+    "emptyDescription": "أنشئ أول بطاقة لربط أوراشك بها.",
+    "noResultTitle": "لا يوجد عميل مطابق",
+    "noResultDescription": "جرّب اسماً أو مدينة أخرى، أو غيّر النوع.",
+    "noClientOption": "بدون عميل",
+    "noClientYet": "لا توجد بطاقة عميل حالياً — أنشئها من شاشة العملاء.",
+    "error": {
+      "invalidInput": "تحقّق من الحقول: أحدها غير مقبول.",
+      "unknown": "تعذّر حفظ العميل."
+    }
+  },
   "worksiteStatus": {
     "upcoming": "قادم",
     "in_progress": "قيد الإنجاز",
     "completed": "منتهٍ",
     "suspended": "موقوف"
+  },
+  "clientType": {
+    "individual": "شخص طبيعي",
+    "legal_entity": "شخص معنوي"
   },
   "userRole": {
     "admin": "مدير",
@@ -108,7 +180,8 @@
         "contextual": "يجب ألا تحتوي كلمة المرور على اسمك أو بريدك الإلكتروني أو اسم مؤسستك"
       },
       "worksiteCodeTaken": "هذا الرمز مستخدم لورش آخر",
-      "endBeforeStart": "لا يمكن أن يسبق تاريخ الانتهاء تاريخ البدء"
+      "endBeforeStart": "لا يمكن أن يسبق تاريخ الانتهاء تاريخ البدء",
+      "unknownClient": "هذا العميل غير موجود"
     }
   },
   "login": {

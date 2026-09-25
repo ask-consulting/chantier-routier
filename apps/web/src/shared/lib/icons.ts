@@ -25,6 +25,10 @@ export {
   Wallet as BudgetIcon,
   Building2 as OrganizationIcon,
   UserCog as AccountIcon,
+  Handshake as ClientIcon,
+  Smartphone as MobilePhoneIcon,
+  Phone as LandlinePhoneIcon,
+  Mail as EmailIcon,
 
   // --- Actions --------------------------------------------------------------
   Plus as CreateIcon,

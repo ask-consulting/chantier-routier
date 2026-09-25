@@ -21,6 +21,7 @@ function row(overrides: Record<string, unknown> = {}) {
     organizationId: 'org-1',
     code: 'RN7-2026',
     name: 'Réfection RN7',
+    clientId: null,
     client: null,
     address: null,
     latitude: null,
@@ -45,11 +46,20 @@ function setup(rows: unknown[] = [], upsertError?: unknown) {
     return rows[0] ?? row();
   });
 
+  const clientCount = vi.fn(async () => 1);
   const prisma = {
     worksite: { findMany, count, findUnique, upsert },
+    client: { count: clientCount },
   } as unknown as TenantPrismaClient;
 
-  return { findMany, count, findUnique, upsert, repository: new WorksiteRepository(prisma) };
+  return {
+    findMany,
+    count,
+    findUnique,
+    upsert,
+    clientCount,
+    repository: new WorksiteRepository(prisma),
+  };
 }
 
 function aWorksite(overrides: Partial<Parameters<typeof Worksite.create>[0]> = {}): Worksite {
@@ -91,7 +101,50 @@ describe('WorksiteRepository — reads', () => {
     const worksite = await repository.findById('worksite-1');
 
     expect(worksite?.totalBudget).toBe(250_000);
-    expect(findUnique).toHaveBeenCalledWith({ where: { id: 'worksite-1', deletedAt: null } });
+    expect(findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'worksite-1', deletedAt: null } }),
+    );
+  });
+});
+
+describe('WorksiteRepository — the client', () => {
+  it('searches the client’s name alongside the worksite’s own fields', async () => {
+    const { repository, findMany } = setup([row()]);
+
+    await repository.search({ filters: { search: 'sousse' } });
+
+    const { where } = findMany.mock.calls[0][0] as { where: { OR: unknown[] } };
+    expect(where.OR).toContainEqual({
+      client: { displayName: { contains: 'sousse', mode: 'insensitive' } },
+    });
+    expect(JSON.stringify(where.OR)).toContain('"code"');
+  });
+
+  it('sorts by client through the relation', async () => {
+    const { repository, findMany } = setup([row()]);
+
+    await repository.search({ sort: { field: 'client', order: 'desc' } });
+
+    expect((findMany.mock.calls[0][0] as { orderBy: unknown }).orderBy).toEqual({
+      client: { displayName: 'desc' },
+    });
+  });
+
+  it('reads the client’s name with the worksite', async () => {
+    const { repository } = setup([
+      row({ clientId: 'client-1', client: { id: 'client-1', displayName: 'STEG' } }),
+    ]);
+
+    const worksite = await repository.findById('worksite-1');
+
+    expect(worksite?.client).toEqual({ id: 'client-1', displayName: 'STEG' });
+  });
+
+  it('asks the tenant-filtered clients table, excluding deleted ones', async () => {
+    const { repository, clientCount } = setup();
+
+    expect(await repository.isAssignableClient('client-1')).toBe(true);
+    expect(clientCount).toHaveBeenCalledWith({ where: { id: 'client-1', deletedAt: null } });
   });
 });
 

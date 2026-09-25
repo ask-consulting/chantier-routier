@@ -9,7 +9,7 @@ import { Can } from '@/features/auth';
 import { useWorksites } from '../api/worksite.queries';
 import { WORKSITE_STATUS } from '../model/worksite-display';
 import { useWorksiteFilters, type StatusFilter } from '../model/use-worksite-filters';
-import { WorksiteDrawer } from './worksite-drawer';
+import { WorksiteDrawer, type ClientPicker } from './worksite-drawer';
 import { WorksiteList } from './worksite-table';
 
 /**
@@ -17,9 +17,10 @@ import { WorksiteList } from './worksite-table';
  * remote list can be in, plus "empty *because of a filter*", which needs a
  * different sentence and a different way out than "nothing was ever created".
  *
- * The route file in `app/` only mounts it.
+ * The route file in `app/` only mounts it — and hands in the client picker,
+ * which belongs to another feature.
  */
-export function WorksiteListPage() {
+export function WorksiteListPage({ ClientPicker }: { ClientPicker?: ClientPicker } = {}) {
   const t = useTranslations('worksites');
   const tStatus = useTranslations('worksiteStatus');
   const filters = useWorksiteFilters();
@@ -64,6 +65,7 @@ export function WorksiteListPage() {
         open={drawerOpen}
         worksite={editing}
         onClose={closeDrawer}
+        ClientPicker={ClientPicker}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">

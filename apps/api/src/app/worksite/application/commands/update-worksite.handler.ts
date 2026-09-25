@@ -2,7 +2,10 @@ import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { Worksite } from '../../domain/entities/worksite.entity';
-import { InvalidWorksiteScheduleException } from '../../domain/exceptions/worksite.exceptions';
+import {
+  InvalidWorksiteScheduleException,
+  UnknownWorksiteClientException,
+} from '../../domain/exceptions/worksite.exceptions';
 import {
   WORKSITE_REPOSITORY_PORT,
   WorksiteRepositoryPort,
@@ -40,6 +43,15 @@ export class UpdateWorksiteHandler implements ICommandHandler<UpdateWorksiteComm
     });
     if (!changed.hasConsistentSchedule()) {
       throw new InvalidWorksiteScheduleException();
+    }
+    // Only a *change* of client is checked — a form resends the current one
+    // on every save, and that one was checked when it was set.
+    if (
+      data.clientId &&
+      data.clientId !== worksite.clientId &&
+      !(await this.repository.isAssignableClient(data.clientId))
+    ) {
+      throw new UnknownWorksiteClientException(data.clientId);
     }
 
     return this.repository.save(changed);

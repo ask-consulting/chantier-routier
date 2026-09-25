@@ -35,3 +35,18 @@ export class InvalidWorksiteScheduleException extends DomainException {
     ]);
   }
 }
+
+/** The client named is not one this worksite may point at. */
+export class UnknownWorksiteClientException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor(clientId: string) {
+    super(`Client ${clientId} does not exist`, [
+      {
+        field: 'clientId',
+        code: 'form.errors.unknownClient',
+        message: `Client ${clientId} does not exist`,
+      },
+    ]);
+  }
+}

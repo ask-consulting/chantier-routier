@@ -21,6 +21,10 @@ export enum Permission {
   WORKSITE_READ = 'worksite:read',
   WORKSITE_MANAGE = 'worksite:manage',
 
+  /** Clients and their contacts — who the worksites are built for. */
+  CLIENT_READ = 'client:read',
+  CLIENT_MANAGE = 'client:manage',
+
   WORKER_READ = 'worker:read',
   WORKER_MANAGE = 'worker:manage',
 

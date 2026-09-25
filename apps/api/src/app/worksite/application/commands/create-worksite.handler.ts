@@ -2,7 +2,10 @@ import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'node:crypto';
 import { Worksite } from '../../domain/entities/worksite.entity';
-import { InvalidWorksiteScheduleException } from '../../domain/exceptions/worksite.exceptions';
+import {
+  InvalidWorksiteScheduleException,
+  UnknownWorksiteClientException,
+} from '../../domain/exceptions/worksite.exceptions';
 import {
   WORKSITE_REPOSITORY_PORT,
   WorksiteRepositoryPort,
@@ -24,7 +27,7 @@ export class CreateWorksiteHandler implements ICommandHandler<CreateWorksiteComm
       organizationId,
       code: data.code,
       name: data.name,
-      client: data.client,
+      clientId: data.clientId,
       address: data.address,
       latitude: data.latitude,
       longitude: data.longitude,
@@ -36,6 +39,9 @@ export class CreateWorksiteHandler implements ICommandHandler<CreateWorksiteComm
 
     if (!worksite.hasConsistentSchedule()) {
       throw new InvalidWorksiteScheduleException();
+    }
+    if (worksite.clientId && !(await this.repository.isAssignableClient(worksite.clientId))) {
+      throw new UnknownWorksiteClientException(worksite.clientId);
     }
 
     return this.repository.save(worksite);

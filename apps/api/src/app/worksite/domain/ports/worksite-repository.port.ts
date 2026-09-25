@@ -26,6 +26,12 @@ export interface WorksiteRepositoryPort {
   findById(id: string): Promise<Worksite | null>;
   /** Throws `WorksiteCodeTakenException` when a current worksite holds the code. */
   save(worksite: Worksite): Promise<Worksite>;
+  /**
+   * Whether a worksite may point at this client: one of the caller's own
+   * organization, not soft-deleted. The foreign key alone would accept
+   * another tenant's client, or one nobody can see any more.
+   */
+  isAssignableClient(clientId: string): Promise<boolean>;
   /** Aggregation source for cost computation (timesheets joined with worker rates + expenses). */
   findCostInputs(worksiteId: string): Promise<WorksiteCostInputs>;
 }

@@ -1125,6 +1125,12 @@ Le module chantier se crée, se modifie et se supprime — la suppression pose
 depuis le chantier. Il manque encore le budget par poste (terrassement, enrobé,
 signalisation) que le périmètre demande.
 
+Le module client existe — personne physique ou morale, contacts (un principal),
+adresse de facturation structurée (Tunisie par défaut), suppression logique refusée
+tant qu'un chantier courant y est rattaché. Le chantier pointe vers un client au lieu
+de porter son nom en texte libre ; la migration a repris les noms existants comme
+clients « personne morale ».
+
 ---
 
 ## Annexe — Ce qui est construit
