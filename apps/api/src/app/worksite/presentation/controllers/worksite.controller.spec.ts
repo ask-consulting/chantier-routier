@@ -112,3 +112,19 @@ describe('WorksiteController — sorting is a read of its own', () => {
     await expect(build().findAll(UserRole.FOREMAN, dto)).resolves.toBeDefined();
   });
 });
+
+describe('WorksiteController — writes', () => {
+  it('applies the same budget rule to the update response', async () => {
+    const controller = build();
+
+    const foreman = await controller.update(UserRole.FOREMAN, 'worksite-1', { name: 'X' });
+    const manager = await controller.update(UserRole.SITE_MANAGER, 'worksite-1', { name: 'X' });
+
+    expect(onTheWire(foreman)).not.toHaveProperty('totalBudget');
+    expect(manager.totalBudget).toBe(BUDGET);
+  });
+
+  it('answers nothing on delete', async () => {
+    await expect(build().remove('worksite-1')).resolves.toBeUndefined();
+  });
+});

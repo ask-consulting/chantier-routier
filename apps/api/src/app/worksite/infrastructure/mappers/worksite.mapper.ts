@@ -17,6 +17,7 @@ export class WorksiteMapper {
       plannedEndDate: row.plannedEndDate,
       status: row.status as WorksiteStatus,
       totalBudget: row.totalBudget ? row.totalBudget.toNumber() : null,
+      deletedAt: row.deletedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -36,6 +37,7 @@ export class WorksiteMapper {
       plannedEndDate: worksite.plannedEndDate,
       status: worksite.status,
       totalBudget: worksite.totalBudget,
+      deletedAt: worksite.deletedAt,
     };
   }
 }
