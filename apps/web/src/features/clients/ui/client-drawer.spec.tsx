@@ -217,6 +217,50 @@ describe('ClientDrawer, contacts', () => {
   });
 });
 
+describe('ClientDrawer, every contact field', () => {
+  it('sends what was typed in each box, blanks as null', async () => {
+    renderWithProviders(<ClientDrawer open onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('Raison sociale'), { target: { value: 'STEG' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter un contact' }));
+
+    fireEvent.change(screen.getAllByLabelText('Nom')[0], { target: { value: 'Trabelsi' } });
+    fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Sami' } });
+    fireEvent.change(screen.getByLabelText('Fonction'), { target: { value: 'Chef de district' } });
+    fireEvent.change(screen.getByLabelText('Fixe'), { target: { value: '+216 71 000 000' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'sami@steg.com.tn' } });
+    fireEvent.change(screen.getByLabelText('Adresse'), { target: { value: 'Rue de Rome' } });
+    fireEvent.change(screen.getByLabelText('Complément d’adresse'), { target: { value: 'Bât. B' } });
+    fireEvent.change(screen.getByLabelText('Code postal'), { target: { value: '1000' } });
+    fireEvent.change(screen.getByLabelText('Ville'), { target: { value: 'Tunis' } });
+    fireEvent.change(screen.getByLabelText('Pays'), { target: { value: 'FR' } });
+
+    fireEvent.click(save());
+
+    await waitFor(() => {
+      expect(sent('post')).toMatchObject({
+        billingAddress: {
+          line1: 'Rue de Rome',
+          line2: 'Bât. B',
+          postalCode: '1000',
+          city: 'Tunis',
+          country: 'FR',
+        },
+        contacts: [
+          {
+            firstName: 'Sami',
+            lastName: 'Trabelsi',
+            position: 'Chef de district',
+            mobilePhone: null,
+            landlinePhone: '+216 71 000 000',
+            email: 'sami@steg.com.tn',
+            isPrimary: true,
+          },
+        ],
+      });
+    });
+  });
+});
+
 describe('ClientDrawer, saving', () => {
   it('closes on success', async () => {
     const onClose = vi.fn();
