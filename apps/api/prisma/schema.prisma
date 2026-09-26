@@ -439,3 +439,70 @@ model ClientContact {
   @@map("client_contacts")
   @@schema("public")
 }
+
+enum AcquisitionMethod {
+  cash_purchase
+  credit_purchase
+  leasing
+  long_term_rental
+  short_term_rental
+
+  @@map("acquisition_method")
+  @@schema("public")
+}
+
+enum EquipmentStatus {
+  in_service
+  under_maintenance
+  retired
+
+  @@map("equipment_status")
+  @@schema("public")
+}
+
+/// A machine of the organization's fleet — owned, leased or hired. Its type
+/// comes from the fixed catalog in `@chantia/shared` (`EQUIPMENT_TYPES`), stored
+/// as a code: the catalog is code, not a table, so there is no foreign key.
+/// Money is `Decimal(14, 3)`: the dinar counts millimes.
+model Equipment {
+  id                 String            @id(map: "pk_equipment") @default(uuid()) @db.Uuid
+  /// Soft reference to `identity.organizations.id` — no foreign key by design.
+  organizationId     String            @map("organization_id") @db.Uuid
+  typeCode           String            @map("type_code")
+  designation        String
+  fleetNumber        String?           @map("fleet_number")
+  brand              String?
+  model              String?
+  serialNumber       String?           @map("serial_number")
+  registrationNumber String?           @map("registration_number")
+  manufactureYear    Int?              @map("manufacture_year")
+  status             EquipmentStatus   @default(in_service)
+  acquisitionMethod  AcquisitionMethod @map("acquisition_method")
+  acquisitionDate    DateTime          @map("acquisition_date") @db.Date
+  supplier           String?
+  /// Owned: price excluding tax, residual value, straight-line lifetime.
+  purchasePrice      Decimal?          @map("purchase_price") @db.Decimal(14, 3)
+  residualValue      Decimal?          @map("residual_value") @db.Decimal(14, 3)
+  usefulLifeMonths   Int?              @map("useful_life_months")
+  /// Leasing and long-term rental.
+  monthlyPayment     Decimal?          @map("monthly_payment") @db.Decimal(14, 3)
+  /// Leasing: the price of keeping it at the end of the contract.
+  buyoutValue        Decimal?          @map("buyout_value") @db.Decimal(14, 3)
+  /// Short-term rental.
+  dailyRate          Decimal?          @map("daily_rate") @db.Decimal(14, 3)
+  contractEndDate    DateTime?         @map("contract_end_date") @db.Date
+  disposalDate       DateTime?         @map("disposal_date") @db.Date
+  notes              String?
+  /// Set instead of a real delete, like workers, worksites and clients:
+  /// assignments to worksites will point here.
+  deletedAt          DateTime?         @map("deleted_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  /// Partial in the database — `WHERE deleted_at IS NULL` — like the worksite
+  /// code: a deleted machine frees its fleet number. Nulls never collide.
+  @@unique([organizationId, fleetNumber], map: "uq_equipment_organization_id_fleet_number")
+  @@index([organizationId], map: "ix_equipment_organization_id")
+  @@map("equipment")
+  @@schema("public")
+}

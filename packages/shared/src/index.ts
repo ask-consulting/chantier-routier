@@ -1,6 +1,7 @@
 // Enums
 export * from './enums/worksite.enums';
 export * from './enums/client.enums';
+export * from './enums/equipment.enums';
 export * from './enums/user.enums';
 export * from './enums/permission.enums';
 export * from './enums/locale.enums';
@@ -14,6 +15,7 @@ export * from './security/password-policy';
 // Interfaces (shared transport contracts API <-> web <-> mobile)
 export * from './interfaces/worksite.interface';
 export * from './interfaces/client.interface';
+export * from './interfaces/equipment.interface';
 export * from './interfaces/organization.interface';
 export * from './interfaces/user.interface';
 export * from './interfaces/worker.interface';
@@ -25,3 +27,7 @@ export * from './costs/worksite-costs';
 
 // Client naming and contact rules — the API stores what the form previews
 export * from './clients/client-rules';
+
+// Equipment: the fixed catalog, and what a machine costs per day
+export * from './equipment/equipment-catalog';
+export * from './equipment/equipment-costs';

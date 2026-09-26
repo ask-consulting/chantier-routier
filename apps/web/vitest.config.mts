@@ -60,9 +60,9 @@ export default defineConfig({
         // the tests as covered-by-tests is how a number stops meaning anything.
         'src/test/**',
       ],
-      // 67 → 72 : l'écran des clients — fiche, contacts, adresse — et le sélecteur de
-      // client du chantier, passé par la route.
-      thresholds: { statements: 72, branches: 75, functions: 72, lines: 73 },
+      // 72 → 77 (branches 75 → 80, le plafond) : l'écran du parc matériel, et `Can`
+      // enfin testé contre la vraie matrice au lieu d'être simulé partout.
+      thresholds: { statements: 77, branches: 80, functions: 77, lines: 78 },
     },
   },
 });

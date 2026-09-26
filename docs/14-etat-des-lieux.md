@@ -1131,6 +1131,12 @@ tant qu'un chantier courant y est rattaché. Le chantier pointe vers un client a
 de porter son nom en texte libre ; la migration a repris les noms existants comme
 clients « personne morale ».
 
+Le parc matériel existe — un catalogue fixe d'environ 70 types en 11 catégories
+(dans `@chantia/shared`, durées d'amortissement par défaut selon le décret
+2008-492), et les engins de chaque organisation avec leur mode d'acquisition (achat,
+crédit, leasing, location longue ou courte durée) et leur coût par jour calendaire.
+Reste à les **affecter aux chantiers** pour que ce coût entre dans celui du chantier.
+
 ---
 
 ## Annexe — Ce qui est construit

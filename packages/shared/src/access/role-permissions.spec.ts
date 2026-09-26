@@ -59,6 +59,15 @@ describe('client permissions', () => {
   });
 });
 
+describe('equipment permissions', () => {
+  it('lets the office manage the fleet, and the foreman only see it', () => {
+    expect(roleHasPermission(UserRole.SITE_MANAGER, Permission.EQUIPMENT_MANAGE)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.EQUIPMENT_READ)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.EQUIPMENT_MANAGE)).toBe(false);
+    expect(roleHasPermission(UserRole.WORKER, Permission.EQUIPMENT_READ)).toBe(false);
+  });
+});
+
 describe('roleHasEveryPermission', () => {
   it('requires all of the listed permissions', () => {
     expect(

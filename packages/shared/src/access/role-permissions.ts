@@ -25,6 +25,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.WORKSITE_MANAGE,
     Permission.CLIENT_READ,
     Permission.CLIENT_MANAGE,
+    Permission.EQUIPMENT_READ,
+    Permission.EQUIPMENT_MANAGE,
     Permission.WORKER_READ,
     Permission.WORKER_MANAGE,
     Permission.TIMESHEET_READ,
@@ -46,6 +48,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     // The client's contacts, not its file: who to call when the site needs
     // the town hall is a field question.
     Permission.CLIENT_READ,
+    // Which machines exist — not what they cost: money stays behind budget:read.
+    Permission.EQUIPMENT_READ,
     Permission.WORKER_READ,
     Permission.TIMESHEET_READ,
     Permission.TIMESHEET_RECORD,
