@@ -1,13 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { EquipmentCategory, EquipmentStatus } from '@chantia/shared';
+import type { EquipmentStatus } from '@chantia/shared';
 import type { EquipmentListParams } from '../api/equipment.api';
 
 /** How long the list waits after the last keystroke before asking the server. */
 export const SEARCH_DEBOUNCE_MS = 300;
 
-export type CategoryFilter = EquipmentCategory | 'all';
+/** A category code of the catalog, or every one. */
+export type CategoryFilter = string;
 export type StatusFilter = EquipmentStatus | 'all';
 
 /** The filter state of the fleet screen — same shape as the other lists'. */

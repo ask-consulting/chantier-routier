@@ -2,16 +2,54 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { Permission, type IEquipment } from '@chantia/shared';
-import { Badge, Card, CardBody, TD, TH, THead, TRow, Table } from '@/shared/ui';
+import { Badge, Button, Card, CardBody, TD, TH, THead, TRow, Table } from '@/shared/ui';
+import { CalendarIcon } from '@/shared/lib/icons';
 import { formatAmount, formatDate } from '@/shared/lib/format';
 import type { Locale } from '@/shared/i18n/config';
 import { useEveryPermission, usePermission } from '@/features/auth';
-import { EQUIPMENT_STATUS_TONE } from '../model/equipment-display';
+import { useEquipmentCatalog } from '../api/equipment.queries';
+import { EQUIPMENT_STATUS_TONE, findType, labelOf } from '../model/equipment-display';
 import { EquipmentActions } from './equipment-actions';
 
 interface RowsProps {
   equipment: IEquipment[];
   onEdit: (equipment: IEquipment) => void;
+  /** Opens the machine's planning — readable by anyone who sees the fleet. */
+  onPlan?: (equipment: IEquipment) => void;
+}
+
+/** The type's label from the catalog; its code until the catalog arrives. */
+function useTypeLabel(): (code: string) => string {
+  const catalog = useEquipmentCatalog();
+  const locale = useLocale();
+  return (code) => {
+    const type = findType(catalog.data, code);
+    return type ? labelOf(type, locale) : code;
+  };
+}
+
+function PlanButton({
+  machine,
+  onPlan,
+  compact = false,
+}: {
+  machine: IEquipment;
+  onPlan: (equipment: IEquipment) => void;
+  compact?: boolean;
+}) {
+  const t = useTranslations('equipment');
+  return (
+    <Button
+      variant="ghost"
+      size={compact ? 'sm' : 'icon'}
+      onClick={() => onPlan(machine)}
+      title={t('planning')}
+      aria-label={compact ? undefined : t('planningFor', { name: machine.designation })}
+    >
+      <CalendarIcon className="size-4 shrink-0" aria-hidden />
+      {compact && <span>{t('planning')}</span>}
+    </Button>
+  );
 }
 
 /**
@@ -21,16 +59,17 @@ interface RowsProps {
  * the end of depreciation, a whole column, like a worksite's budget; the API
  * does not send the figures either. `equipment:manage` with `budget:manage` —
  * the actions, the same pair the API asks for, since a machine is written with
- * its price.
+ * its price. The planning opens for anyone who sees the fleet: a foreman
+ * needs to know where a machine is, not what it costs.
  */
-export function EquipmentList({ equipment, onEdit }: RowsProps) {
+export function EquipmentList(props: RowsProps) {
   return (
     <>
       <div className="md:hidden">
-        <EquipmentCards equipment={equipment} onEdit={onEdit} />
+        <EquipmentCards {...props} />
       </div>
       <div className="hidden md:block">
-        <EquipmentTable equipment={equipment} onEdit={onEdit} />
+        <EquipmentTable {...props} />
       </div>
     </>
   );
@@ -43,9 +82,9 @@ function useRowPermissions() {
   };
 }
 
-function EquipmentTable({ equipment, onEdit }: RowsProps) {
+function EquipmentTable({ equipment, onEdit, onPlan }: RowsProps) {
   const t = useTranslations('equipment');
-  const tType = useTranslations('equipmentType');
+  const tType = useTypeLabel();
   const tStatus = useTranslations('equipmentStatus');
   const tMethod = useTranslations('acquisitionMethod');
   const locale = useLocale() as Locale;
@@ -62,11 +101,9 @@ function EquipmentTable({ equipment, onEdit }: RowsProps) {
           <TH>{t('status')}</TH>
           {showsMoney && <TH numeric>{t('dailyCost')}</TH>}
           {showsMoney && <TH>{t('depreciationEnd')}</TH>}
-          {canManage && (
-            <TH>
-              <span className="sr-only">{t('actions')}</span>
-            </TH>
-          )}
+          <TH>
+            <span className="sr-only">{t('actions')}</span>
+          </TH>
         </tr>
       </THead>
       <tbody>
@@ -85,11 +122,14 @@ function EquipmentTable({ equipment, onEdit }: RowsProps) {
             {showsMoney && (
               <TD className="text-fg-muted">{formatDate(machine.depreciationEndDate, locale)}</TD>
             )}
-            {canManage && (
-              <TD>
-                <EquipmentActions equipment={machine} onEdit={() => onEdit(machine)} />
-              </TD>
-            )}
+            <TD>
+              <div className="flex items-start justify-end gap-1">
+                {onPlan && <PlanButton machine={machine} onPlan={onPlan} />}
+                {canManage && (
+                  <EquipmentActions equipment={machine} onEdit={() => onEdit(machine)} />
+                )}
+              </div>
+            </TD>
           </TRow>
         ))}
       </tbody>
@@ -97,9 +137,9 @@ function EquipmentTable({ equipment, onEdit }: RowsProps) {
   );
 }
 
-function EquipmentCards({ equipment, onEdit }: RowsProps) {
+function EquipmentCards({ equipment, onEdit, onPlan }: RowsProps) {
   const t = useTranslations('equipment');
-  const tType = useTranslations('equipmentType');
+  const tType = useTypeLabel();
   const tStatus = useTranslations('equipmentStatus');
   const locale = useLocale() as Locale;
   const { showsMoney, canManage } = useRowPermissions();
@@ -131,9 +171,12 @@ function EquipmentCards({ equipment, onEdit }: RowsProps) {
                 </p>
               )}
 
-              {canManage && (
-                <EquipmentActions equipment={machine} onEdit={() => onEdit(machine)} compact />
-              )}
+              <div className="flex flex-wrap items-start justify-end gap-1">
+                {onPlan && <PlanButton machine={machine} onPlan={onPlan} compact />}
+                {canManage && (
+                  <EquipmentActions equipment={machine} onEdit={() => onEdit(machine)} compact />
+                )}
+              </div>
             </CardBody>
           </Card>
         </li>

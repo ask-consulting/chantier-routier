@@ -1,21 +1,17 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  equipmentTypesOf,
-  type AcquisitionMethod,
-  type EquipmentCategory,
-  type EquipmentStatus,
-  type IEquipment,
+import type {
+  AcquisitionMethod,
+  EquipmentStatus,
+  IEquipment,
+  IEquipmentCategory,
 } from '@chantia/shared';
-import { Alert, Button, Drawer, Field, Select } from '@/shared/ui';
+import { Alert, Button, Drawer, Field, Select, Skeleton } from '@/shared/ui';
 import { formatAmount, formatDate } from '@/shared/lib/format';
 import type { Locale } from '@/shared/i18n/config';
-import {
-  ACQUISITION_METHODS,
-  EQUIPMENT_CATEGORIES,
-  EQUIPMENT_STATUSES,
-} from '../model/equipment-display';
+import { useEquipmentCatalog } from '../api/equipment.queries';
+import { ACQUISITION_METHODS, EQUIPMENT_STATUSES, labelOf } from '../model/equipment-display';
 import { useEquipmentForm, type EquipmentFormValues } from '../model/use-equipment-form';
 
 /**
@@ -31,6 +27,9 @@ import { useEquipmentForm, type EquipmentFormValues } from '../model/use-equipme
  * because seventy entries in one list is a list nobody reads. A machine the
  * catalog does not know goes under the category's "Autre", with its own
  * designation.
+ *
+ * **The form waits for the catalog.** Its category and default lifetime come
+ * from it; a form mounted before it arrives would start from the wrong ones.
  */
 export function EquipmentDrawer({
   open,
@@ -42,13 +41,47 @@ export function EquipmentDrawer({
   onClose: () => void;
 }) {
   const t = useTranslations('equipment');
-  const tCategory = useTranslations('equipmentCategory');
-  const tType = useTranslations('equipmentType');
+  const catalog = useEquipmentCatalog();
+
+  if (!catalog.data) {
+    return (
+      <Drawer open={open} title={t('createTitle')} closeLabel={t('close')} onClose={onClose}>
+        {catalog.isError ? (
+          <Alert tone="danger">{t('catalogError')}</Alert>
+        ) : (
+          <div className="flex flex-col gap-stack" aria-busy>
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
+          </div>
+        )}
+      </Drawer>
+    );
+  }
+
+  return (
+    <EquipmentForm open={open} equipment={equipment} onClose={onClose} catalog={catalog.data} />
+  );
+}
+
+function EquipmentForm({
+  open,
+  equipment,
+  onClose,
+  catalog,
+}: {
+  open: boolean;
+  equipment: IEquipment | null;
+  onClose: () => void;
+  catalog: readonly IEquipmentCategory[];
+}) {
+  const t = useTranslations('equipment');
   const tMethod = useTranslations('acquisitionMethod');
   const tStatus = useTranslations('equipmentStatus');
   const tFieldError = useTranslations('form.errors');
   const locale = useLocale() as Locale;
-  const form = useEquipmentForm(equipment);
+  const form = useEquipmentForm(equipment, catalog);
+  const types = catalog.find((category) => category.code === form.values.category)?.types ?? [];
 
   const close = (): void => {
     onClose();
@@ -108,23 +141,18 @@ export function EquipmentDrawer({
           <div className="grid gap-stack sm:grid-cols-2">
             <Select
               label={t('category')}
-              options={EQUIPMENT_CATEGORIES.map((category) => ({
-                value: category,
-                label: tCategory(category),
+              options={catalog.map((category) => ({
+                value: category.code,
+                label: labelOf(category, locale),
               }))}
               value={form.values.category}
-              onChange={(event) =>
-                form.setValue('category', event.target.value as EquipmentCategory)
-              }
+              onChange={(event) => form.setValue('category', event.target.value)}
             />
             <Select
               label={t('type')}
               options={[
                 { value: '', label: t('pickType') },
-                ...equipmentTypesOf(form.values.category).map((type) => ({
-                  value: type.code,
-                  label: tType(type.code),
-                })),
+                ...types.map((type) => ({ value: type.code, label: labelOf(type, locale) })),
               ]}
               value={form.values.typeCode}
               error={form.fieldErrors.typeCode && tFieldError(form.fieldErrors.typeCode)}

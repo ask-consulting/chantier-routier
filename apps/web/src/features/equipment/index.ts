@@ -4,3 +4,6 @@
  */
 
 export { EquipmentListPage } from './ui/equipment-list-page';
+
+// For the route, which hands in the worksites feature's picker.
+export type { WorksitePicker, WorksitePickerProps } from './ui/assignments-drawer';

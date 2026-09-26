@@ -3,17 +3,17 @@
 import { useCallback, useState } from 'react';
 import {
   AcquisitionMethod,
-  EquipmentCategory,
   EquipmentStatus,
   depreciationEndDate,
   equipmentDailyCost,
-  equipmentType,
   isOwned,
   type EquipmentCostInput,
   type IEquipment,
+  type IEquipmentCategory,
 } from '@chantia/shared';
 import { ApiError } from '@/shared/api/http-client';
 import { useCreateEquipment, useUpdateEquipment } from '../api/equipment.queries';
+import { findType } from './equipment-display';
 
 /** Why a machine could not be saved, as a key under `equipment.error.*`. */
 export type EquipmentErrorKey = 'invalidInput' | 'unknown';
@@ -28,7 +28,8 @@ export type EquipmentFieldErrorKey =
 
 /** Everything as the boxes hold it — strings, parsed at submission. Empty is "not set". */
 export interface EquipmentFormValues {
-  category: EquipmentCategory;
+  /** A category code of the catalog — a UI value, never sent. */
+  category: string;
   typeCode: string;
   designation: string;
   fleetNumber: string;
@@ -63,10 +64,13 @@ function text(value: string | number | null | undefined): string {
   return value === null || value === undefined ? '' : String(value);
 }
 
-function valuesOf(equipment: IEquipment | null): EquipmentFormValues {
+function valuesOf(
+  equipment: IEquipment | null,
+  catalog: readonly IEquipmentCategory[],
+): EquipmentFormValues {
   if (!equipment) {
     return {
-      category: EquipmentCategory.EARTHMOVING,
+      category: catalog[0]?.code ?? '',
       typeCode: '',
       designation: '',
       fleetNumber: '',
@@ -91,7 +95,7 @@ function valuesOf(equipment: IEquipment | null): EquipmentFormValues {
     };
   }
   return {
-    category: equipmentType(equipment.typeCode)?.category ?? EquipmentCategory.EARTHMOVING,
+    category: findType(catalog, equipment.typeCode)?.categoryCode ?? catalog[0]?.code ?? '',
     typeCode: equipment.typeCode,
     designation: equipment.designation,
     fleetNumber: text(equipment.fleetNumber),
@@ -137,14 +141,18 @@ function orNull(value: string): string | null {
  * this only saves a round trip to learn what the form could already see.
  *
  * **The lifetime follows the type until it is typed in.** Picking a
- * "compacteur tandem" fills 60 months; once the box is edited by hand, a
- * later change of type leaves it alone.
+ * "compacteur tandem" fills 60 months — the catalog's default, from the
+ * database; once the box is edited by hand, a later change of type leaves it
+ * alone. The catalog is loaded before this hook ever runs (the drawer waits).
  *
  * **The end of depreciation and today's cost are previewed** with the very
  * functions the API computes them with (`@chantia/shared`).
  */
-export function useEquipmentForm(equipment: IEquipment | null = null) {
-  const [values, setValues] = useState<EquipmentFormValues>(() => valuesOf(equipment));
+export function useEquipmentForm(
+  equipment: IEquipment | null,
+  catalog: readonly IEquipmentCategory[],
+) {
+  const [values, setValues] = useState<EquipmentFormValues>(() => valuesOf(equipment, catalog));
   const [lifetimeTouched, setLifetimeTouched] = useState(equipment !== null);
   const [error, setError] = useState<EquipmentErrorKey | null>(null);
   const [serverFieldErrors, setServerFieldErrors] = useState<FieldErrors>({});
@@ -162,7 +170,7 @@ export function useEquipmentForm(equipment: IEquipment | null = null) {
           next.typeCode = '';
         }
         if (field === 'typeCode' && !lifetimeTouched) {
-          next.usefulLifeMonths = text(equipmentType(String(value))?.defaultUsefulLifeMonths);
+          next.usefulLifeMonths = text(findType(catalog, String(value))?.defaultUsefulLifeMonths);
         }
         return next;
       });
@@ -172,17 +180,17 @@ export function useEquipmentForm(equipment: IEquipment | null = null) {
       setError(null);
       setServerFieldErrors({});
     },
-    [lifetimeTouched],
+    [lifetimeTouched, catalog],
   );
 
   const reset = useCallback(() => {
-    setValues(valuesOf(equipment));
+    setValues(valuesOf(equipment, catalog));
     setLifetimeTouched(equipment !== null);
     setError(null);
     setServerFieldErrors({});
     create.reset();
     update.reset();
-  }, [equipment, create, update]);
+  }, [equipment, catalog, create, update]);
 
   const method = values.acquisitionMethod;
   const owned = isOwned(method);
@@ -355,7 +363,7 @@ function toFieldErrors(caught: unknown): FieldErrors {
     return {};
   }
   const result: FieldErrors = {};
-  const fields = valuesOf(null);
+  const fields = valuesOf(null, []);
   for (const { field, code } of caught.fields) {
     const key = KNOWN[code];
     if (key && field in fields) {

@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Permission, type IEquipment } from '@chantia/shared';
 import { Alert, Button, EmptyState, Field, Select, Skeleton } from '@/shared/ui';
 import { CreateIcon } from '@/shared/lib/icons';
 import { Can } from '@/features/auth';
-import { useEquipmentList } from '../api/equipment.queries';
-import { EQUIPMENT_CATEGORIES, EQUIPMENT_STATUSES } from '../model/equipment-display';
+import { useEquipmentCatalog, useEquipmentList } from '../api/equipment.queries';
+import { EQUIPMENT_STATUSES, labelOf } from '../model/equipment-display';
 import {
   useEquipmentFilters,
   type CategoryFilter,
   type StatusFilter,
 } from '../model/use-equipment-filters';
+import { AssignmentsDrawer, type WorksitePicker } from './assignments-drawer';
 import { EquipmentDrawer } from './equipment-drawer';
 import { EquipmentList } from './equipment-table';
 
@@ -22,14 +23,20 @@ const MANAGE = [Permission.EQUIPMENT_MANAGE, Permission.BUDGET_MANAGE];
 /**
  * The fleet screen — the same shape as the other lists: the four states of a
  * remote list, plus "empty because of a filter".
+ *
+ * Each machine's planning opens in its own drawer. Picking a worksite there
+ * takes the worksites feature's picker, which the route hands in — features
+ * do not import each other.
  */
-export function EquipmentListPage() {
+export function EquipmentListPage({ WorksitePicker }: { WorksitePicker?: WorksitePicker } = {}) {
   const t = useTranslations('equipment');
-  const tCategory = useTranslations('equipmentCategory');
   const tStatus = useTranslations('equipmentStatus');
+  const locale = useLocale();
   const filters = useEquipmentFilters();
+  const catalog = useEquipmentCatalog();
   const [editing, setEditing] = useState<IEquipment | null>(null);
   const [creating, setCreating] = useState(false);
+  const [planning, setPlanning] = useState<IEquipment | null>(null);
   const { data, isPending, isError, error, isPlaceholderData } = useEquipmentList(filters.params);
 
   const drawerOpen = creating || editing !== null;
@@ -60,6 +67,13 @@ export function EquipmentListPage() {
         onClose={closeDrawer}
       />
 
+      <AssignmentsDrawer
+        key={planning?.id ?? 'none'}
+        equipment={planning}
+        onClose={() => setPlanning(null)}
+        WorksitePicker={WorksitePicker}
+      />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="sm:flex-1">
           <Field
@@ -74,9 +88,9 @@ export function EquipmentListPage() {
           label={t('categoryFilterLabel')}
           options={[
             { value: 'all', label: t('allCategories') },
-            ...EQUIPMENT_CATEGORIES.map((category) => ({
-              value: category,
-              label: tCategory(category),
+            ...(catalog.data ?? []).map((category) => ({
+              value: category.code,
+              label: labelOf(category, locale),
             })),
           ]}
           value={filters.category}
@@ -139,7 +153,7 @@ export function EquipmentListPage() {
 
       {data && data.items.length > 0 && (
         <div className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
-          <EquipmentList equipment={data.items} onEdit={setEditing} />
+          <EquipmentList equipment={data.items} onEdit={setEditing} onPlan={setPlanning} />
         </div>
       )}
     </section>

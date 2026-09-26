@@ -1,4 +1,10 @@
-import type { ICreateWorksite, IUpdateWorksite, IWorksite, WorksiteStatus } from '@chantia/shared';
+import type {
+  ICreateWorksite,
+  IUpdateWorksite,
+  IWorksite,
+  IWorksiteCosts,
+  WorksiteStatus,
+} from '@chantia/shared';
 import { apiFetch, type Paginated } from '@/shared/api/http-client';
 
 /**
@@ -19,6 +25,8 @@ export interface WorksiteListParams {
   search?: string;
   /** Absent means every status. */
   status?: WorksiteStatus;
+  /** Every worksite in one page — what a picker needs, not what a list does. */
+  paginated?: false;
 }
 
 export function fetchWorksites(params?: WorksiteListParams): Promise<Paginated<IWorksite>> {
@@ -35,6 +43,9 @@ export function fetchWorksites(params?: WorksiteListParams): Promise<Paginated<I
   }
   if (params?.status) {
     query.set('status', params.status);
+  }
+  if (params?.paginated === false) {
+    query.set('paginated', 'false');
   }
   const suffix = query.size > 0 ? `?${query}` : '';
   return apiFetch<Paginated<IWorksite>>(`/worksites${suffix}`);
@@ -59,4 +70,12 @@ export function updateWorksite(id: string, payload: IUpdateWorksite): Promise<IW
  */
 export function deleteWorksite(id: string): Promise<void> {
   return apiFetch<void>(`/worksites/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Labour, expenses and equipment against the budget. Money: the API answers
+ * 403 without `budget:read`, so callers only ask when the reader may know.
+ */
+export function fetchWorksiteCosts(id: string): Promise<IWorksiteCosts> {
+  return apiFetch<IWorksiteCosts>(`/worksites/${id}/costs`);
 }

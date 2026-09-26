@@ -6,6 +6,7 @@ import {
   createWorksite,
   deleteWorksite,
   fetchWorksite,
+  fetchWorksiteCosts,
   fetchWorksites,
   updateWorksite,
   type WorksiteListParams,
@@ -66,4 +67,18 @@ export function useDeleteWorksite() {
     mutationFn: deleteWorksite,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: worksiteKeys.all }),
   });
+}
+
+/** `enabled` is the caller's say-so that the reader may see money. */
+export function useWorksiteCosts(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: worksiteKeys.costs(id),
+    queryFn: () => fetchWorksiteCosts(id),
+    enabled: enabled && Boolean(id),
+  });
+}
+
+/** Every worksite, for a picker. */
+export function useWorksiteOptions() {
+  return useWorksites({ paginated: false });
 }
