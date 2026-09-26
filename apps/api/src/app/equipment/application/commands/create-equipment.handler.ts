@@ -2,6 +2,11 @@ import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { randomUUID } from 'node:crypto';
 import { Equipment } from '../../domain/entities/equipment.entity';
+import { UnknownEquipmentTypeException } from '../../domain/exceptions/equipment.exceptions';
+import {
+  EQUIPMENT_CATALOG_PORT,
+  EquipmentCatalogPort,
+} from '../../domain/ports/equipment-catalog.port';
 import {
   EQUIPMENT_REPOSITORY_PORT,
   EquipmentRepositoryPort,
@@ -13,12 +18,23 @@ export class CreateEquipmentHandler implements ICommandHandler<CreateEquipmentCo
   constructor(
     @Inject(EQUIPMENT_REPOSITORY_PORT)
     private readonly repository: EquipmentRepositoryPort,
+    @Inject(EQUIPMENT_CATALOG_PORT)
+    private readonly catalog: EquipmentCatalogPort,
   ) {}
 
   async execute(command: CreateEquipmentCommand): Promise<Equipment> {
     const { organizationId, data } = command;
-    // Every rule — catalog type, money per acquisition method, dates — is the
+
+    // Before the foreign key, for a 400 on the field rather than a 500.
+    const type = await this.catalog.findType(data.typeCode);
+    if (!type) {
+      throw new UnknownEquipmentTypeException(data.typeCode);
+    }
+
+    // Every other rule — money per acquisition method, dates — is the
     // aggregate's; see `Equipment`.
-    return this.repository.save(Equipment.create({ ...data, id: randomUUID(), organizationId }));
+    return this.repository.save(
+      Equipment.create({ ...data, id: randomUUID(), organizationId }, type),
+    );
   }
 }

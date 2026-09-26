@@ -16,6 +16,7 @@ export * from './security/password-policy';
 export * from './interfaces/worksite.interface';
 export * from './interfaces/client.interface';
 export * from './interfaces/equipment.interface';
+export * from './interfaces/equipment-assignment.interface';
 export * from './interfaces/organization.interface';
 export * from './interfaces/user.interface';
 export * from './interfaces/worker.interface';
@@ -28,6 +29,5 @@ export * from './costs/worksite-costs';
 // Client naming and contact rules — the API stores what the form previews
 export * from './clients/client-rules';
 
-// Equipment: the fixed catalog, and what a machine costs per day
-export * from './equipment/equipment-catalog';
+// Equipment: what a machine costs per day (the catalog itself lives in the database)
 export * from './equipment/equipment-costs';

@@ -66,6 +66,7 @@ const machine = Equipment.create({
   acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
   acquisitionDate: '2026-01-01',
   purchasePrice: 365_000,
+  usefulLifeMonths: 60,
 });
 
 describe('EquipmentRepository', () => {

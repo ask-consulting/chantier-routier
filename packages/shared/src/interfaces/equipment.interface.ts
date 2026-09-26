@@ -10,7 +10,7 @@ import { AcquisitionMethod, EquipmentStatus } from '../enums/equipment.enums';
 export interface IEquipment {
   id: string;
   organizationId: string;
-  /** A code from `EQUIPMENT_TYPES`. */
+  /** A code of the catalog — `GET /equipment-catalog`. */
   typeCode: string;
   /** What people call it — "Pelle CAT 320 n°2". */
   designation: string;
@@ -80,3 +80,25 @@ export interface ICreateEquipment {
 
 /** Payload to change a machine. Every field optional; `null` clears. */
 export type IUpdateEquipment = Partial<ICreateEquipment>;
+
+/**
+ * One type of the equipment catalog. The catalog is global — the same for
+ * every organization — and written only by migrations; it is served by
+ * `GET /equipment-catalog` with both labels, the client picking its language.
+ */
+export interface IEquipmentType {
+  code: string;
+  categoryCode: string;
+  /** Straight-line lifetime proposed for a new owned machine of this type. */
+  defaultUsefulLifeMonths: number;
+  labelFr: string;
+  labelAr: string;
+}
+
+/** A family of the catalog, with its types — already in display order. */
+export interface IEquipmentCategory {
+  code: string;
+  labelFr: string;
+  labelAr: string;
+  types: IEquipmentType[];
+}

@@ -68,6 +68,9 @@ export interface IWorksiteCosts {
   worksiteId: string;
   laborCost: number;
   expensesCost: number;
+  /** Σ of each assigned machine's cost over its whole assigned period. */
+  equipmentCost: number;
+  /** laborCost + expensesCost + equipmentCost. */
   actualCost: number;
   totalBudget: number | null;
   /** totalBudget - actualCost (positive = under budget, negative = overrun). null when no budget. */

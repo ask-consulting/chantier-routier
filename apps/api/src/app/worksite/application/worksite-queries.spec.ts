@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { WorksiteStatus } from '@chantia/shared';
+import { AcquisitionMethod, WorksiteStatus } from '@chantia/shared';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { GetWorksiteByIdHandler } from './queries/get-worksite-by-id.handler';
 import { GetWorksiteByIdQuery } from './queries/get-worksite-by-id.query';
@@ -37,6 +37,18 @@ function repositoryWith(found: Worksite | null) {
     findCostInputs: vi.fn(async () => ({
       timesheets: [{ hoursWorked: 8, hourlyRate: 20 }],
       expenses: [{ amount: 1_000 }],
+      // Hired at 100 a day, on the worksite for 3 days.
+      equipment: [
+        {
+          startDate: '2026-04-01',
+          endDate: '2026-04-03',
+          equipment: {
+            acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
+            acquisitionDate: '2026-01-01',
+            dailyRate: 100,
+          },
+        },
+      ],
     })),
   } satisfies WorksiteRepositoryPort;
 }
@@ -70,7 +82,7 @@ describe('GetWorksiteByIdHandler', () => {
 });
 
 describe('GetWorksiteCostsHandler', () => {
-  it('computes labour plus expenses against the budget', async () => {
+  it('computes labour, expenses and equipment against the budget', async () => {
     const handler = new GetWorksiteCostsHandler(repositoryWith(worksite));
 
     const costs = await handler.execute(new GetWorksiteCostsQuery('worksite-1'));
@@ -79,9 +91,10 @@ describe('GetWorksiteCostsHandler', () => {
       worksiteId: 'worksite-1',
       laborCost: 160,
       expensesCost: 1_000,
-      actualCost: 1_160,
+      equipmentCost: 300,
+      actualCost: 1_460,
       totalBudget: 10_000,
-      variance: 8_840,
+      variance: 8_540,
     });
   });
 

@@ -3,6 +3,9 @@ import { AcquisitionMethod, EquipmentStatus } from '@chantia/shared';
 import { InvalidEquipmentException } from '../exceptions/equipment.exceptions';
 import { Equipment, type EquipmentProps } from './equipment.entity';
 
+/** What the catalog lends a public-works machine — handed in by the handler. */
+const PUBLIC_WORKS = { defaultUsefulLifeMonths: 60 };
+
 /**
  * The rules that make a machine's cost computable. Each failure is pinned to
  * its field, all at once, so a form can mark every one in a single round trip.
@@ -33,8 +36,8 @@ function fieldsOf(attempt: () => unknown): string[] {
 }
 
 describe('Equipment — an owned machine', () => {
-  it('takes its lifetime from the catalog, and cleans its text', () => {
-    const equipment = Equipment.create(bought);
+  it('takes its lifetime from the catalog’s defaults, and cleans its text', () => {
+    const equipment = Equipment.create(bought, PUBLIC_WORKS);
 
     expect(equipment.usefulLifeMonths).toBe(60);
     expect(equipment.depreciationEndDate).toBe('2030-12-31');
@@ -45,27 +48,25 @@ describe('Equipment — an owned machine', () => {
   });
 
   it('keeps a lifetime set by hand', () => {
-    expect(Equipment.create({ ...bought, usefulLifeMonths: 12 }).dailyCostOn('2026-06-01')).toBeCloseTo(
+    expect(Equipment.create({ ...bought, usefulLifeMonths: 12 }, PUBLIC_WORKS).dailyCostOn('2026-06-01')).toBeCloseTo(
       1_000,
     );
   });
 
   it('needs a price, and a residual value no higher than it', () => {
-    expect(fieldsOf(() => Equipment.create({ ...bought, purchasePrice: null }))).toEqual([
+    expect(fieldsOf(() => Equipment.create({ ...bought, purchasePrice: null }, PUBLIC_WORKS))).toEqual([
       'purchasePrice',
     ]);
     expect(
-      fieldsOf(() => Equipment.create({ ...bought, residualValue: 400_000 })),
+      fieldsOf(() => Equipment.create({ ...bought, residualValue: 400_000 }, PUBLIC_WORKS)),
     ).toEqual(['residualValue']);
   });
 
   it('drops the fields of the other acquisition methods', () => {
-    const equipment = Equipment.create({
-      ...bought,
-      monthlyPayment: 3_000,
-      dailyRate: 200,
-      contractEndDate: '2027-01-01',
-    });
+    const equipment = Equipment.create(
+      { ...bought, monthlyPayment: 3_000, dailyRate: 200, contractEndDate: '2027-01-01' },
+      PUBLIC_WORKS,
+    );
 
     expect(equipment.monthlyPayment).toBeNull();
     expect(equipment.dailyRate).toBeNull();
@@ -114,7 +115,10 @@ describe('Equipment — leased and hired', () => {
   it('hired short-term, needs a daily rate', () => {
     expect(
       fieldsOf(() =>
-        Equipment.create({ ...bought, acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL }),
+        Equipment.create(
+          { ...bought, acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL },
+          PUBLIC_WORKS,
+        ),
       ),
     ).toEqual(['dailyRate']);
   });
@@ -127,34 +131,37 @@ describe('Equipment — leased and hired', () => {
 });
 
 describe('Equipment — type, status and changes', () => {
-  it('refuses a type the catalog does not know, and an empty designation', () => {
-    // And no lifetime either: an unknown type has no default to lend.
-    expect(
-      fieldsOf(() => Equipment.create({ ...bought, typeCode: 'spaceship', designation: '  ' })),
-    ).toEqual(['typeCode', 'designation', 'usefulLifeMonths']);
+  it('refuses an empty designation', () => {
+    expect(fieldsOf(() => Equipment.create({ ...bought, designation: '  ' }, PUBLIC_WORKS))).toEqual([
+      'designation',
+    ]);
+  });
+
+  it('asks for a lifetime when the catalog lends none', () => {
+    // The mapper passes no defaults: a stored owned machine has its own.
+    expect(fieldsOf(() => Equipment.create(bought))).toEqual(['usefulLifeMonths']);
   });
 
   it('needs a disposal date once retired, and ignores one otherwise', () => {
-    expect(fieldsOf(() => Equipment.create({ ...bought, status: EquipmentStatus.RETIRED }))).toEqual(
+    expect(fieldsOf(() => Equipment.create({ ...bought, status: EquipmentStatus.RETIRED }, PUBLIC_WORKS))).toEqual(
       ['disposalDate'],
     );
-    expect(Equipment.create({ ...bought, disposalDate: '2027-01-01' }).disposalDate).toBeNull();
+    expect(Equipment.create({ ...bought, disposalDate: '2027-01-01' }, PUBLIC_WORKS).disposalDate).toBeNull();
     expect(
       fieldsOf(() =>
-        Equipment.create({
-          ...bought,
-          status: EquipmentStatus.RETIRED,
-          disposalDate: '2025-01-01',
-        }),
+        Equipment.create(
+          { ...bought, status: EquipmentStatus.RETIRED, disposalDate: '2025-01-01' },
+          PUBLIC_WORKS,
+        ),
       ),
     ).toEqual(['disposalDate']);
   });
 
   it('re-checks the whole on a change: switching to leasing needs its fields', () => {
-    const equipment = Equipment.create(bought);
+    const equipment = Equipment.create(bought, PUBLIC_WORKS);
 
     expect(
-      fieldsOf(() => equipment.with({ acquisitionMethod: AcquisitionMethod.LEASING })),
+      fieldsOf(() => equipment.with({ acquisitionMethod: AcquisitionMethod.LEASING }, PUBLIC_WORKS)),
     ).toEqual(['monthlyPayment', 'contractEndDate']);
 
     const leased = equipment.with({
@@ -166,7 +173,7 @@ describe('Equipment — type, status and changes', () => {
   });
 
   it('clears a field on null, and leaves it on undefined', () => {
-    const equipment = Equipment.create({ ...bought, brand: 'Caterpillar', model: '320' });
+    const equipment = Equipment.create({ ...bought, brand: 'Caterpillar', model: '320' }, PUBLIC_WORKS);
 
     const changed = equipment.with({ brand: null, model: undefined });
 
@@ -175,7 +182,7 @@ describe('Equipment — type, status and changes', () => {
   });
 
   it('marks itself deleted and keeps the rest', () => {
-    const deleted = Equipment.create(bought).deleted(new Date('2026-09-27'));
+    const deleted = Equipment.create(bought, PUBLIC_WORKS).deleted(new Date('2026-09-27'));
 
     expect(deleted.isDeleted()).toBe(true);
     expect(deleted.designation).toBe('Pelle CAT 320 n°2');

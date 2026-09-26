@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { AcquisitionMethod } from '@chantia/shared';
 import { TENANT_PRISMA, TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
 import { SearchParams, SearchResult } from '@shared/domain/search.types';
 import { getPrismaPagination } from '@shared/infrastructure/repositories/search-params';
@@ -18,6 +19,11 @@ import { WorksiteMapper } from '../mappers/worksite.mapper';
  * `worksites.client_id` is only ever written after `isAssignableClient`.
  */
 const WITH_CLIENT = { client: { select: { id: true, displayName: true } } };
+
+/** A `@db.Date` reads back as midnight UTC; costs speak `YYYY-MM-DD`. */
+function day(value: Date | null): string | null {
+  return value === null ? null : value.toISOString().slice(0, 10);
+}
 
 @Injectable()
 export class WorksiteRepository implements WorksiteRepositoryPort {
@@ -104,7 +110,7 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
   }
 
   async findCostInputs(worksiteId: string): Promise<WorksiteCostInputs> {
-    const [timesheetRows, expenseRows] = await Promise.all([
+    const [timesheetRows, expenseRows, assignmentRows] = await Promise.all([
       this.prisma.timesheet.findMany({
         where: { worksiteId },
         select: { hoursWorked: true, worker: { select: { hourlyRate: true } } },
@@ -112,6 +118,29 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
       this.prisma.expense.findMany({
         where: { worksiteId },
         select: { amount: true },
+      }),
+      // Tenant-scoped by the assignments' own organization. The machine comes
+      // through the include, soft-deleted or not: a machine deleted since
+      // still cost what it cost while it was here.
+      this.prisma.equipmentAssignment.findMany({
+        where: { worksiteId },
+        select: {
+          startDate: true,
+          endDate: true,
+          equipment: {
+            select: {
+              acquisitionMethod: true,
+              acquisitionDate: true,
+              purchasePrice: true,
+              residualValue: true,
+              usefulLifeMonths: true,
+              monthlyPayment: true,
+              dailyRate: true,
+              contractEndDate: true,
+              disposalDate: true,
+            },
+          },
+        },
       }),
     ]);
 
@@ -121,6 +150,21 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
         hourlyRate: t.worker.hourlyRate.toNumber(),
       })),
       expenses: expenseRows.map((e) => ({ amount: e.amount.toNumber() })),
+      equipment: assignmentRows.map((a) => ({
+        startDate: day(a.startDate) as string,
+        endDate: day(a.endDate) as string,
+        equipment: {
+          acquisitionMethod: a.equipment.acquisitionMethod as AcquisitionMethod,
+          acquisitionDate: day(a.equipment.acquisitionDate) as string,
+          purchasePrice: a.equipment.purchasePrice?.toNumber() ?? null,
+          residualValue: a.equipment.residualValue?.toNumber() ?? null,
+          usefulLifeMonths: a.equipment.usefulLifeMonths,
+          monthlyPayment: a.equipment.monthlyPayment?.toNumber() ?? null,
+          dailyRate: a.equipment.dailyRate?.toNumber() ?? null,
+          contractEndDate: day(a.equipment.contractEndDate),
+          disposalDate: day(a.equipment.disposalDate),
+        },
+      })),
     };
   }
 }

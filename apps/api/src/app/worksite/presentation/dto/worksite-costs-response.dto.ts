@@ -5,7 +5,11 @@ export class WorksiteCostsResponseDto implements IWorksiteCosts {
   @ApiProperty() worksiteId: string;
   @ApiProperty({ description: 'Σ hoursWorked × hourlyRate' }) laborCost: number;
   @ApiProperty({ description: 'Σ expense amounts' }) expensesCost: number;
-  @ApiProperty({ description: 'laborCost + expensesCost' }) actualCost: number;
+  @ApiProperty({
+    description: 'Σ each assigned machine’s daily cost over its whole period, future days included',
+  })
+  equipmentCost: number;
+  @ApiProperty({ description: 'laborCost + expensesCost + equipmentCost' }) actualCost: number;
   @ApiProperty({ nullable: true }) totalBudget: number | null;
   @ApiProperty({ nullable: true, description: 'totalBudget - actualCost' }) variance: number | null;
 
@@ -14,6 +18,7 @@ export class WorksiteCostsResponseDto implements IWorksiteCosts {
     dto.worksiteId = costs.worksiteId;
     dto.laborCost = costs.laborCost;
     dto.expensesCost = costs.expensesCost;
+    dto.equipmentCost = costs.equipmentCost;
     dto.actualCost = costs.actualCost;
     dto.totalBudget = costs.totalBudget;
     dto.variance = costs.variance;

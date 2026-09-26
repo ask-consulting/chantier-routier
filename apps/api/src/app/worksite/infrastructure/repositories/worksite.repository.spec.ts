@@ -50,6 +50,31 @@ function setup(rows: unknown[] = [], upsertError?: unknown) {
   const prisma = {
     worksite: { findMany, count, findUnique, upsert },
     client: { count: clientCount },
+    timesheet: {
+      findMany: vi.fn(async () => [
+        { hoursWorked: new Prisma.Decimal('8'), worker: { hourlyRate: new Prisma.Decimal('20') } },
+      ]),
+    },
+    expense: { findMany: vi.fn(async () => [{ amount: new Prisma.Decimal('150.5') }]) },
+    equipmentAssignment: {
+      findMany: vi.fn(async () => [
+        {
+          startDate: new Date('2026-04-01T00:00:00.000Z'),
+          endDate: new Date('2026-04-03T00:00:00.000Z'),
+          equipment: {
+            acquisitionMethod: 'cash_purchase',
+            acquisitionDate: new Date('2026-01-01T00:00:00.000Z'),
+            purchasePrice: new Prisma.Decimal('365000'),
+            residualValue: null,
+            usefulLifeMonths: 12,
+            monthlyPayment: null,
+            dailyRate: null,
+            contractEndDate: null,
+            disposalDate: null,
+          },
+        },
+      ]),
+    },
   } as unknown as TenantPrismaClient;
 
   return {
@@ -145,6 +170,34 @@ describe('WorksiteRepository — the client', () => {
 
     expect(await repository.isAssignableClient('client-1')).toBe(true);
     expect(clientCount).toHaveBeenCalledWith({ where: { id: 'client-1', deletedAt: null } });
+  });
+});
+
+describe('WorksiteRepository — cost inputs', () => {
+  it('reads timesheets, expenses and assigned machines as plain numbers and days', async () => {
+    const { repository } = setup();
+
+    const inputs = await repository.findCostInputs('worksite-1');
+
+    expect(inputs.timesheets).toEqual([{ hoursWorked: 8, hourlyRate: 20 }]);
+    expect(inputs.expenses).toEqual([{ amount: 150.5 }]);
+    expect(inputs.equipment).toEqual([
+      {
+        startDate: '2026-04-01',
+        endDate: '2026-04-03',
+        equipment: {
+          acquisitionMethod: 'cash_purchase',
+          acquisitionDate: '2026-01-01',
+          purchasePrice: 365_000,
+          residualValue: null,
+          usefulLifeMonths: 12,
+          monthlyPayment: null,
+          dailyRate: null,
+          contractEndDate: null,
+          disposalDate: null,
+        },
+      },
+    ]);
   });
 });
 

@@ -224,9 +224,10 @@ model Worksite {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  client     Client?     @relation(fields: [clientId], references: [id], onDelete: NoAction, map: "fk_worksites_clients")
-  timesheets Timesheet[]
-  expenses   Expense[]
+  client               Client?               @relation(fields: [clientId], references: [id], onDelete: NoAction, map: "fk_worksites_clients")
+  timesheets           Timesheet[]
+  expenses             Expense[]
+  equipmentAssignments EquipmentAssignment[]
 
   /// Partial in the database — `WHERE deleted_at IS NULL`, see migration
   /// `20260925120000_worksite_soft_delete` — so a deleted worksite frees its
@@ -460,9 +461,8 @@ enum EquipmentStatus {
   @@schema("public")
 }
 
-/// A machine of the organization's fleet — owned, leased or hired. Its type
-/// comes from the fixed catalog in `@chantia/shared` (`EQUIPMENT_TYPES`), stored
-/// as a code: the catalog is code, not a table, so there is no foreign key.
+/// A machine of the organization's fleet — owned, leased or hired. Its type is
+/// a row of the shared catalog (`equipment_types`), by code.
 /// Money is `Decimal(14, 3)`: the dinar counts millimes.
 model Equipment {
   id                 String            @id(map: "pk_equipment") @default(uuid()) @db.Uuid
@@ -499,10 +499,82 @@ model Equipment {
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
 
+  type        EquipmentType         @relation(fields: [typeCode], references: [code], onDelete: NoAction, map: "fk_equipment_equipment_types")
+  assignments EquipmentAssignment[]
+
   /// Partial in the database — `WHERE deleted_at IS NULL` — like the worksite
   /// code: a deleted machine frees its fleet number. Nulls never collide.
   @@unique([organizationId, fleetNumber], map: "uq_equipment_organization_id_fleet_number")
   @@index([organizationId], map: "ix_equipment_organization_id")
   @@map("equipment")
+  @@schema("public")
+}
+
+/// A machine on a worksite for a fixed period, both ends included — what puts
+/// the machine's daily cost into the worksite's cost.
+///
+/// Its own aggregate, tenant-scoped by its own `organizationId`. A real
+/// `DELETE` is fine here: nothing hangs off an assignment, and cancelling one
+/// is exactly removing it. The foreign keys are `NO ACTION` because machines
+/// and worksites are soft-deleted — a real delete of either must fail, not
+/// take the history of the other with it.
+///
+/// One machine is never in two places on the same day: checked by the API
+/// before every write (see `EquipmentAssignmentRepository.findOverlapping`).
+model EquipmentAssignment {
+  id             String   @id(map: "pk_equipment_assignments") @default(uuid()) @db.Uuid
+  /// Soft reference to `identity.organizations.id` — no foreign key by design.
+  organizationId String   @map("organization_id") @db.Uuid
+  equipmentId    String   @map("equipment_id") @db.Uuid
+  worksiteId     String   @map("worksite_id") @db.Uuid
+  startDate      DateTime @map("start_date") @db.Date
+  endDate        DateTime @map("end_date") @db.Date
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: NoAction, map: "fk_equipment_assignments_equipment")
+  worksite  Worksite  @relation(fields: [worksiteId], references: [id], onDelete: NoAction, map: "fk_equipment_assignments_worksites")
+
+  @@index([organizationId], map: "ix_equipment_assignments_organization_id")
+  @@index([equipmentId, startDate], map: "ix_equipment_assignments_equipment_id_start_date")
+  @@index([worksiteId], map: "ix_equipment_assignments_worksite_id")
+  @@map("equipment_assignments")
+  @@schema("public")
+}
+
+/// The families of the equipment catalog. Global — the same for every
+/// organization, no `organizationId`, so the tenant filter leaves it alone —
+/// and written only by migrations: organizations pick from it, never edit it.
+model EquipmentCategory {
+  code      String @id(map: "pk_equipment_categories")
+  labelFr   String @map("label_fr")
+  labelAr   String @map("label_ar")
+  sortOrder Int    @map("sort_order")
+
+  types EquipmentType[]
+
+  @@map("equipment_categories")
+  @@schema("public")
+}
+
+/// The equipment catalog: every type an organization can file a machine
+/// under, each category ending with an "other" type. Global and written only
+/// by migrations, like its categories. Default lifetimes follow the Tunisian
+/// maximum straight-line rates (décret 2008-492).
+model EquipmentType {
+  code                    String @id(map: "pk_equipment_types")
+  categoryCode            String @map("category_code")
+  /// Straight-line depreciation period proposed for a new owned machine.
+  defaultUsefulLifeMonths Int    @map("default_useful_life_months")
+  labelFr                 String @map("label_fr")
+  labelAr                 String @map("label_ar")
+  sortOrder               Int    @map("sort_order")
+
+  category  EquipmentCategory @relation(fields: [categoryCode], references: [code], onDelete: NoAction, map: "fk_equipment_types_equipment_categories")
+  equipment Equipment[]
+
+  @@index([categoryCode], map: "ix_equipment_types_category_code")
+  @@map("equipment_types")
   @@schema("public")
 }

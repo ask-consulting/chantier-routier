@@ -23,10 +23,9 @@ describe('CreateEquipmentDto', () => {
     expect(await invalid(CreateEquipmentDto, valid)).toEqual([]);
   });
 
-  it('refuses a type outside the catalog', async () => {
-    expect(await invalid(CreateEquipmentDto, { ...valid, typeCode: 'spaceship' })).toContain(
-      'typeCode',
-    );
+  it('takes any type code of the right shape — the catalog, in the database, judges', async () => {
+    expect(await invalid(CreateEquipmentDto, { ...valid, typeCode: 'spaceship' })).toEqual([]);
+    expect(await invalid(CreateEquipmentDto, { ...valid, typeCode: 42 })).toContain('typeCode');
   });
 
   it('takes a day, not an instant — nor a day that does not exist', async () => {
@@ -71,7 +70,8 @@ describe('GetEquipmentListDto', () => {
     );
   });
 
-  it('refuses an unknown category', async () => {
-    expect(await invalid(GetEquipmentListDto, { category: 'boats' })).toContain('category');
+  it('takes a category code as text', async () => {
+    expect(await invalid(GetEquipmentListDto, { category: 'compaction' })).toEqual([]);
+    expect(await invalid(GetEquipmentListDto, { category: 'x'.repeat(61) })).toContain('category');
   });
 });

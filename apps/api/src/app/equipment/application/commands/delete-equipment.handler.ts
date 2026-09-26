@@ -2,6 +2,11 @@ import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { Equipment } from '../../domain/entities/equipment.entity';
+import { EquipmentStillAssignedException } from '../../domain/exceptions/equipment-assignment.exceptions';
+import {
+  EQUIPMENT_ASSIGNMENT_REPOSITORY_PORT,
+  EquipmentAssignmentRepositoryPort,
+} from '../../domain/ports/equipment-assignment-repository.port';
 import {
   EQUIPMENT_REPOSITORY_PORT,
   EquipmentRepositoryPort,
@@ -10,7 +15,7 @@ import { DeleteEquipmentCommand } from './delete-equipment.command';
 
 /**
  * Removes a machine created by mistake — `deletedAt`, never a `DELETE`, like
- * the other aggregates: assignments to worksites will point here. A machine
+ * the other aggregates: past assignments keep pointing here. A machine
  * sold or scrapped is not deleted; it is *retired*, with a disposal date, and
  * stays in the fleet's history.
  */
@@ -19,6 +24,8 @@ export class DeleteEquipmentHandler implements ICommandHandler<DeleteEquipmentCo
   constructor(
     @Inject(EQUIPMENT_REPOSITORY_PORT)
     private readonly repository: EquipmentRepositoryPort,
+    @Inject(EQUIPMENT_ASSIGNMENT_REPOSITORY_PORT)
+    private readonly assignments: EquipmentAssignmentRepositoryPort,
   ) {}
 
   async execute(command: DeleteEquipmentCommand): Promise<Equipment> {
@@ -26,6 +33,15 @@ export class DeleteEquipmentHandler implements ICommandHandler<DeleteEquipmentCo
     if (!equipment) {
       throw new ResourceNotFoundException('Equipment', command.equipmentId);
     }
+    // Past assignments stay, and keep costing their worksites: the row
+    // survives for them. Current and future ones would be bookings of a
+    // machine nobody can see any more — they are cancelled first.
+    const today = new Date().toISOString().slice(0, 10);
+    const booked = await this.assignments.countEndingFrom(equipment.id, today);
+    if (booked > 0) {
+      throw new EquipmentStillAssignedException(booked);
+    }
+
     return this.repository.save(equipment.deleted());
   }
 }
