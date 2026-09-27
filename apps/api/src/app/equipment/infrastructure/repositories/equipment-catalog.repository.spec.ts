@@ -9,17 +9,20 @@ function setup(type: { defaultUsefulLifeMonths: number } | null = { defaultUsefu
       findMany: vi.fn(async () => [
         {
           code: 'compaction',
-          labelFr: 'Compactage',
-          labelAr: 'الدمك',
           sortOrder: 20,
+          translations: [
+            { locale: 'fr', label: 'Compactage' },
+            { locale: 'ar', label: 'الدمك' },
+            // A language the product does not speak yet — served all the same.
+            { locale: 'en', label: 'Compaction' },
+          ],
           types: [
             {
               code: 'tandem_roller',
               categoryCode: 'compaction',
               defaultUsefulLifeMonths: 60,
-              labelFr: 'Compacteur tandem',
-              labelAr: 'مدحلة ترادفية',
               sortOrder: 20,
+              translations: [{ locale: 'fr', label: 'Compacteur tandem' }],
             },
           ],
         },
@@ -35,26 +38,31 @@ describe('EquipmentCatalogRepository', () => {
     expect(await setup(null).repository.findType('spaceship')).toBeNull();
   });
 
-  it('lists categories and types in display order, without the sort keys', async () => {
+  it('lists categories and types in display order, every language as a map', async () => {
     const { repository, prisma } = setup();
 
     const [category] = await repository.listCategories();
 
     expect(prisma.equipmentCategory.findMany).toHaveBeenCalledWith({
       orderBy: { sortOrder: 'asc' },
-      include: { types: { orderBy: [{ sortOrder: 'asc' }, { code: 'asc' }] } },
+      include: {
+        translations: { select: { locale: true, label: true } },
+        types: {
+          orderBy: [{ sortOrder: 'asc' }, { code: 'asc' }],
+          include: { translations: { select: { locale: true, label: true } } },
+        },
+      },
     });
     expect(category).toEqual({
       code: 'compaction',
-      labelFr: 'Compactage',
-      labelAr: 'الدمك',
+      labels: { fr: 'Compactage', ar: 'الدمك', en: 'Compaction' },
       types: [
         {
           code: 'tandem_roller',
           categoryCode: 'compaction',
           defaultUsefulLifeMonths: 60,
-          labelFr: 'Compacteur tandem',
-          labelAr: 'مدحلة ترادفية',
+          // Only French so far: the client falls back to it — see `translated`.
+          labels: { fr: 'Compacteur tandem' },
         },
       ],
     });

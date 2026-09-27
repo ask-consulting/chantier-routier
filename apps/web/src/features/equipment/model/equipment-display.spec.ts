@@ -9,6 +9,11 @@ describe('the catalog on screen', () => {
     expect(labelOf(CATALOG[1], 'ar')).toBe('الدمك');
   });
 
+  it('falls back to French, then to the code, for a language the catalog lacks', () => {
+    expect(labelOf(CATALOG[1], 'en')).toBe('Compactage');
+    expect(labelOf({ ...CATALOG[1], labels: {} }, 'fr')).toBe('compaction');
+  });
+
   it('finds a type across categories — and nothing while the catalog loads', () => {
     expect(findType(CATALOG, 'site_hut')?.defaultUsefulLifeMonths).toBe(120);
     expect(findType(CATALOG, 'spaceship')).toBeUndefined();

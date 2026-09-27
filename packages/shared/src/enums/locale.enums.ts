@@ -36,3 +36,17 @@ export function intlLocale(locale: Locale): string {
 export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && Object.values(Locale).includes(value as Locale);
 }
+
+/**
+ * The label for `locale` among `labels` — else the default language's, else
+ * any there is, else `fallback`. Labels that live in the database (the
+ * equipment catalog) can gain a language before the product speaks it, or
+ * lack one it does: neither may leave a blank on screen.
+ */
+export function translated(
+  labels: Readonly<Record<string, string>>,
+  locale: string,
+  fallback = '',
+): string {
+  return labels[locale] ?? labels[DEFAULT_LOCALE] ?? Object.values(labels)[0] ?? fallback;
+}

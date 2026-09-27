@@ -82,23 +82,29 @@ export interface ICreateEquipment {
 export type IUpdateEquipment = Partial<ICreateEquipment>;
 
 /**
+ * A label in every language the database has for it, keyed by language code:
+ * `{ fr: 'Niveleuse', ar: 'ممهدة' }`. A language is added by inserting rows,
+ * so a client must expect keys it does not speak — and a missing one; see
+ * `translated`.
+ */
+export type Translations = Readonly<Record<string, string>>;
+
+/**
  * One type of the equipment catalog. The catalog is global — the same for
  * every organization — and written only by migrations; it is served by
- * `GET /equipment-catalog` with both labels, the client picking its language.
+ * `GET /equipment-catalog` with all its labels, the client picking its language.
  */
 export interface IEquipmentType {
   code: string;
   categoryCode: string;
   /** Straight-line lifetime proposed for a new owned machine of this type. */
   defaultUsefulLifeMonths: number;
-  labelFr: string;
-  labelAr: string;
+  labels: Translations;
 }
 
 /** A family of the catalog, with its types — already in display order. */
 export interface IEquipmentCategory {
   code: string;
-  labelFr: string;
-  labelAr: string;
+  labels: Translations;
   types: IEquipmentType[];
 }

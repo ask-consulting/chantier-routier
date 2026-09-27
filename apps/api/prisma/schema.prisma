@@ -546,13 +546,13 @@ model EquipmentAssignment {
 /// The families of the equipment catalog. Global — the same for every
 /// organization, no `organizationId`, so the tenant filter leaves it alone —
 /// and written only by migrations: organizations pick from it, never edit it.
+/// Its labels live in `equipment_category_translations`, one row per language.
 model EquipmentCategory {
   code      String @id(map: "pk_equipment_categories")
-  labelFr   String @map("label_fr")
-  labelAr   String @map("label_ar")
   sortOrder Int    @map("sort_order")
 
-  types EquipmentType[]
+  types        EquipmentType[]
+  translations EquipmentCategoryTranslation[]
 
   @@map("equipment_categories")
   @@schema("public")
@@ -561,20 +561,48 @@ model EquipmentCategory {
 /// The equipment catalog: every type an organization can file a machine
 /// under, each category ending with an "other" type. Global and written only
 /// by migrations, like its categories. Default lifetimes follow the Tunisian
-/// maximum straight-line rates (décret 2008-492).
+/// maximum straight-line rates (décret 2008-492). Its labels live in
+/// `equipment_type_translations`, one row per language.
 model EquipmentType {
   code                    String @id(map: "pk_equipment_types")
   categoryCode            String @map("category_code")
   /// Straight-line depreciation period proposed for a new owned machine.
   defaultUsefulLifeMonths Int    @map("default_useful_life_months")
-  labelFr                 String @map("label_fr")
-  labelAr                 String @map("label_ar")
   sortOrder               Int    @map("sort_order")
 
-  category  EquipmentCategory @relation(fields: [categoryCode], references: [code], onDelete: NoAction, map: "fk_equipment_types_equipment_categories")
-  equipment Equipment[]
+  category     EquipmentCategory          @relation(fields: [categoryCode], references: [code], onDelete: NoAction, map: "fk_equipment_types_equipment_categories")
+  equipment    Equipment[]
+  translations EquipmentTypeTranslation[]
 
   @@index([categoryCode], map: "ix_equipment_types_category_code")
   @@map("equipment_types")
+  @@schema("public")
+}
+
+/// A category's label in one language. Adding a language is adding rows —
+/// no column, no schema change. `locale` is a language code (`fr`, `ar`, `en`…);
+/// a reader whose language has no row falls back to French.
+model EquipmentCategoryTranslation {
+  categoryCode String @map("category_code")
+  locale       String
+  label        String
+
+  category EquipmentCategory @relation(fields: [categoryCode], references: [code], onDelete: Cascade, map: "fk_equipment_category_translations_equipment_categories")
+
+  @@id([categoryCode, locale], map: "pk_equipment_category_translations")
+  @@map("equipment_category_translations")
+  @@schema("public")
+}
+
+/// A type's label in one language — see `EquipmentCategoryTranslation`.
+model EquipmentTypeTranslation {
+  typeCode String @map("type_code")
+  locale   String
+  label    String
+
+  type EquipmentType @relation(fields: [typeCode], references: [code], onDelete: Cascade, map: "fk_equipment_type_translations_equipment_types")
+
+  @@id([typeCode, locale], map: "pk_equipment_type_translations")
+  @@map("equipment_type_translations")
   @@schema("public")
 }

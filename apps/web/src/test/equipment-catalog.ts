@@ -8,64 +8,55 @@ import type { IEquipmentCategory } from '@chantia/shared';
 export const CATALOG: IEquipmentCategory[] = [
   {
     code: 'earthmoving',
-    labelFr: 'Terrassement',
-    labelAr: 'تحريك التربة',
+    labels: { fr: 'Terrassement', ar: 'تحريك التربة' },
     types: [
       {
         code: 'motor_grader',
         categoryCode: 'earthmoving',
         defaultUsefulLifeMonths: 60,
-        labelFr: 'Niveleuse',
-        labelAr: 'ممهدة (قريدر)',
+        labels: { fr: 'Niveleuse', ar: 'ممهدة (قريدر)' },
       },
       {
         code: 'earthmoving_other',
         categoryCode: 'earthmoving',
         defaultUsefulLifeMonths: 60,
-        labelFr: 'Autre engin de terrassement',
-        labelAr: 'آلة تحريك تربة أخرى',
+        labels: { fr: 'Autre engin de terrassement', ar: 'آلة تحريك تربة أخرى' },
       },
     ],
   },
   {
     code: 'compaction',
-    labelFr: 'Compactage',
-    labelAr: 'الدمك',
+    labels: { fr: 'Compactage', ar: 'الدمك' },
     types: [
       {
         code: 'tandem_roller',
         categoryCode: 'compaction',
         defaultUsefulLifeMonths: 60,
-        labelFr: 'Compacteur tandem',
-        labelAr: 'مدحلة ترادفية',
+        labels: { fr: 'Compacteur tandem', ar: 'مدحلة ترادفية' },
       },
     ],
   },
   {
     code: 'site_equipment',
-    labelFr: 'Matériel de chantier',
-    labelAr: 'معدات الورش',
+    labels: { fr: 'Matériel de chantier', ar: 'معدات الورش' },
     types: [
       {
         code: 'site_hut',
         categoryCode: 'site_equipment',
         defaultUsefulLifeMonths: 120,
-        labelFr: 'Bungalow de chantier',
-        labelAr: 'مكتب متنقل للورش',
+        labels: { fr: 'Bungalow de chantier', ar: 'مكتب متنقل للورش' },
       },
     ],
   },
   {
     code: 'surveying',
-    labelFr: 'Topographie',
-    labelAr: 'المسح الطبوغرافي',
+    labels: { fr: 'Topographie', ar: 'المسح الطبوغرافي' },
     types: [
       {
         code: 'total_station',
         categoryCode: 'surveying',
         defaultUsefulLifeMonths: 80,
-        labelFr: 'Station totale',
-        labelAr: 'محطة مسح شاملة',
+        labels: { fr: 'Station totale', ar: 'محطة مسح شاملة' },
       },
     ],
   },

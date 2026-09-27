@@ -61,7 +61,7 @@ function setup(
   const catalog = {
     findType: vi.fn(async () => (options.knownType === false ? null : { defaultUsefulLifeMonths: 60 })),
     listCategories: vi.fn(async () => [
-      { code: 'compaction', labelFr: 'Compactage', labelAr: 'الدمك', types: [] },
+      { code: 'compaction', labels: { fr: 'Compactage', ar: 'الدمك' }, types: [] },
     ]),
   } satisfies EquipmentCatalogPort;
   const assignments = {
