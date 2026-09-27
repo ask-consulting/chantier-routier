@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AcquisitionMethod, WorksiteStatus } from '@chantia/shared';
+import { WorksiteStatus } from '@chantia/shared';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { GetWorksiteByIdHandler } from './queries/get-worksite-by-id.handler';
 import { GetWorksiteByIdQuery } from './queries/get-worksite-by-id.query';
@@ -37,18 +37,8 @@ function repositoryWith(found: Worksite | null) {
     findCostInputs: vi.fn(async () => ({
       timesheets: [{ hoursWorked: 8, hourlyRate: 20 }],
       expenses: [{ amount: 1_000 }],
-      // Hired at 100 a day, on the worksite for 3 days.
-      equipment: [
-        {
-          startDate: '2026-04-01',
-          endDate: '2026-04-03',
-          equipment: {
-            acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
-            acquisitionDate: '2026-01-01',
-            dailyRate: 100,
-          },
-        },
-      ],
+      // One machine, its stay stored at 300.
+      equipment: [{ cost: 300 }],
     })),
   } satisfies WorksiteRepositoryPort;
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Prisma } from '@prisma/client';
+import { AcquisitionMethod } from '@chantia/shared';
 import { TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
 import { EquipmentAssignment } from '../../domain/entities/equipment-assignment.entity';
 import { EquipmentAssignmentRepository } from './equipment-assignment.repository';
@@ -14,6 +15,8 @@ function row() {
     worksiteId: 'ws-1',
     startDate: midnight('2026-04-01'),
     endDate: midnight('2026-04-10'),
+    pricing: { acquisitionMethod: 'short_term_rental', acquisitionDate: '2026-03-01', dailyRate: 450 },
+    cost: new Prisma.Decimal('4500.000'),
     notes: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -67,7 +70,7 @@ function setup() {
 }
 
 describe('EquipmentAssignmentRepository', () => {
-  it('lists chronologically, with the machine priced and the worksite named', async () => {
+  it('lists chronologically, with the stored cost and the worksite named', async () => {
     const { repository, prisma } = setup();
 
     const result = await repository.search({ filters: { equipmentId: 'eq-1' } });
@@ -122,6 +125,11 @@ describe('EquipmentAssignmentRepository', () => {
 
   it('writes days as midnight UTC, and deletes through the tenant filter', async () => {
     const { repository, prisma } = setup();
+    const pricing = {
+      acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
+      acquisitionDate: '2026-03-01',
+      dailyRate: 450,
+    };
     const assignment = EquipmentAssignment.create({
       id: 'as-1',
       organizationId: 'org-1',
@@ -129,15 +137,18 @@ describe('EquipmentAssignmentRepository', () => {
       worksiteId: 'ws-1',
       startDate: '2026-04-01',
       endDate: '2026-04-10',
+      pricing,
     });
 
     await repository.save(assignment);
     await repository.delete('as-1');
 
     const { create } = prisma.equipmentAssignment.upsert.mock.calls[0][0] as {
-      create: { startDate: Date };
+      create: { startDate: Date; pricing: unknown; cost: number };
     };
     expect(create.startDate).toEqual(midnight('2026-04-01'));
+    expect(create.pricing).toEqual(pricing);
+    expect(create.cost).toBe(4_500);
     expect(prisma.equipmentAssignment.deleteMany).toHaveBeenCalledWith({ where: { id: 'as-1' } });
   });
 

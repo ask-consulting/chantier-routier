@@ -42,7 +42,14 @@ export class CreateEquipmentAssignmentHandler
     }
 
     const assignment = EquipmentAssignment.create(
-      { ...data, id: randomUUID(), organizationId },
+      {
+        ...data,
+        id: randomUUID(),
+        organizationId,
+        // The price is agreed now: a copy, not a reference, so a rate changed
+        // on the machine later does not reach this assignment.
+        pricing: { ...machine.costInput },
+      },
       { equipment: machine, worksite },
     );
     await checkPlacement(assignment, machine, this.assignments);

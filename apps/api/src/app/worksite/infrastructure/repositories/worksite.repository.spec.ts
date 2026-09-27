@@ -57,23 +57,7 @@ function setup(rows: unknown[] = [], upsertError?: unknown) {
     },
     expense: { findMany: vi.fn(async () => [{ amount: new Prisma.Decimal('150.5') }]) },
     equipmentAssignment: {
-      findMany: vi.fn(async () => [
-        {
-          startDate: new Date('2026-04-01T00:00:00.000Z'),
-          endDate: new Date('2026-04-03T00:00:00.000Z'),
-          equipment: {
-            acquisitionMethod: 'cash_purchase',
-            acquisitionDate: new Date('2026-01-01T00:00:00.000Z'),
-            purchasePrice: new Prisma.Decimal('365000'),
-            residualValue: null,
-            usefulLifeMonths: 12,
-            monthlyPayment: null,
-            dailyRate: null,
-            contractEndDate: null,
-            disposalDate: null,
-          },
-        },
-      ]),
+      findMany: vi.fn(async () => [{ cost: new Prisma.Decimal('1350.500') }]),
     },
   } as unknown as TenantPrismaClient;
 
@@ -174,30 +158,15 @@ describe('WorksiteRepository — the client', () => {
 });
 
 describe('WorksiteRepository — cost inputs', () => {
-  it('reads timesheets, expenses and assigned machines as plain numbers and days', async () => {
+  it('reads timesheets, expenses and the assignments’ stored costs as plain numbers', async () => {
     const { repository } = setup();
 
     const inputs = await repository.findCostInputs('worksite-1');
 
     expect(inputs.timesheets).toEqual([{ hoursWorked: 8, hourlyRate: 20 }]);
     expect(inputs.expenses).toEqual([{ amount: 150.5 }]);
-    expect(inputs.equipment).toEqual([
-      {
-        startDate: '2026-04-01',
-        endDate: '2026-04-03',
-        equipment: {
-          acquisitionMethod: 'cash_purchase',
-          acquisitionDate: '2026-01-01',
-          purchasePrice: 365_000,
-          residualValue: null,
-          usefulLifeMonths: 12,
-          monthlyPayment: null,
-          dailyRate: null,
-          contractEndDate: null,
-          disposalDate: null,
-        },
-      },
-    ]);
+    // The cost stored on each assignment — never recomputed at today's rates.
+    expect(inputs.equipment).toEqual([{ cost: 1_350.5 }]);
   });
 });
 

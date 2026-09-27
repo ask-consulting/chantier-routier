@@ -529,6 +529,15 @@ model EquipmentAssignment {
   worksiteId     String   @map("worksite_id") @db.Uuid
   startDate      DateTime @map("start_date") @db.Date
   endDate        DateTime @map("end_date") @db.Date
+  /// The machine's pricing as it stood when the assignment was made —
+  /// acquisition method, rate, payment, price, lifetime (`EquipmentCostInput`
+  /// in @chantia/shared). A rate changed afterwards applies to the next
+  /// assignments, never to this one.
+  pricing        Json
+  /// What the machine costs the worksite over the period, computed from
+  /// `pricing` whenever the dates change — stored, so the worksite's cost is
+  /// a sum of what was agreed, not a recomputation at today's rates.
+  cost           Decimal  @db.Decimal(14, 3)
   notes          String?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")

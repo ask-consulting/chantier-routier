@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { EquipmentCostInput } from '@chantia/shared';
 import { SearchParams, SearchResult } from '@shared/domain/search.types';
 import { buildPrismaSearchQuery } from '@shared/infrastructure/repositories/prisma-search.helper';
 import { getPrismaPagination } from '@shared/infrastructure/repositories/search-params';
@@ -11,7 +12,7 @@ import {
 import { EquipmentAssignmentRepositoryPort } from '../../domain/ports/equipment-assignment-repository.port';
 import { EquipmentMapper } from '../mappers/equipment.mapper';
 
-/** The machine to price the period, the worksite to name it. */
+/** The machine and the worksite, to name them. The price is the assignment's own. */
 const WITH_RELATIONS = {
   equipment: true,
   worksite: { select: { id: true, code: true, name: true } },
@@ -36,6 +37,9 @@ function toDomain(row: AssignmentRow): EquipmentAssignment {
       worksiteId: row.worksiteId,
       startDate: day(row.startDate),
       endDate: day(row.endDate),
+      // Written by `save` from an `EquipmentCostInput`, and only there.
+      pricing: row.pricing as unknown as EquipmentCostInput,
+      cost: row.cost.toNumber(),
       notes: row.notes,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -88,6 +92,8 @@ export class EquipmentAssignmentRepository implements EquipmentAssignmentReposit
       worksiteId: assignment.worksiteId,
       startDate: date(assignment.startDate),
       endDate: date(assignment.endDate),
+      pricing: assignment.pricing as unknown as Prisma.InputJsonObject,
+      cost: assignment.cost,
       notes: assignment.notes,
     };
     const row = await this.prisma.equipmentAssignment.upsert({

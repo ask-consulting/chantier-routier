@@ -133,7 +133,9 @@ export function useAssignmentForm(
     values.endDate !== '' &&
     Object.keys(clientErrors).length === 0;
 
-  const costInput = costInputOf(equipment);
+  // An assignment keeps the pricing it was made at: moving its dates prices
+  // them at that rate, not at the machine's current one — the API's rule.
+  const costInput = editing ? (editing.pricing ?? null) : costInputOf(equipment);
   const previewCost =
     isComplete && costInput
       ? equipmentCostOverPeriod(costInput, values.startDate, values.endDate)

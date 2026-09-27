@@ -435,7 +435,8 @@
     "endToday": "Terminer aujourd’hui",
     "endTodayFor": "Terminer aujourd’hui l’affectation à {worksite}",
     "frozenHint": "L’affectation a commencé : le chantier et la date de début ne changent plus, et la fin ne peut pas revenir avant hier — ces jours sont dans le coût du chantier.",
-    "correctAssignmentDescription": "Cette affectation a commencé : la supprimer retire ses jours passés du coût de {worksite}. À réserver à la correction d’une erreur."
+    "correctAssignmentDescription": "Cette affectation a commencé : la supprimer retire ses jours passés du coût de {worksite}. À réserver à la correction d’une erreur.",
+    "rateChangeHint": "Un nouveau tarif s’applique aux prochaines affectations ; celles déjà faites gardent le leur."
   },
   "acquisitionMethod": {
     "cash_purchase": "Achat comptant",

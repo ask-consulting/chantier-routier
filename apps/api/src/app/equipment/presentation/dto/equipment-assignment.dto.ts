@@ -11,6 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import {
+  EquipmentCostInput,
   ICreateEquipmentAssignment,
   IEquipmentAssignment,
   IUpdateEquipmentAssignment,
@@ -109,13 +110,22 @@ export class EquipmentAssignmentResponseDto implements IEquipmentAssignment {
   @ApiProperty({ nullable: true }) notes: string | null;
   @ApiProperty() equipment: IEquipmentAssignment['equipment'];
   @ApiProperty() worksite: IEquipmentAssignment['worksite'];
-  @ApiProperty({ required: false, description: 'Omitted without budget:read.' }) cost?: number;
+  @ApiProperty({
+    required: false,
+    description: 'Stored, at the pricing agreed. Omitted without budget:read.',
+  })
+  cost?: number;
+  @ApiProperty({
+    required: false,
+    description: 'The machine’s pricing when the assignment was made. Omitted without budget:read.',
+  })
+  pricing?: EquipmentCostInput;
   @ApiProperty({ required: false }) createdAt?: string;
   @ApiProperty({ required: false }) updatedAt?: string;
 
   /**
-   * @param options.includeMoney when false, `cost` is left unset and never
-   *   reaches the client — the rule of every money field.
+   * @param options.includeMoney when false, `cost` and `pricing` are left
+   *   unset and never reach the client — the rule of every money field.
    */
   static fromDomain(
     assignment: EquipmentAssignment,
@@ -140,8 +150,9 @@ export class EquipmentAssignmentResponseDto implements IEquipmentAssignment {
       fleetNumber: machine?.fleetNumber ?? null,
     };
     dto.worksite = assignment.worksite ?? { id: assignment.worksiteId, code: '', name: '' };
-    if (options.includeMoney && assignment.cost !== null) {
+    if (options.includeMoney) {
       dto.cost = assignment.cost;
+      dto.pricing = assignment.pricing;
     }
     dto.createdAt = assignment.createdAt?.toISOString();
     dto.updatedAt = assignment.updatedAt?.toISOString();

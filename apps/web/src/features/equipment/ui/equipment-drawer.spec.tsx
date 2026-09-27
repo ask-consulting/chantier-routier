@@ -202,6 +202,25 @@ describe('EquipmentDrawer, the money', () => {
 });
 
 describe('EquipmentDrawer, editing and state', () => {
+  it('warns, on a leased machine’s rate, that a new one reaches only the next assignments', async () => {
+    renderWithProviders(
+      <EquipmentDrawer
+        open
+        equipment={{
+          ...grader,
+          acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
+          purchasePrice: null,
+          usefulLifeMonths: null,
+          dailyRate: 450,
+        }}
+        onClose={() => {}}
+      />,
+    );
+    await ready();
+
+    expect(screen.getByText(/s’applique aux prochaines affectations/)).toBeTruthy();
+  });
+
   it('prefills the machine, category included, and keeps its own lifetime', async () => {
     renderWithProviders(<EquipmentDrawer open equipment={grader} onClose={() => {}} />);
     await ready();

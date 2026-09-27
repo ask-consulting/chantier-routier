@@ -19,6 +19,11 @@ const assignment = EquipmentAssignment.create(
     worksiteId: 'ws-1',
     startDate: '2026-04-01',
     endDate: '2026-04-10',
+    pricing: {
+      acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
+      acquisitionDate: '2026-03-01',
+      dailyRate: 450,
+    },
   },
   {
     equipment: Equipment.create({
@@ -70,7 +75,10 @@ describe('EquipmentAssignmentController', () => {
       fleetNumber: 'CP-03',
     });
     expect(manager.days).toBe(10);
-    expect(JSON.parse(JSON.stringify(foreman))).not.toHaveProperty('cost');
+    expect(manager.pricing?.dailyRate).toBe(450);
+    const wire = JSON.parse(JSON.stringify(foreman)) as Record<string, unknown>;
+    expect(wire).not.toHaveProperty('cost');
+    expect(wire).not.toHaveProperty('pricing');
   });
 
   it('filters by machine or worksite', async () => {

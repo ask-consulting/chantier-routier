@@ -52,6 +52,7 @@ function booked(overrides: Partial<{ id: string; startDate: string; endDate: str
       worksiteId: SOUSSE.id,
       startDate: '2026-04-01',
       endDate: '2026-04-10',
+      pricing: { ...roller.costInput },
       ...overrides,
     },
     { equipment: roller, worksite: SOUSSE },
@@ -219,6 +220,45 @@ describe('UpdateEquipmentAssignmentHandler', () => {
   });
 });
 
+describe('the price agreed when the assignment was made', () => {
+  it('is copied from the machine at creation — a value, not a reference', async () => {
+    const { assignments, equipment, saved } = setup();
+
+    await new CreateEquipmentAssignmentHandler(assignments, equipment).execute(
+      create({ startDate: '2026-05-01', endDate: '2026-05-10' }),
+    );
+
+    expect(saved[0].pricing).toEqual(roller.costInput);
+    expect(saved[0].pricing).not.toBe(roller.costInput);
+    expect(saved[0].cost).toBe(4_500);
+  });
+
+  it('survives a rate raised afterwards: its cost does not move', async () => {
+    const { assignments, equipment, saved } = setup();
+    // The rental goes from 450 to 500 a day after the booking.
+    equipment.findById.mockResolvedValue(roller.with({ dailyRate: 500 }));
+
+    await new UpdateEquipmentAssignmentHandler(assignments, equipment).execute(
+      new UpdateEquipmentAssignmentCommand('as-1', { notes: 'chauffeur inclus' }),
+    );
+
+    expect(saved[0].cost).toBe(4_500);
+    expect(saved[0].pricing.dailyRate).toBe(450);
+  });
+
+  it('prices new dates at the agreed rate, not today’s', async () => {
+    const { assignments, equipment, saved } = setup();
+    equipment.findById.mockResolvedValue(roller.with({ dailyRate: 500 }));
+
+    await new UpdateEquipmentAssignmentHandler(assignments, equipment).execute(
+      new UpdateEquipmentAssignmentCommand('as-1', { endDate: '2026-04-12' }),
+    );
+
+    // 12 days at the 450 of the booking, not at 500.
+    expect(saved[0].cost).toBe(5_400);
+  });
+});
+
 describe('the days that already happened', () => {
   // Today is 2026-04-05: the booking of 04-01 → 04-10 is in progress.
   beforeEach(() => vi.setSystemTime(new Date('2026-04-05T10:00:00Z')));
@@ -320,7 +360,7 @@ describe('EquipmentAssignment', () => {
     expect(assignment.with({ worksiteId: SOUSSE.id }).worksite).toEqual(SOUSSE);
   });
 
-  it('has no cost when its machine was not loaded', () => {
+  it('prices itself from its own pricing, not the machine’s', () => {
     const bare = EquipmentAssignment.create({
       id: 'as-2',
       organizationId: 'org-1',
@@ -328,10 +368,29 @@ describe('EquipmentAssignment', () => {
       worksiteId: SOUSSE.id,
       startDate: '2026-04-01T00:00:00.000Z',
       endDate: '2026-04-01',
+      pricing: { ...roller.costInput, dailyRate: 300 },
     });
 
-    expect(bare.cost).toBeNull();
+    expect(bare.cost).toBe(300);
     expect(bare.startDate).toBe('2026-04-01');
     expect(bare.days).toBe(1);
+  });
+
+  it('keeps a stored cost while its dates do not move', () => {
+    const stored = EquipmentAssignment.create({
+      id: 'as-3',
+      organizationId: 'org-1',
+      equipmentId: 'eq-1',
+      worksiteId: SOUSSE.id,
+      startDate: '2026-04-01',
+      endDate: '2026-04-02',
+      pricing: roller.costInput,
+      cost: 777,
+    });
+
+    expect(stored.cost).toBe(777);
+    expect(stored.with({ notes: 'x' }).cost).toBe(777);
+    // New dates: priced again, at the same agreed rate — 3 days × 450.
+    expect(stored.with({ endDate: '2026-04-03' }).cost).toBe(1_350);
   });
 });

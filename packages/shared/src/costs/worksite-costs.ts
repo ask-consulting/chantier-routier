@@ -1,4 +1,3 @@
-import { equipmentCostOverPeriod, type EquipmentCostInput } from '../equipment/equipment-costs';
 import { IWorksiteCosts } from '../interfaces/worksite.interface';
 
 /** A timesheet reduced to what the labor cost computation needs. */
@@ -12,12 +11,13 @@ export interface ExpenseCost {
   amount: number;
 }
 
-/** A machine's stay on the worksite, reduced to what its cost needs. */
+/**
+ * A machine's stay on the worksite, reduced to its cost — the one stored on
+ * the assignment, computed from the pricing agreed when it was made (see
+ * `equipmentCostOverPeriod`). Never recomputed here at today's rates.
+ */
 export interface EquipmentAssignmentCost {
-  equipment: EquipmentCostInput;
-  /** `YYYY-MM-DD`, both included. */
-  startDate: string;
-  endDate: string;
+  cost: number;
 }
 
 export interface CalculateActualCostInput {
@@ -43,20 +43,16 @@ export function calculateExpensesCost(expenses: ExpenseCost[]): number {
 }
 
 /**
- * Equipment cost = Σ of each machine's daily cost over its assigned period.
+ * Equipment cost = Σ of each assignment's stored cost.
  *
- * Over the **whole** period, future days included: an assignment is a
- * commitment — the machine is booked, and its depreciation or rent runs
- * whether or not the days have passed yet. That makes this the worksite's
- * final equipment cost, known from the day the machine is planned.
+ * Each covers the **whole** assigned period, future days included: an
+ * assignment is a commitment — the machine is booked, and its depreciation or
+ * rent runs whether or not the days have passed yet. And each is priced at
+ * what was agreed when it was made: a rental that goes up later does not
+ * rewrite what past worksites cost.
  */
 export function calculateEquipmentCost(assignments: EquipmentAssignmentCost[]): number {
-  return round(
-    assignments.reduce(
-      (total, a) => total + equipmentCostOverPeriod(a.equipment, a.startDate, a.endDate),
-      0,
-    ),
-  );
+  return round(assignments.reduce((total, a) => total + a.cost, 0));
 }
 
 /**

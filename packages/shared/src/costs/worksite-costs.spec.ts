@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { AcquisitionMethod } from '../enums/equipment.enums';
 import {
   calculateActualCost,
   calculateEquipmentCost,
@@ -66,25 +65,8 @@ describe('calculateActualCost', () => {
 });
 
 describe('the equipment in a worksite’s cost', () => {
-  const excavator = {
-    acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
-    acquisitionDate: '2026-01-01',
-    purchasePrice: 365_000,
-    usefulLifeMonths: 12,
-  };
-  const hired = {
-    acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
-    acquisitionDate: '2026-03-01',
-    dailyRate: 450,
-  };
-
-  it('sums every machine over its whole assigned period', () => {
-    expect(
-      calculateEquipmentCost([
-        { equipment: excavator, startDate: '2026-03-01', endDate: '2026-03-10' },
-        { equipment: hired, startDate: '2026-03-01', endDate: '2026-03-02' },
-      ]),
-    ).toBe(10_900);
+  it('sums the costs stored on the assignments — never recomputed', () => {
+    expect(calculateEquipmentCost([{ cost: 10_000 }, { cost: 900.005 }])).toBe(10_900.01);
   });
 
   it('adds up with labour and expenses, against the budget', () => {
@@ -92,7 +74,7 @@ describe('the equipment in a worksite’s cost', () => {
       worksiteId: 'w-1',
       timesheets: [{ hoursWorked: 10, hourlyRate: 20 }],
       expenses: [{ amount: 300 }],
-      equipment: [{ equipment: hired, startDate: '2026-03-01', endDate: '2026-03-02' }],
+      equipment: [{ cost: 900 }],
       totalBudget: 2_000,
     });
 

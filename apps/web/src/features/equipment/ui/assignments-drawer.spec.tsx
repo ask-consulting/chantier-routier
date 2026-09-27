@@ -81,6 +81,13 @@ const atSousse: IEquipmentAssignment = {
   equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeCode: 'tandem_roller', fleetNumber: 'CP-03' },
   worksite: { id: 'ws-1', code: 'RN1', name: 'Réfection RN1' },
   cost: 4500,
+  // Booked at 400 a day — the machine's rate has gone up to 450 since.
+  pricing: {
+    acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
+    acquisitionDate: '2026-03-01',
+    dailyRate: 400,
+    contractEndDate: '2026-12-31',
+  },
 };
 
 let mock: MockAdapter;
@@ -240,12 +247,14 @@ describe('AssignmentsDrawer, booking', () => {
 });
 
 describe('AssignmentsDrawer, moving and cancelling', () => {
-  it('moves an assignment through PATCH, prefilled', async () => {
+  it('moves an assignment through PATCH, prefilled, priced at its own agreed rate', async () => {
     open();
     fireEvent.click(await screen.findByRole('button', { name: /Modifier l’affectation à RN1/ }));
 
     expect((screen.getByLabelText('Du') as HTMLInputElement).value).toBe('2026-04-01');
     change('Au (inclus)', '2026-04-15');
+    // 15 days at the 400 it was booked at — not at the machine's 450 of today.
+    expect(screen.getByText(/Coût pour le chantier sur la période : 6\s?000,00/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => {

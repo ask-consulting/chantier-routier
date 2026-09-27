@@ -249,7 +249,13 @@ function EquipmentForm({
 
           {form.leased && (
             <div className="grid gap-stack sm:grid-cols-2">
-              <Field label={t('monthlyPayment')} required {...money} {...bound('monthlyPayment')} />
+              <Field
+                label={t('monthlyPayment')}
+                hint={form.isEditing ? t('rateChangeHint') : undefined}
+                required
+                {...money}
+                {...bound('monthlyPayment')}
+              />
               <Field
                 label={t('contractEndDate')}
                 type="date"
@@ -270,7 +276,13 @@ function EquipmentForm({
 
           {form.hired && (
             <div className="grid gap-stack sm:grid-cols-2">
-              <Field label={t('dailyRate')} required {...money} {...bound('dailyRate')} />
+              <Field
+                label={t('dailyRate')}
+                hint={form.isEditing ? t('rateChangeHint') : undefined}
+                required
+                {...money}
+                {...bound('dailyRate')}
+              />
               <Field
                 label={t('rentalEndDate')}
                 hint={t('rentalEndHint')}
