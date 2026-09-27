@@ -4,6 +4,7 @@
     "description": "Gestion de chantiers routiers"
   },
   "nav": {
+    "home": "Accueil",
     "worksites": "Chantiers",
     "clients": "Clients",
     "workers": "Ouvriers",
@@ -17,6 +18,15 @@
     "open": "Ouvrir le menu",
     "close": "Fermer le menu",
     "invitations": "Invitations"
+  },
+  "home": {
+    "title": "Chantiers en cours",
+    "allWorksites": "Tous les chantiers",
+    "emptyTitle": "Aucun chantier en cours",
+    "emptyDescription": "Les chantiers passés au statut « En cours » apparaissent ici.",
+    "goToWorksites": "Voir les chantiers",
+    "loadError": "Impossible de charger les chantiers : {reason}",
+    "unknownError": "erreur inconnue"
   },
   "settings": {
     "theme": "Thème",
@@ -89,7 +99,16 @@
     "laborCost": "Main-d’œuvre",
     "expensesCost": "Dépenses",
     "equipmentCost": "Matériel",
-    "actualCost": "Coût total"
+    "actualCost": "Coût total",
+    "openWorksite": "Ouvrir le chantier {name}",
+    "noClient": "Sans client",
+    "schedule": {
+      "label": "Planning prévu",
+      "unplanned": "Dates prévues non renseignées",
+      "upcoming": "Commence dans {days, plural, one {# jour} other {# jours}}",
+      "onSchedule": "{percent} % du planning écoulé · {days, plural, =0 {dernier jour} one {# jour restant} other {# jours restants}}",
+      "overdue": "En retard de {days, plural, one {# jour} other {# jours}} sur la fin prévue"
+    }
   },
   "clients": {
     "title": "Clients",
@@ -156,7 +175,8 @@
     "error": {
       "invalidInput": "Vérifiez les champs : l’un d’eux n’est pas accepté.",
       "unknown": "Le client n’a pas pu être enregistré."
-    }
+    },
+    "contactsError": "Impossible de charger les contacts."
   },
   "worksiteStatus": {
     "upcoming": "À venir",
@@ -436,7 +456,9 @@
     "endTodayFor": "Terminer aujourd’hui l’affectation à {worksite}",
     "frozenHint": "L’affectation a commencé : le chantier et la date de début ne changent plus, et la fin ne peut pas revenir avant hier — ces jours sont dans le coût du chantier.",
     "correctAssignmentDescription": "Cette affectation a commencé : la supprimer retire ses jours passés du coût de {worksite}. À réserver à la correction d’une erreur.",
-    "rateChangeHint": "Un nouveau tarif s’applique aux prochaines affectations ; celles déjà faites gardent le leur."
+    "rateChangeHint": "Un nouveau tarif s’applique aux prochaines affectations ; celles déjà faites gardent le leur.",
+    "noEquipmentOnWorksite": "Aucun matériel affecté à ce chantier.",
+    "openFleetPlanning": "Gérer le planning du matériel"
   },
   "acquisitionMethod": {
     "cash_purchase": "Achat comptant",
@@ -449,5 +471,20 @@
     "in_service": "En service",
     "under_maintenance": "En maintenance",
     "retired": "Retiré"
+  },
+  "worksitePage": {
+    "backHome": "Accueil",
+    "backToList": "Voir tous les chantiers",
+    "edit": "Modifier",
+    "schedule": "Planning",
+    "plannedStart": "Début prévu",
+    "plannedEnd": "Fin prévue",
+    "equipment": "Matériel affecté",
+    "details": "Informations",
+    "contacts": "Contacts du client",
+    "notFoundTitle": "Chantier introuvable",
+    "notFoundDescription": "Ce chantier n’existe pas, ou plus.",
+    "loadError": "Impossible de charger le chantier : {reason}",
+    "unknownError": "erreur inconnue"
   }
 }

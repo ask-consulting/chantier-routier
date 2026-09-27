@@ -18,6 +18,7 @@ import { createLucideIcon } from 'lucide-react';
 
 export {
   // --- Domain ---------------------------------------------------------------
+  House as HomeIcon,
   HardHat as WorksiteIcon,
   Users as WorkerIcon,
   Clock as TimesheetIcon,

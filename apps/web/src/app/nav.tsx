@@ -3,7 +3,14 @@
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Permission } from '@chantia/shared';
-import { AccountIcon, ClientIcon, RollerIcon, WorkerIcon, WorksiteIcon } from '@/shared/lib/icons';
+import {
+  AccountIcon,
+  ClientIcon,
+  HomeIcon,
+  RollerIcon,
+  WorkerIcon,
+  WorksiteIcon,
+} from '@/shared/lib/icons';
 import { SidebarNavGroup, SidebarNavItem } from '@/shared/ui';
 import { Can } from '@/features/auth';
 
@@ -28,6 +35,8 @@ import { Can } from '@/features/auth';
  * answer 403 — the API enforces the same rule, this only spares a dead end.
  */
 export const NAV = [
+  // Exact match only: `/` would otherwise prefix every path — see `SidebarNavItem`.
+  { href: '/', key: 'home', Icon: HomeIcon },
   { href: '/worksites', key: 'worksites', Icon: WorksiteIcon },
   { href: '/clients', key: 'clients', Icon: ClientIcon, permission: Permission.CLIENT_READ },
   { href: '/workers', key: 'workers', Icon: WorkerIcon, permission: Permission.WORKER_READ },
