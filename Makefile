@@ -95,7 +95,7 @@ api-shell: ## Ouvre un shell dans le conteneur de l'API
 	docker exec -it chantia-api sh
 
 ##@ API — Prisma / migrations
-.PHONY: api-prisma-generate api-migrate api-migrate-create api-migrate-deploy api-migrate-status api-studio
+.PHONY: api-prisma-generate api-migrate api-migrate-create api-migrate-deploy api-migrate-status api-studio api-seed-demo api-seed-demo-reset
 api-prisma-generate: ## Génère le client Prisma
 	cd $(API_DIR) && $(PNPM) exec prisma generate
 api-migrate: ## Crée + applique une migration en dev  (usage: make api-migrate name=ma_migration)
@@ -108,6 +108,10 @@ api-migrate-status: ## Affiche l'état des migrations
 	cd $(API_DIR) && $(PNPM) exec prisma migrate status
 api-studio: ## Ouvre Prisma Studio (UI base de données)
 	cd $(API_DIR) && $(PNPM) exec prisma studio
+api-seed-demo: ## Crée ou rafraîchit l'organisation de test « Chantia Démo » (base locale)
+	cd $(API_DIR) && $(PNPM) build && $(PNPM) seed:demo
+api-seed-demo-reset: ## Supprime l'organisation de test et tout son contenu
+	cd $(API_DIR) && $(PNPM) build && $(PNPM) seed:demo -- --reset
 
 ##@ API — Base de données & santé
 .PHONY: api-psql api-db-orgs api-db-users api-health api-login api-worksites
