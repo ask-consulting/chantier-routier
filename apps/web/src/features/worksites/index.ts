@@ -11,6 +11,9 @@
  */
 
 export { WorksiteListPage } from './ui/worksite-list-page';
+// The home page's cards, and the page each opens.
+export { ActiveWorksites } from './ui/active-worksites';
+export { WorksitePage, type WorksitePanels } from './ui/worksite-page';
 export type { ClientPicker, ClientPickerProps } from './ui/worksite-drawer';
 // For the equipment planning, handed over by the `/equipment` route.
 export { WorksiteSelect } from './ui/worksite-select';

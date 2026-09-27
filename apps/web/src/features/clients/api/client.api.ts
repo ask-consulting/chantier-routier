@@ -39,6 +39,10 @@ export function fetchClients(params?: ClientListParams): Promise<Paginated<IClie
   return apiFetch<Paginated<IClient>>(`/clients${suffix}`);
 }
 
+export function fetchClient(id: string): Promise<IClient> {
+  return apiFetch<IClient>(`/clients/${id}`);
+}
+
 export function createClient(payload: ICreateClient): Promise<IClient> {
   return apiFetch<IClient>('/clients', { method: 'POST', data: payload });
 }

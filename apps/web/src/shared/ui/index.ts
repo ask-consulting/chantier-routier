@@ -1,6 +1,7 @@
 export * from './alert';
 export * from './badge';
 export * from './button';
+export * from './button-link';
 export * from './card';
 export * from './checkbox';
 export * from './confirm-dialog';

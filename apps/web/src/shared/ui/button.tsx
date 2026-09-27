@@ -22,6 +22,25 @@ const SIZES: Record<ButtonSize, string> = {
   icon: 'size-9',
 };
 
+/**
+ * The button's look, for anything that must look like one without being a
+ * `<button>` — a link to another page, say (`ButtonLink`). One definition, so
+ * the two never drift apart.
+ */
+export function buttonClasses(
+  variant: ButtonVariant = 'secondary',
+  size: ButtonSize = 'md',
+  className?: string,
+): string {
+  return cn(
+    'inline-flex items-center justify-center rounded-control font-medium',
+    'transition-colors disabled:pointer-events-none disabled:opacity-50',
+    VARIANTS[variant],
+    SIZES[size],
+    className,
+  );
+}
+
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -61,13 +80,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        'inline-flex items-center justify-center rounded-control font-medium',
-        'transition-colors disabled:pointer-events-none disabled:opacity-50',
-        VARIANTS[variant],
-        SIZES[size],
-        className,
-      )}
+      className={buttonClasses(variant, size, className)}
       {...props}
     >
       {loading && <SpinnerIcon className="size-4 shrink-0 animate-spin" aria-hidden />}

@@ -4,6 +4,7 @@
     "description": "إدارة أوراش الطرق"
   },
   "nav": {
+    "home": "الرئيسية",
     "worksites": "الأوراش",
     "clients": "العملاء",
     "workers": "العمال",
@@ -17,6 +18,15 @@
     "open": "فتح القائمة",
     "close": "إغلاق القائمة",
     "invitations": "الدعوات"
+  },
+  "home": {
+    "title": "الأوراش الجارية",
+    "allWorksites": "كل الأوراش",
+    "emptyTitle": "لا يوجد ورش جارٍ",
+    "emptyDescription": "تظهر هنا الأوراش التي حالتها «جارٍ».",
+    "goToWorksites": "عرض الأوراش",
+    "loadError": "تعذّر تحميل الأوراش: {reason}",
+    "unknownError": "خطأ غير معروف"
   },
   "settings": {
     "theme": "المظهر",
@@ -89,7 +99,16 @@
     "laborCost": "اليد العاملة",
     "expensesCost": "المصاريف",
     "equipmentCost": "المعدات",
-    "actualCost": "التكلفة الإجمالية"
+    "actualCost": "التكلفة الإجمالية",
+    "openWorksite": "فتح الورش {name}",
+    "noClient": "بدون عميل",
+    "schedule": {
+      "label": "الجدولة المتوقعة",
+      "unplanned": "التواريخ المتوقعة غير محددة",
+      "upcoming": "يبدأ بعد {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يوماً} other {# يوم}}",
+      "onSchedule": "مضى {percent}٪ من الجدولة · {days, plural, zero {اليوم الأخير} one {يوم واحد متبقٍ} two {يومان متبقيان} few {# أيام متبقية} many {# يوماً متبقياً} other {# يوم متبقٍ}}",
+      "overdue": "متأخر بـ {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يوماً} other {# يوم}} عن النهاية المتوقعة"
+    }
   },
   "clients": {
     "title": "العملاء",
@@ -156,7 +175,8 @@
     "error": {
       "invalidInput": "تحقّق من الحقول: أحدها غير مقبول.",
       "unknown": "تعذّر حفظ العميل."
-    }
+    },
+    "contactsError": "تعذّر تحميل جهات الاتصال."
   },
   "worksiteStatus": {
     "upcoming": "قادم",
@@ -436,7 +456,9 @@
     "endTodayFor": "إنهاء التخصيص لـ {worksite} اليوم",
     "frozenHint": "بدأ التخصيص: لم يعد الورش وتاريخ البدء قابلين للتغيير، ولا يمكن أن تعود النهاية إلى ما قبل الأمس — هذه الأيام ضمن تكلفة الورش.",
     "correctAssignmentDescription": "بدأ هذا التخصيص: حذفه يُخرج أيامه الماضية من تكلفة {worksite}. يُستعمل فقط لتصحيح خطأ.",
-    "rateChangeHint": "تُطبَّق التعريفة الجديدة على التخصيصات القادمة؛ وتحتفظ التخصيصات السابقة بتعريفتها."
+    "rateChangeHint": "تُطبَّق التعريفة الجديدة على التخصيصات القادمة؛ وتحتفظ التخصيصات السابقة بتعريفتها.",
+    "noEquipmentOnWorksite": "لا توجد معدات مخصصة لهذا الورش.",
+    "openFleetPlanning": "إدارة جدولة المعدات"
   },
   "acquisitionMethod": {
     "cash_purchase": "شراء نقدي",
@@ -449,5 +471,20 @@
     "in_service": "في الخدمة",
     "under_maintenance": "في الصيانة",
     "retired": "خارج الخدمة"
+  },
+  "worksitePage": {
+    "backHome": "الرئيسية",
+    "backToList": "عرض كل الأوراش",
+    "edit": "تعديل",
+    "schedule": "الجدولة",
+    "plannedStart": "البداية المتوقعة",
+    "plannedEnd": "النهاية المتوقعة",
+    "equipment": "المعدات المخصصة",
+    "details": "المعلومات",
+    "contacts": "جهات اتصال العميل",
+    "notFoundTitle": "الورش غير موجود",
+    "notFoundDescription": "هذا الورش غير موجود.",
+    "loadError": "تعذّر تحميل الورش: {reason}",
+    "unknownError": "خطأ غير معروف"
   }
 }
