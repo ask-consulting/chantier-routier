@@ -12,6 +12,8 @@
 
 export { WorksiteListPage } from './ui/worksite-list-page';
 export type { ClientPicker, ClientPickerProps } from './ui/worksite-drawer';
+// For the equipment planning, handed over by the `/equipment` route.
+export { WorksiteSelect } from './ui/worksite-select';
 
 // Exposed because the design-system page documents the tones, and because a
 // dashboard will want to colour a status without duplicating the mapping.

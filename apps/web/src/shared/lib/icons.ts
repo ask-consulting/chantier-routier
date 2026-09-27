@@ -29,6 +29,7 @@ export {
   Smartphone as MobilePhoneIcon,
   Phone as LandlinePhoneIcon,
   Mail as EmailIcon,
+  CalendarRange as CalendarIcon,
 
   // --- Actions --------------------------------------------------------------
   Plus as CreateIcon,

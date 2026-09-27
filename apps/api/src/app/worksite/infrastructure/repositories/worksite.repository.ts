@@ -104,7 +104,7 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
   }
 
   async findCostInputs(worksiteId: string): Promise<WorksiteCostInputs> {
-    const [timesheetRows, expenseRows] = await Promise.all([
+    const [timesheetRows, expenseRows, assignmentRows] = await Promise.all([
       this.prisma.timesheet.findMany({
         where: { worksiteId },
         select: { hoursWorked: true, worker: { select: { hourlyRate: true } } },
@@ -112,6 +112,13 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
       this.prisma.expense.findMany({
         where: { worksiteId },
         select: { amount: true },
+      }),
+      // Tenant-scoped by the assignments' own organization. Each carries the
+      // cost agreed when it was made — summed, never recomputed at today's
+      // rates.
+      this.prisma.equipmentAssignment.findMany({
+        where: { worksiteId },
+        select: { cost: true },
       }),
     ]);
 
@@ -121,6 +128,7 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
         hourlyRate: t.worker.hourlyRate.toNumber(),
       })),
       expenses: expenseRows.map((e) => ({ amount: e.amount.toNumber() })),
+      equipment: assignmentRows.map((a) => ({ cost: a.cost.toNumber() })),
     };
   }
 }

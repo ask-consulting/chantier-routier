@@ -179,3 +179,28 @@ export function netBookValue(equipment: EquipmentCostInput, day: string): number
   const value = equipment.purchasePrice - depreciationPerDay(equipment) * elapsed;
   return round(Math.max(equipment.residualValue ?? 0, value));
 }
+
+/** Whether two periods share at least one day. Both ends included on both. */
+export function periodsOverlap(
+  a: { startDate: string; endDate: string },
+  b: { startDate: string; endDate: string },
+): boolean {
+  return toUtc(a.startDate) <= toUtc(b.endDate) && toUtc(b.startDate) <= toUtc(a.endDate);
+}
+
+/**
+ * The days a machine can be on a worksite at all: from its acquisition to its
+ * disposal — and, for what is leased or hired, to the end of the contract.
+ * `until` is `null` when nothing ends it.
+ */
+export function equipmentAvailability(equipment: EquipmentCostInput): {
+  from: string;
+  until: string | null;
+} {
+  const ends = [
+    equipment.disposalDate ?? null,
+    isOwned(equipment.acquisitionMethod) ? null : (equipment.contractEndDate ?? null),
+  ].filter((day): day is string => day !== null);
+  const until = ends.length === 0 ? null : ends.reduce((a, b) => (toUtc(a) <= toUtc(b) ? a : b));
+  return { from: equipment.acquisitionDate.slice(0, 10), until: until?.slice(0, 10) ?? null };
+}

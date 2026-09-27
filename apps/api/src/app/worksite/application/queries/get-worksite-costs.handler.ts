@@ -21,13 +21,16 @@ export class GetWorksiteCostsHandler implements IQueryHandler<GetWorksiteCostsQu
       throw new ResourceNotFoundException('Worksite', query.worksiteId);
     }
 
-    const { timesheets, expenses } = await this.repository.findCostInputs(query.worksiteId);
+    const { timesheets, expenses, equipment } = await this.repository.findCostInputs(
+      query.worksiteId,
+    );
 
     // Shared pure computation — same function the mobile app runs offline.
     return calculateActualCost({
       worksiteId: worksite.id,
       timesheets,
       expenses,
+      equipment,
       totalBudget: worksite.totalBudget,
     });
   }

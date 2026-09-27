@@ -3,12 +3,12 @@ import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AcquisitionMethod,
-  EquipmentCategory,
   EquipmentStatus,
   Permission,
   type IEquipment,
 } from '@chantia/shared';
 import { apiClient } from '@/shared/api/http-client';
+import { CATALOG } from '@/test/equipment-catalog';
 import { renderWithProviders } from '@/test/render';
 import { EquipmentListPage } from './equipment-list-page';
 import { EquipmentList } from './equipment-table';
@@ -58,8 +58,10 @@ function listBody(items: IEquipment[]) {
   return { items, total: items.length, page: 1, limit: 20 };
 }
 
+/** The catalog always answers; everything else answers `status` and `body`. */
 function mockReply(status: number, body?: unknown): void {
   mock.reset();
+  mock.onGet('/equipment-catalog').reply(200, CATALOG);
   mock.onAny().reply(status, body);
 }
 
@@ -81,10 +83,10 @@ afterEach(() => {
 });
 
 describe('EquipmentList', () => {
-  it('names the type and the status, and shows today’s cost to whoever reads budgets', () => {
+  it('names the type from the catalog, the status, and today’s cost for whoever reads budgets', async () => {
     renderWithProviders(<EquipmentList equipment={[roller]} onEdit={() => {}} />);
 
-    expect(screen.getAllByText('Compacteur tandem').length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('Compacteur tandem')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('En maintenance').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/120,00/).length).toBeGreaterThan(0);
   });
@@ -139,10 +141,11 @@ describe('EquipmentListPage', () => {
   it('sends the category and the status to the server', async () => {
     renderWithProviders(<EquipmentListPage />);
     await screen.findAllByText('Compacteur HAMM HD12');
+    await screen.findByRole('option', { name: 'Compactage' });
 
     const outside = (label: string) =>
       screen.getAllByLabelText(label).find((element) => element.closest('dialog') === null) as HTMLElement;
-    fireEvent.change(outside('Catégorie'), { target: { value: EquipmentCategory.COMPACTION } });
+    fireEvent.change(outside('Catégorie'), { target: { value: 'compaction' } });
     fireEvent.change(outside('Statut'), { target: { value: EquipmentStatus.RETIRED } });
 
     await waitFor(() => {

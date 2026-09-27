@@ -5,8 +5,10 @@ import {
   daysBetweenInclusive,
   depreciationEndDate,
   equipmentCostOverPeriod,
+  equipmentAvailability,
   equipmentDailyCost,
   netBookValue,
+  periodsOverlap,
   type EquipmentCostInput,
 } from './equipment-costs';
 
@@ -123,5 +125,31 @@ describe('a leased or rented machine', () => {
 
   it('counts only the days a period shares with the contract', () => {
     expect(equipmentCostOverPeriod(leased, '2026-12-25', '2027-01-05')).toBeCloseTo(120 * 7, 3);
+  });
+});
+
+describe('periods', () => {
+  it('overlap when they share a day, ends included', () => {
+    const march = { startDate: '2026-03-01', endDate: '2026-03-10' };
+
+    expect(periodsOverlap(march, { startDate: '2026-03-10', endDate: '2026-03-20' })).toBe(true);
+    expect(periodsOverlap(march, { startDate: '2026-02-01', endDate: '2026-03-01' })).toBe(true);
+    expect(periodsOverlap(march, { startDate: '2026-03-11', endDate: '2026-03-20' })).toBe(false);
+  });
+
+  it('bound a machine by its acquisition, its contract and its disposal — the earliest end wins', () => {
+    const leased: EquipmentCostInput = {
+      acquisitionMethod: AcquisitionMethod.LEASING,
+      acquisitionDate: '2026-01-01',
+      monthlyPayment: 1,
+      contractEndDate: '2028-12-31',
+      disposalDate: '2027-06-30',
+    };
+
+    expect(equipmentAvailability(leased)).toEqual({ from: '2026-01-01', until: '2027-06-30' });
+    expect(equipmentAvailability({ ...leased, disposalDate: null }).until).toBe('2028-12-31');
+    // An owned machine's lifetime does not end its availability: it still
+    // works, it just stops costing.
+    expect(equipmentAvailability(excavator)).toEqual({ from: '2026-01-01', until: null });
   });
 });

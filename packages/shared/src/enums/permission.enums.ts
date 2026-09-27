@@ -31,6 +31,12 @@ export enum Permission {
    */
   EQUIPMENT_READ = 'equipment:read',
   EQUIPMENT_MANAGE = 'equipment:manage',
+  /**
+   * Change what already happened on the planning — delete an assignment that
+   * started, move its past days. Frozen for everyone else, because those days
+   * are in a worksite's cost. Admin only.
+   */
+  EQUIPMENT_CORRECT_HISTORY = 'equipment:correct-history',
 
   WORKER_READ = 'worker:read',
   WORKER_MANAGE = 'worker:manage',

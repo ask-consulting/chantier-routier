@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { calculateActualCost, calculateExpensesCost, calculateLaborCost } from './worksite-costs';
+import {
+  calculateActualCost,
+  calculateEquipmentCost,
+  calculateExpensesCost,
+  calculateLaborCost,
+} from './worksite-costs';
 
 describe('calculateLaborCost', () => {
   it('sums hoursWorked × hourlyRate', () => {
@@ -56,5 +61,31 @@ describe('calculateActualCost', () => {
     });
     expect(result.actualCost).toBe(3500);
     expect(result.variance).toBe(-2500);
+  });
+});
+
+describe('the equipment in a worksite’s cost', () => {
+  it('sums the costs stored on the assignments — never recomputed', () => {
+    expect(calculateEquipmentCost([{ cost: 10_000 }, { cost: 900.005 }])).toBe(10_900.01);
+  });
+
+  it('adds up with labour and expenses, against the budget', () => {
+    const costs = calculateActualCost({
+      worksiteId: 'w-1',
+      timesheets: [{ hoursWorked: 10, hourlyRate: 20 }],
+      expenses: [{ amount: 300 }],
+      equipment: [{ cost: 900 }],
+      totalBudget: 2_000,
+    });
+
+    expect(costs.equipmentCost).toBe(900);
+    expect(costs.actualCost).toBe(1_400);
+    expect(costs.variance).toBe(600);
+  });
+
+  it('counts no equipment when none is given', () => {
+    expect(
+      calculateActualCost({ worksiteId: 'w-1', timesheets: [], expenses: [] }).equipmentCost,
+    ).toBe(0);
   });
 });

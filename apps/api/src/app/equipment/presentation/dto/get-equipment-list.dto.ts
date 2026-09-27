@@ -1,7 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { AcquisitionMethod, EquipmentCategory, EquipmentStatus } from '@chantia/shared';
+import {
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { AcquisitionMethod, EquipmentStatus } from '@chantia/shared';
 
 /**
  * Sortable columns. No money among them: sorting by price would hand the
@@ -45,10 +54,11 @@ export class GetEquipmentListDto {
   @IsOptional()
   search?: string;
 
-  @ApiPropertyOptional({ enum: EquipmentCategory })
-  @IsEnum(EquipmentCategory)
+  @ApiPropertyOptional({ description: 'A category code of `GET /equipment-catalog`.' })
+  @IsString()
+  @MaxLength(60)
   @IsOptional()
-  category?: EquipmentCategory;
+  category?: string;
 
   @ApiPropertyOptional({ enum: EquipmentStatus })
   @IsEnum(EquipmentStatus)

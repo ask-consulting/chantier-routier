@@ -34,6 +34,13 @@ convention de `cie-next`, ce qui évite d'avoir à changer de réflexe en passan
 projet à l'autre. Le modèle Prisma, lui, reste au singulier : il représente *une*
 entité.
 
+**Les indénombrables restent tels quels.** Le pluriel suit la grammaire anglaise,
+pas une règle mécanique : `equipment` n'a pas de pluriel (« *equipments* » est une
+faute), la table s'appelle donc `equipment`, comme la route `/equipment`. Côté code, le
+mot seul ne distingue plus un engin de plusieurs — d'où `GetEquipmentListQuery`,
+`useEquipmentList`. Les tables qui en dérivent et se comptent reprennent le pluriel :
+`equipment_assignments`, `equipment_types`.
+
 ## 2. Contraintes et index
 
 | Type | Préfixe | Motif | Exemple |

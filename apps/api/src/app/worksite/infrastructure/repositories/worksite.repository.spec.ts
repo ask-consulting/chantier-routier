@@ -50,6 +50,15 @@ function setup(rows: unknown[] = [], upsertError?: unknown) {
   const prisma = {
     worksite: { findMany, count, findUnique, upsert },
     client: { count: clientCount },
+    timesheet: {
+      findMany: vi.fn(async () => [
+        { hoursWorked: new Prisma.Decimal('8'), worker: { hourlyRate: new Prisma.Decimal('20') } },
+      ]),
+    },
+    expense: { findMany: vi.fn(async () => [{ amount: new Prisma.Decimal('150.5') }]) },
+    equipmentAssignment: {
+      findMany: vi.fn(async () => [{ cost: new Prisma.Decimal('1350.500') }]),
+    },
   } as unknown as TenantPrismaClient;
 
   return {
@@ -145,6 +154,19 @@ describe('WorksiteRepository — the client', () => {
 
     expect(await repository.isAssignableClient('client-1')).toBe(true);
     expect(clientCount).toHaveBeenCalledWith({ where: { id: 'client-1', deletedAt: null } });
+  });
+});
+
+describe('WorksiteRepository — cost inputs', () => {
+  it('reads timesheets, expenses and the assignments’ stored costs as plain numbers', async () => {
+    const { repository } = setup();
+
+    const inputs = await repository.findCostInputs('worksite-1');
+
+    expect(inputs.timesheets).toEqual([{ hoursWorked: 8, hourlyRate: 20 }]);
+    expect(inputs.expenses).toEqual([{ amount: 150.5 }]);
+    // The cost stored on each assignment — never recomputed at today's rates.
+    expect(inputs.equipment).toEqual([{ cost: 1_350.5 }]);
   });
 });
 

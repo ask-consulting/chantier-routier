@@ -1,6 +1,6 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { describe, expect, it, vi } from 'vitest';
-import { AcquisitionMethod, EquipmentCategory, UserRole } from '@chantia/shared';
+import { AcquisitionMethod, UserRole } from '@chantia/shared';
 import { CreateEquipmentCommand } from '../../application/commands/create-equipment.command';
 import { DeleteEquipmentCommand } from '../../application/commands/delete-equipment.command';
 import { UpdateEquipmentCommand } from '../../application/commands/update-equipment.command';
@@ -25,6 +25,7 @@ const machine = Equipment.create({
   acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
   acquisitionDate: '2026-01-01',
   purchasePrice: PRICE,
+  usefulLifeMonths: 60,
 });
 
 function build() {
@@ -86,19 +87,17 @@ describe('EquipmentController — who sees money', () => {
 });
 
 describe('EquipmentController — requests', () => {
-  it('turns a category into the type codes filed under it', async () => {
+  it('filters a category through the machine’s type', async () => {
     const { controller, queryBus } = build();
     const dto = Object.assign(new GetEquipmentListDto(), {
-      category: EquipmentCategory.COMPACTION,
+      category: 'compaction',
       sortField: 'fleetNumber',
     });
 
     await controller.findAll(UserRole.ADMIN, dto);
 
     const query = queryBus.execute.mock.calls[0][0] as GetEquipmentListQuery;
-    const { typeCode } = query.params.filters as { typeCode: { in: string[] } };
-    expect(typeCode.in).toContain('tandem_roller');
-    expect(typeCode.in).not.toContain('bulldozer');
+    expect((query.params.filters as { type: unknown }).type).toEqual({ categoryCode: 'compaction' });
     expect(query.params.sort).toEqual({ field: 'fleetNumber', order: 'asc' });
   });
 
@@ -108,7 +107,7 @@ describe('EquipmentController — requests', () => {
     await controller.findAll(UserRole.ADMIN, new GetEquipmentListDto());
 
     const query = queryBus.execute.mock.calls[0][0] as GetEquipmentListQuery;
-    expect((query.params.filters as { typeCode?: unknown }).typeCode).toBeUndefined();
+    expect((query.params.filters as { type?: unknown }).type).toBeUndefined();
   });
 
   it('creates, updates and deletes through the right commands', async () => {
@@ -120,6 +119,7 @@ describe('EquipmentController — requests', () => {
       acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
       acquisitionDate: '2026-01-01',
       purchasePrice: 1,
+      usefulLifeMonths: 60,
     });
     await controller.update(UserRole.ADMIN, 'eq-1', { designation: 'Bull D6T' });
     await expect(controller.remove('eq-1')).resolves.toBeUndefined();

@@ -60,9 +60,9 @@ export default defineConfig({
         // the tests as covered-by-tests is how a number stops meaning anything.
         'src/test/**',
       ],
-      // 72 → 77 (branches 75 → 80, le plafond) : l'écran du parc matériel, et `Can`
-      // enfin testé contre la vraie matrice au lieu d'être simulé partout.
-      thresholds: { statements: 77, branches: 80, functions: 77, lines: 78 },
+      // 77 → 80, le plafond, sur les quatre mesures : le planning du matériel et les
+      // coûts du chantier. Au-delà, le cliquet tient sans monter.
+      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
     },
   },
 });

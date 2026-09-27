@@ -1,17 +1,32 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IUpdateEquipment } from '@chantia/shared';
+import type { IUpdateEquipment, IUpdateEquipmentAssignment } from '@chantia/shared';
 import {
+  createAssignment,
   createEquipment,
+  deleteAssignment,
   deleteEquipment,
+  fetchAssignments,
+  fetchEquipmentCatalog,
   fetchEquipmentList,
+  updateAssignment,
   updateEquipment,
+  type AssignmentListParams,
   type EquipmentListParams,
 } from './equipment.api';
 import { equipmentKeys } from './equipment.keys';
 
-/** The React-facing side of the equipment endpoints; every write owns its invalidation. */
+/**
+ * The React-facing side of the equipment endpoints; every write owns its
+ * invalidation.
+ *
+ * An assignment's write also invalidates `['worksites']`: it changes the
+ * worksite's cost. The literal rather than `worksiteKeys` — a feature does not
+ * reach into another's private files.
+ */
+
+const WORKSITES_KEY = ['worksites'] as const;
 
 export function useEquipmentList(params?: EquipmentListParams) {
   return useQuery({
@@ -43,4 +58,49 @@ export function useDeleteEquipment() {
     mutationFn: deleteEquipment,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: equipmentKeys.all }),
   });
+}
+
+/** Fetched once per session: it changes only with a deployment. */
+export function useEquipmentCatalog() {
+  return useQuery({
+    queryKey: equipmentKeys.catalog(),
+    queryFn: fetchEquipmentCatalog,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+export function useAssignments(params: AssignmentListParams) {
+  return useQuery({
+    queryKey: equipmentKeys.assignmentList(params),
+    queryFn: () => fetchAssignments(params),
+  });
+}
+
+function useAssignmentInvalidation() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: equipmentKeys.assignments() }),
+      queryClient.invalidateQueries({ queryKey: WORKSITES_KEY }),
+    ]);
+}
+
+export function useCreateAssignment() {
+  const invalidate = useAssignmentInvalidation();
+  return useMutation({ mutationFn: createAssignment, onSuccess: invalidate });
+}
+
+export function useUpdateAssignment() {
+  const invalidate = useAssignmentInvalidation();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: IUpdateEquipmentAssignment }) =>
+      updateAssignment(id, data),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteAssignment() {
+  const invalidate = useAssignmentInvalidation();
+  return useMutation({ mutationFn: deleteAssignment, onSuccess: invalidate });
 }

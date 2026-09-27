@@ -13,12 +13,7 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import {
-  Permission,
-  UserRole,
-  equipmentTypesOf,
-  roleHasEveryPermission,
-} from '@chantia/shared';
+import { Permission, UserRole, roleHasEveryPermission } from '@chantia/shared';
 import { CurrentUser, RequirePermissions } from '@shared/auth';
 import { SearchResult } from '@shared/domain/search.types';
 import { CreateEquipmentCommand } from '../../application/commands/create-equipment.command';
@@ -77,10 +72,8 @@ export class EquipmentController {
           search: dto.search,
           status: dto.status,
           acquisitionMethod: dto.acquisitionMethod,
-          // A category is not a column: it is every type code filed under it.
-          typeCode: dto.category
-            ? { in: equipmentTypesOf(dto.category).map((type) => type.code) }
-            : undefined,
+          // A category is not a column of the machine: filtered through its type.
+          type: dto.category ? { categoryCode: dto.category } : undefined,
         },
       }),
     );

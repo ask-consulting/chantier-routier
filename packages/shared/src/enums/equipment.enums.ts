@@ -1,18 +1,3 @@
-/** The families the equipment catalog is grouped by. */
-export enum EquipmentCategory {
-  EARTHMOVING = 'earthmoving',
-  COMPACTION = 'compaction',
-  PAVING = 'paving',
-  CONCRETE = 'concrete',
-  TRANSPORT = 'transport',
-  LIFTING = 'lifting',
-  DRILLING_BREAKING = 'drilling_breaking',
-  SIGNAGE = 'signage',
-  SITE_EQUIPMENT = 'site_equipment',
-  SURVEYING = 'surveying',
-  LIGHT_VEHICLE = 'light_vehicle',
-}
-
 /**
  * How the organization came to have the machine — which decides what it costs
  * per day (see `equipmentDailyCost`):

@@ -17,4 +17,10 @@ export const worksiteKeys = {
   list: (params?: WorksiteListParams) => [...worksiteKeys.lists(), params ?? {}] as const,
   details: () => [...worksiteKeys.all, 'detail'] as const,
   detail: (id: string) => [...worksiteKeys.details(), id] as const,
+  /**
+   * Under the detail, so `worksiteKeys.all` reaches it too — which is what
+   * lets a machine's assignment, written by another feature that only knows
+   * `['worksites']`, refresh the cost shown here.
+   */
+  costs: (id: string) => [...worksiteKeys.detail(id), 'costs'] as const,
 };

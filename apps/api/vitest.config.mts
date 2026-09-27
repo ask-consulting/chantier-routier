@@ -70,9 +70,9 @@ export default defineConfig({
       ],
       // +5 points à chaque PR qui touche ce paquet, jusqu'à 80 % — voir
       // `docs/14-etat-des-lieux.md` §2.3. Au-delà de 80, le cliquet tient sans monter.
-      // 61 → 66 : le parc matériel — le catalogue fixe, les règles d'acquisition
-      // et le coût journalier, calculé dans shared et testé des deux côtés.
-      thresholds: { statements: 66, branches: 67, functions: 65, lines: 66 },
+      // 66 → 71 : les affectations de matériel aux chantiers, le référentiel lu
+      // en base, et les deux gardes d'accès enfin testées contre la vraie matrice.
+      thresholds: { statements: 71, branches: 72, functions: 70, lines: 71 },
     },
   },
 });

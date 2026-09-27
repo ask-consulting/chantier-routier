@@ -3,7 +3,6 @@ import {
   EquipmentStatus,
   depreciationEndDate,
   equipmentDailyCost,
-  equipmentType,
   isOwned,
   netBookValue,
   type EquipmentCostInput,
@@ -43,6 +42,15 @@ export interface EquipmentProps {
 
 export type EquipmentChanges = Partial<Omit<EquipmentProps, 'id' | 'organizationId' | 'deletedAt'>>;
 
+/**
+ * What the catalog lends a machine of a given type. Read from the database by
+ * the command handler — which is also where an unknown type is refused — and
+ * handed in, so the aggregate stays free of any lookup.
+ */
+export interface EquipmentTypeDefaults {
+  defaultUsefulLifeMonths: number;
+}
+
 type Normalized = Required<Omit<EquipmentProps, 'createdAt' | 'updatedAt'>> &
   Pick<EquipmentProps, 'createdAt' | 'updatedAt'>;
 
@@ -50,10 +58,9 @@ type Normalized = Required<Omit<EquipmentProps, 'createdAt' | 'updatedAt'>> &
  * Equipment aggregate root — one machine of the fleet.
  *
  * It owns the rules that make its cost computable, so no write path can skip
- * them:
+ * them. (That the type exists is the catalog's to say — a foreign key, and the
+ * command handler before it.)
  *
- *   - **The type is in the catalog.** An unknown code would have no category
- *     and no default lifetime.
  *   - **The money matches how it was acquired.** Owned: a price and a
  *     lifetime (the type's by default), a residual value no higher than the
  *     price. Leasing and long-term rental: a monthly payment and a contract
@@ -66,8 +73,13 @@ type Normalized = Required<Omit<EquipmentProps, 'createdAt' | 'updatedAt'>> &
 export class Equipment {
   private constructor(private readonly props: Normalized) {}
 
-  static create(input: EquipmentProps): Equipment {
-    const props = Equipment.normalize(input);
+  /**
+   * @param typeDefaults the catalog's defaults for `input.typeCode` — needed
+   *   only to fill a lifetime that was not given. A row read back always has
+   *   its own, so the mapper passes none.
+   */
+  static create(input: EquipmentProps, typeDefaults?: EquipmentTypeDefaults): Equipment {
+    const props = Equipment.normalize(input, typeDefaults);
     const errors = Equipment.check(props);
     if (errors.length > 0) {
       throw new InvalidEquipmentException(errors);
@@ -75,7 +87,10 @@ export class Equipment {
     return new Equipment(props);
   }
 
-  private static normalize(input: EquipmentProps): Normalized {
+  private static normalize(
+    input: EquipmentProps,
+    typeDefaults: EquipmentTypeDefaults | undefined,
+  ): Normalized {
     const method = input.acquisitionMethod;
     const owned = isOwned(method);
     const leased =
@@ -101,7 +116,7 @@ export class Equipment {
       purchasePrice: owned ? (input.purchasePrice ?? null) : null,
       residualValue: owned ? (input.residualValue ?? null) : null,
       usefulLifeMonths: owned
-        ? (input.usefulLifeMonths ?? equipmentType(input.typeCode)?.defaultUsefulLifeMonths ?? null)
+        ? (input.usefulLifeMonths ?? typeDefaults?.defaultUsefulLifeMonths ?? null)
         : null,
       monthlyPayment: leased ? (input.monthlyPayment ?? null) : null,
       buyoutValue: method === AcquisitionMethod.LEASING ? (input.buyoutValue ?? null) : null,
@@ -123,9 +138,6 @@ export class Equipment {
     };
     const method = props.acquisitionMethod;
 
-    if (!equipmentType(props.typeCode)) {
-      fail('typeCode', 'unknownEquipmentType', `Unknown equipment type ${props.typeCode}`);
-    }
     if (props.designation.length === 0) {
       fail('designation', 'required', 'A designation is required');
     }
@@ -273,16 +285,17 @@ export class Equipment {
   /**
    * A changed copy, re-validated. `undefined` leaves a field, `null` clears
    * it. Changing the type of an owned machine keeps its lifetime: the
-   * type's default only fills a lifetime that was never set.
+   * type's default only fills a lifetime that was never set — switching a
+   * leased machine to "bought", say.
    */
-  with(changes: EquipmentChanges): Equipment {
+  with(changes: EquipmentChanges, typeDefaults?: EquipmentTypeDefaults): Equipment {
     const merged: EquipmentProps = { ...this.props };
     for (const [key, value] of Object.entries(changes)) {
       if (value !== undefined) {
         (merged as unknown as Record<string, unknown>)[key] = value;
       }
     }
-    return Equipment.create(merged);
+    return Equipment.create(merged, typeDefaults);
   }
 
   /** Marks this machine removed, without discarding it. */

@@ -1,4 +1,4 @@
-import { ExpenseCost, TimesheetCost } from '@chantia/shared';
+import { EquipmentAssignmentCost, ExpenseCost, TimesheetCost } from '@chantia/shared';
 import { SearchParams, SearchResult } from '@shared/domain/search.types';
 import { Worksite } from '../entities/worksite.entity';
 
@@ -6,6 +6,8 @@ import { Worksite } from '../entities/worksite.entity';
 export interface WorksiteCostInputs {
   timesheets: TimesheetCost[];
   expenses: ExpenseCost[];
+  /** Every machine assigned to the worksite, with its period. */
+  equipment: EquipmentAssignmentCost[];
 }
 
 /**

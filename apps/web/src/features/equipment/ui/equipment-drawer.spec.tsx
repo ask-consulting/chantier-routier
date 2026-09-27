@@ -3,11 +3,11 @@ import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AcquisitionMethod,
-  EquipmentCategory,
   EquipmentStatus,
   type IEquipment,
 } from '@chantia/shared';
 import { apiClient } from '@/shared/api/http-client';
+import { CATALOG } from '@/test/equipment-catalog';
 import { renderWithProviders } from '@/test/render';
 import { EquipmentDrawer } from './equipment-drawer';
 
@@ -49,8 +49,10 @@ const grader: IEquipment = {
 
 let mock: MockAdapter;
 
+/** The catalog always answers; everything else answers `status` and `body`. */
 function mockReply(status: number, body?: unknown): void {
   mock.reset();
+  mock.onGet('/equipment-catalog').reply(200, CATALOG);
   mock.onAny().reply(status, body);
 }
 
@@ -62,8 +64,13 @@ function change(label: string, value: string): void {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
 
+/** The form mounts once the catalog has arrived. */
+async function ready(): Promise<void> {
+  await screen.findByLabelText('Catégorie');
+}
+
 function pickRoller(): void {
-  change('Catégorie', EquipmentCategory.COMPACTION);
+  change('Catégorie', 'compaction');
   change('Type', 'tandem_roller');
   change('Désignation', 'Compacteur tandem HAMM');
 }
@@ -85,23 +92,25 @@ afterEach(() => {
 });
 
 describe('EquipmentDrawer, the type', () => {
-  it('fills the lifetime from the type, until it is typed in', () => {
+  it('fills the lifetime from the type, until it is typed in', async () => {
     renderWithProviders(<EquipmentDrawer open onClose={() => {}} />);
+    await ready();
 
     pickRoller();
     expect((screen.getByLabelText('Durée d’amortissement (mois)') as HTMLInputElement).value).toBe('60');
 
     change('Durée d’amortissement (mois)', '48');
-    change('Catégorie', EquipmentCategory.SITE_EQUIPMENT);
+    change('Catégorie', 'site_equipment');
     change('Type', 'site_hut');
     expect((screen.getByLabelText('Durée d’amortissement (mois)') as HTMLInputElement).value).toBe('48');
   });
 
-  it('only offers the types of the chosen category, and clears one from another', () => {
+  it('only offers the types of the chosen category, and clears one from another', async () => {
     renderWithProviders(<EquipmentDrawer open onClose={() => {}} />);
+    await ready();
     pickRoller();
 
-    change('Catégorie', EquipmentCategory.SURVEYING);
+    change('Catégorie', 'surveying');
 
     expect((screen.getByLabelText('Type') as HTMLSelectElement).value).toBe('');
     expect(screen.getByRole('option', { name: 'Station totale' })).toBeTruthy();
@@ -112,6 +121,7 @@ describe('EquipmentDrawer, the type', () => {
 describe('EquipmentDrawer, the money', () => {
   it('asks a purchase for a price, previews the cost, and sends only purchase fields', async () => {
     renderWithProviders(<EquipmentDrawer open onClose={() => {}} />);
+    await ready();
     pickRoller();
     change('Date d’achat', '2026-01-01');
     expect(save().disabled).toBe(true);
@@ -138,6 +148,7 @@ describe('EquipmentDrawer, the money', () => {
 
   it('asks a lease for a payment and an end, and a buyout value', async () => {
     renderWithProviders(<EquipmentDrawer open onClose={() => {}} />);
+    await ready();
     pickRoller();
     change('Mode d’acquisition', AcquisitionMethod.LEASING);
 
@@ -161,6 +172,7 @@ describe('EquipmentDrawer, the money', () => {
 
   it('asks a hire for a daily rate only, the end being optional', async () => {
     renderWithProviders(<EquipmentDrawer open onClose={() => {}} />);
+    await ready();
     pickRoller();
     change('Mode d’acquisition', AcquisitionMethod.SHORT_TERM_RENTAL);
     change('Tarif journalier HT', '450.5');
@@ -177,8 +189,9 @@ describe('EquipmentDrawer, the money', () => {
     });
   });
 
-  it('marks a residual value above the price', () => {
+  it('marks a residual value above the price', async () => {
     renderWithProviders(<EquipmentDrawer open onClose={() => {}} />);
+    await ready();
     pickRoller();
     change('Prix d’achat HT', '1000');
     change('Valeur résiduelle', '2000');
@@ -189,11 +202,31 @@ describe('EquipmentDrawer, the money', () => {
 });
 
 describe('EquipmentDrawer, editing and state', () => {
-  it('prefills the machine, category included, and keeps its own lifetime', () => {
+  it('warns, on a leased machine’s rate, that a new one reaches only the next assignments', async () => {
+    renderWithProviders(
+      <EquipmentDrawer
+        open
+        equipment={{
+          ...grader,
+          acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
+          purchasePrice: null,
+          usefulLifeMonths: null,
+          dailyRate: 450,
+        }}
+        onClose={() => {}}
+      />,
+    );
+    await ready();
+
+    expect(screen.getByText(/s’applique aux prochaines affectations/)).toBeTruthy();
+  });
+
+  it('prefills the machine, category included, and keeps its own lifetime', async () => {
     renderWithProviders(<EquipmentDrawer open equipment={grader} onClose={() => {}} />);
+    await ready();
 
     expect((screen.getByLabelText('Catégorie') as HTMLSelectElement).value).toBe(
-      EquipmentCategory.EARTHMOVING,
+      'earthmoving',
     );
     expect((screen.getByLabelText('Type') as HTMLSelectElement).value).toBe('motor_grader');
     expect((screen.getByLabelText('Durée d’amortissement (mois)') as HTMLInputElement).value).toBe('72');
@@ -202,6 +235,7 @@ describe('EquipmentDrawer, editing and state', () => {
 
   it('asks for a disposal date once retired', async () => {
     renderWithProviders(<EquipmentDrawer open equipment={grader} onClose={() => {}} />);
+    await ready();
 
     change('Statut', EquipmentStatus.RETIRED);
     expect(save().disabled).toBe(true);
@@ -222,6 +256,7 @@ describe('EquipmentDrawer, editing and state', () => {
     });
     const onClose = vi.fn();
     renderWithProviders(<EquipmentDrawer open equipment={grader} onClose={onClose} />);
+    await ready();
 
     fireEvent.click(save());
 
@@ -233,6 +268,7 @@ describe('EquipmentDrawer, editing and state', () => {
     mockReply(500, { message: 'boom' });
     const onClose = vi.fn();
     renderWithProviders(<EquipmentDrawer open equipment={grader} onClose={onClose} />);
+    await ready();
 
     fireEvent.click(save());
     expect(await screen.findByText('Le matériel n’a pas pu être enregistré.')).toBeTruthy();

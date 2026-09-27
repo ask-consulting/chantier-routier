@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
-  IsIn,
   IsInt,
   IsISO8601,
   IsNumber,
@@ -13,12 +12,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import {
-  AcquisitionMethod,
-  EQUIPMENT_TYPE_CODES,
-  EquipmentStatus,
-  ICreateEquipment,
-} from '@chantia/shared';
+import { AcquisitionMethod, EquipmentStatus, ICreateEquipment } from '@chantia/shared';
 
 /** A day, not an instant: `2026-09-01`, never `2026-09-01T01:00+02:00`. */
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -31,8 +25,12 @@ const DAY_MESSAGE = 'must be a date (YYYY-MM-DD)';
  * cannot see the stored fields of.
  */
 export class CreateEquipmentDto implements ICreateEquipment {
-  @ApiProperty({ example: 'crawler_excavator', description: 'A code of `EQUIPMENT_TYPES`.' })
-  @IsIn(EQUIPMENT_TYPE_CODES)
+  @ApiProperty({
+    example: 'crawler_excavator',
+    description: 'A type code of `GET /equipment-catalog`. An unknown one is refused (400).',
+  })
+  @IsString()
+  @MaxLength(60)
   typeCode: string;
 
   @ApiProperty({ example: 'Pelle CAT 320 n°2' })

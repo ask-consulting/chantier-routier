@@ -11,10 +11,21 @@ export interface ExpenseCost {
   amount: number;
 }
 
+/**
+ * A machine's stay on the worksite, reduced to its cost — the one stored on
+ * the assignment, computed from the pricing agreed when it was made (see
+ * `equipmentCostOverPeriod`). Never recomputed here at today's rates.
+ */
+export interface EquipmentAssignmentCost {
+  cost: number;
+}
+
 export interface CalculateActualCostInput {
   worksiteId: string;
   timesheets: TimesheetCost[];
   expenses: ExpenseCost[];
+  /** Absent means none — callers that predate equipment keep working. */
+  equipment?: EquipmentAssignmentCost[];
   totalBudget?: number | null;
 }
 
@@ -32,19 +43,34 @@ export function calculateExpensesCost(expenses: ExpenseCost[]): number {
 }
 
 /**
- * Actual cost = labor cost + expenses cost.
+ * Equipment cost = Σ of each assignment's stored cost.
+ *
+ * Each covers the **whole** assigned period, future days included: an
+ * assignment is a commitment — the machine is booked, and its depreciation or
+ * rent runs whether or not the days have passed yet. And each is priced at
+ * what was agreed when it was made: a rental that goes up later does not
+ * rewrite what past worksites cost.
+ */
+export function calculateEquipmentCost(assignments: EquipmentAssignmentCost[]): number {
+  return round(assignments.reduce((total, a) => total + a.cost, 0));
+}
+
+/**
+ * Actual cost = labor cost + expenses cost + equipment cost.
  * Pure function, reused on the server (API) and on mobile (offline computation).
  */
 export function calculateActualCost(input: CalculateActualCostInput): IWorksiteCosts {
   const laborCost = calculateLaborCost(input.timesheets);
   const expensesCost = calculateExpensesCost(input.expenses);
-  const actualCost = round(laborCost + expensesCost);
+  const equipmentCost = calculateEquipmentCost(input.equipment ?? []);
+  const actualCost = round(laborCost + expensesCost + equipmentCost);
   const totalBudget = input.totalBudget ?? null;
 
   return {
     worksiteId: input.worksiteId,
     laborCost,
     expensesCost,
+    equipmentCost,
     actualCost,
     totalBudget,
     variance: totalBudget === null ? null : round(totalBudget - actualCost),

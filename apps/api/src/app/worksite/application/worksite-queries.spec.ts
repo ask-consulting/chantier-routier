@@ -37,6 +37,8 @@ function repositoryWith(found: Worksite | null) {
     findCostInputs: vi.fn(async () => ({
       timesheets: [{ hoursWorked: 8, hourlyRate: 20 }],
       expenses: [{ amount: 1_000 }],
+      // One machine, its stay stored at 300.
+      equipment: [{ cost: 300 }],
     })),
   } satisfies WorksiteRepositoryPort;
 }
@@ -70,7 +72,7 @@ describe('GetWorksiteByIdHandler', () => {
 });
 
 describe('GetWorksiteCostsHandler', () => {
-  it('computes labour plus expenses against the budget', async () => {
+  it('computes labour, expenses and equipment against the budget', async () => {
     const handler = new GetWorksiteCostsHandler(repositoryWith(worksite));
 
     const costs = await handler.execute(new GetWorksiteCostsQuery('worksite-1'));
@@ -79,9 +81,10 @@ describe('GetWorksiteCostsHandler', () => {
       worksiteId: 'worksite-1',
       laborCost: 160,
       expensesCost: 1_000,
-      actualCost: 1_160,
+      equipmentCost: 300,
+      actualCost: 1_460,
       totalBudget: 10_000,
-      variance: 8_840,
+      variance: 8_540,
     });
   });
 

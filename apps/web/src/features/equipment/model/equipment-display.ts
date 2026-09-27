@@ -1,10 +1,16 @@
-import { AcquisitionMethod, EquipmentCategory, EquipmentStatus } from '@chantia/shared';
+import {
+  AcquisitionMethod,
+  EquipmentStatus,
+  translated,
+  type IEquipmentCategory,
+  type IEquipmentType,
+} from '@chantia/shared';
 import type { Tone } from '@/shared/ui';
 
 /**
- * How equipment reads on screen. Labels live in `messages/*.json`
- * (`equipmentType.*`, `equipmentCategory.*`, `acquisitionMethod.*`,
- * `equipmentStatus.*`); tones and orders live here.
+ * How equipment reads on screen. Status and method labels live in
+ * `messages/*.json`; the catalog's labels come with the catalog, from the
+ * database, in every language it has — see `labelOf`. Tones and orders live here.
  */
 
 export const EQUIPMENT_STATUS_TONE: Record<EquipmentStatus, Tone> = {
@@ -20,21 +26,6 @@ export const EQUIPMENT_STATUSES: readonly EquipmentStatus[] = [
   EquipmentStatus.RETIRED,
 ];
 
-/** The catalog's categories, in the order a road works fleet is read. */
-export const EQUIPMENT_CATEGORIES: readonly EquipmentCategory[] = [
-  EquipmentCategory.EARTHMOVING,
-  EquipmentCategory.COMPACTION,
-  EquipmentCategory.PAVING,
-  EquipmentCategory.CONCRETE,
-  EquipmentCategory.TRANSPORT,
-  EquipmentCategory.LIFTING,
-  EquipmentCategory.DRILLING_BREAKING,
-  EquipmentCategory.SIGNAGE,
-  EquipmentCategory.SITE_EQUIPMENT,
-  EquipmentCategory.SURVEYING,
-  EquipmentCategory.LIGHT_VEHICLE,
-];
-
 export const ACQUISITION_METHODS: readonly AcquisitionMethod[] = [
   AcquisitionMethod.CASH_PURCHASE,
   AcquisitionMethod.CREDIT_PURCHASE,
@@ -42,3 +33,26 @@ export const ACQUISITION_METHODS: readonly AcquisitionMethod[] = [
   AcquisitionMethod.LONG_TERM_RENTAL,
   AcquisitionMethod.SHORT_TERM_RENTAL,
 ];
+
+/**
+ * A catalog entry's label in the reader's language — else French, else its
+ * code. The catalog's languages live in the database and may run ahead of, or
+ * behind, the ones this interface speaks.
+ */
+export function labelOf(entry: IEquipmentCategory | IEquipmentType, locale: string): string {
+  return translated(entry.labels, locale, entry.code);
+}
+
+/** A type of the catalog by its code, or `undefined` while it loads or for an unknown code. */
+export function findType(
+  catalog: readonly IEquipmentCategory[] | undefined,
+  code: string,
+): IEquipmentType | undefined {
+  for (const category of catalog ?? []) {
+    const type = category.types.find((candidate) => candidate.code === code);
+    if (type) {
+      return type;
+    }
+  }
+  return undefined;
+}

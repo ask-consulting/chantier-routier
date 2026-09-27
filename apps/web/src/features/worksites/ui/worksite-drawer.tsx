@@ -11,6 +11,7 @@ import {
 import { Alert, Button, Drawer, Field, Select } from '@/shared/ui';
 import { usePermission } from '@/features/auth';
 import { WORKSITE_STATUS } from '../model/worksite-display';
+import { WorksiteCosts } from './worksite-costs';
 import { useWorksiteForm } from '../model/use-worksite-form';
 
 /**
@@ -60,6 +61,7 @@ export function WorksiteDrawer({
   const tStatus = useTranslations('worksiteStatus');
   const tFieldError = useTranslations('form.errors');
   const withBudget = usePermission(Permission.BUDGET_MANAGE);
+  const readsMoney = usePermission(Permission.BUDGET_READ);
   const form = useWorksiteForm(worksite, { withBudget });
 
   const close = (): void => {
@@ -180,6 +182,13 @@ export function WorksiteDrawer({
             value={form.values.totalBudget}
             onChange={(event) => form.setValue('totalBudget', event.target.value)}
           />
+        )}
+        {/* An existing worksite only — a new one has cost nothing yet. */}
+        {worksite && readsMoney && (
+          <section className="flex flex-col gap-2">
+            <h3 className="text-sm font-semibold">{t('costs')}</h3>
+            <WorksiteCosts worksiteId={worksite.id} />
+          </section>
         )}
       </form>
     </Drawer>
