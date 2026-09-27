@@ -39,3 +39,8 @@ supabase/.temp
 
 # Rapports de couverture
 coverage/
+
+# Service worker — built from src/app/sw.ts by @serwist/next
+apps/web/public/sw.js
+apps/web/public/sw.js.map
+apps/web/public/swe-worker-*.js

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -13,8 +13,23 @@ import { AppSidebar } from './app-sidebar';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app');
-  return { title: t('name'), description: t('description') };
+  return {
+    title: t('name'),
+    description: t('description'),
+    // iOS reads none of the manifest's icons or display mode: it wants its own
+    // tags to open the app full screen from the home screen, under its name.
+    appleWebApp: { capable: true, title: t('name'), statusBarStyle: 'default' },
+    icons: { apple: '/icons/apple-touch-icon.png' },
+  };
 }
+
+/** The colour of the system bars around the installed app, per theme. */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1220' },
+  ],
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = (await getLocale()) as Locale;

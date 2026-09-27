@@ -866,6 +866,11 @@ d'ouvrir un troisième chantier avant d'avoir fini le premier. L'architecture en
 features et le design system sont déjà là ; une application native repartirait de
 zéro sur les deux.
 
+**Décidé et amorcé (septembre 2026) : la PWA.** Le front est installable — manifeste,
+icônes, service worker, page hors-ligne (`13-architecture-front.md` § PWA). Restent
+les écrans terrain eux-mêmes — pointage, dépenses avec photo du bon — puis la file
+hors-ligne dans IndexedDB.
+
 ---
 
 ## Priorité 5 — Module utilisateurs complet, web et mobile, avec les notifications

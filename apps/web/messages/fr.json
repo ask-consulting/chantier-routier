@@ -449,5 +449,10 @@
     "in_service": "En service",
     "under_maintenance": "En maintenance",
     "retired": "Retiré"
+  },
+  "offline": {
+    "title": "Pas de réseau",
+    "description": "Cette page n’est pas disponible hors ligne. Elle se rechargera d’elle-même dès que la connexion revient.",
+    "retry": "Réessayer"
   }
 }

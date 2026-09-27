@@ -42,8 +42,8 @@ Minimise le back-end à écrire, idéale pour tester vite et gratuitement.
 |---|---|---|
 | **Back-end + BDD + Auth + Stockage** | **Supabase** (PostgreSQL managé, Auth, Storage, Row Level Security) | Tout-en-un, généreux free tier, temps réel, RLS pour les permissions |
 | **Web** | **Next.js (React) + TypeScript** | SSR, rapide, déploiement gratuit (Vercel) |
-| **Mobile** | **Expo (React Native) + TypeScript** | iOS + Android depuis une base, build cloud gratuit (EAS), OTA updates |
-| **Hors-ligne mobile** | **WatermelonDB** ou **SQLite (expo-sqlite) + file de sync** | Base locale, sync différée |
+| **Mobile** | **PWA sur le front Next.js** (Serwist) — *décision de septembre 2026, voir `13-architecture-front.md` § PWA* | Réutilise design system, i18n, session et permissions ; installable sans store, mise à jour à chaque déploiement. Expo reste l'option si un besoin natif apparaît (GPS en arrière-plan, store obligatoire) |
+| **Hors-ligne mobile** | **Service worker** (l'application) + **IndexedDB** (la file des saisies) | L'application s'ouvre sans réseau ; les saisies attendent le retour du réseau |
 | **UI** | Tailwind (web) / NativeWind (mobile) | Composants cohérents web ↔ mobile |
 | **État/données** | TanStack Query + Zustand | Cache, sync serveur, offline |
 

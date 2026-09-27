@@ -278,3 +278,38 @@ cie-next met un `i18n/fr.json` par module. C'est cohérent avec l'isolation, mai
 oblige un traducteur à ouvrir six fichiers. À deux langues et cinq domaines — avec
 de l'arabe à faire relire d'un bloc — le coût de l'éclatement dépasse le bénéfice.
 Voir `docs/12-internationalisation.md`.
+
+## PWA — l'application mobile
+
+Le mobile est **le front lui-même, installable** : pas de troisième application.
+Un chef de chantier ouvre le site sur son téléphone et choisit « Ajouter à l'écran
+d'accueil » ; l'application s'ouvre ensuite en plein écran, sous son icône.
+
+| fichier | rôle |
+|---|---|
+| `app/manifest.ts` | nom, icônes (`public/icons/`, dont une *maskable* pour Android), `display: standalone`, raccourcis |
+| `app/sw.ts` | le service worker, compilé par `@serwist/next` vers `public/sw.js` (ignoré par git) |
+| `shared/pwa/never-cached.ts` | ce qu'il ne met **jamais** en cache — testé à part |
+| `app/offline/page.tsx` | la page servie sans réseau, mise en cache à l'installation |
+| `app/layout.tsx` | les balises iOS (`appleWebApp`, icône Apple) et la couleur des barres système |
+
+**Il met en cache l'application, jamais les données.** Le shell — pages, scripts,
+styles, polices, icônes — pour s'ouvrir vite et hors ligne. Les réponses de l'API
+(autre origine) et les routes de session (`/api/*`) passent toujours par le réseau :
+un téléphone prêté au dépôt ne doit pas garder les budgets d'une organisation dans son
+Cache Storage après la déconnexion. Les données hors ligne — la file des pointages —
+viendront dans IndexedDB, écrites exprès, pas comme effet de bord d'un cache.
+
+**Les mises à jour s'appliquent seules** (`skipWaiting` + `clientsClaim`) : un
+déploiement Vercel atteint chaque application installée à son prochain lancement.
+
+**Désactivé en développement** : sous `next dev`, un worker servirait le build
+d'hier et chaque modification paraîtrait ignorée. Pour l'essayer : `next build &&
+next start`, puis les outils de développement du navigateur, onglet *Application*.
+
+**Limites connues de la PWA** — le jour où elles comptent, Capacitor habille ce
+même front pour les stores :
+
+- géolocalisation **en arrière-plan** impossible (ponctuelle au pointage : oui) ;
+- notifications push sur iOS seulement une fois installée (iOS ≥ 16.4) ;
+- pas de présence dans l'App Store ni le Play Store.

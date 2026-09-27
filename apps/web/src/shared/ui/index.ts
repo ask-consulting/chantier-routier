@@ -12,3 +12,4 @@ export * from './sidebar';
 export * from './snippet';
 export * from './states';
 export * from './table';
+export * from './offline-notice';
