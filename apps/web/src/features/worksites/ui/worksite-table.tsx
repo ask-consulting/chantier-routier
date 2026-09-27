@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { Permission, type IWorksite } from '@chantia/shared';
 import { Badge, Card, CardBody, TD, TH, THead, TRow, Table } from '@/shared/ui';
@@ -68,7 +69,11 @@ function WorksiteTable({ worksites, onEdit }: RowsProps) {
         {worksites.map((worksite) => (
           <TRow key={worksite.id}>
             <TD className="font-mono text-xs text-fg-muted">{worksite.code}</TD>
-            <TD className="font-medium">{worksite.name}</TD>
+            <TD className="font-medium">
+              <Link href={`/worksites/${worksite.id}`} className="hover:text-primary hover:underline">
+                {worksite.name}
+              </Link>
+            </TD>
             <TD className="text-fg-muted">{worksite.client?.displayName ?? '—'}</TD>
             <TD>
               <Badge tone={WORKSITE_STATUS_TONE[worksite.status]} dot>
@@ -103,7 +108,12 @@ function WorksiteCards({ worksites, onEdit }: RowsProps) {
             <CardBody className="flex flex-col gap-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{worksite.name}</p>
+                  <Link
+                    href={`/worksites/${worksite.id}`}
+                    className="block truncate font-medium hover:text-primary"
+                  >
+                    {worksite.name}
+                  </Link>
                   <p className="truncate text-sm text-fg-muted">
                     <span className="font-mono text-xs">{worksite.code}</span>
                     {worksite.client && ` · ${worksite.client.displayName}`}

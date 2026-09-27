@@ -5,6 +5,7 @@ import type { IUpdateClient } from '@chantia/shared';
 import {
   createClient,
   deleteClient,
+  fetchClient,
   fetchClients,
   updateClient,
   type ClientListParams,
@@ -28,6 +29,14 @@ export function useClients(params?: ClientListParams) {
     queryKey: clientKeys.list(params),
     queryFn: () => fetchClients(params),
     placeholderData: (previous) => previous,
+  });
+}
+
+export function useClient(id: string) {
+  return useQuery({
+    queryKey: clientKeys.detail(id),
+    queryFn: () => fetchClient(id),
+    enabled: Boolean(id),
   });
 }
 
