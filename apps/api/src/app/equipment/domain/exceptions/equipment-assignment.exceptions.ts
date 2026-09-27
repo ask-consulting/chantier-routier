@@ -48,3 +48,20 @@ export class EquipmentStillAssignedException extends DomainException {
     super(`This machine still has ${count} current or future assignment(s)`);
   }
 }
+
+/**
+ * A change that would rewrite days that already happened — they are in a
+ * worksite's cost. Only `equipment:correct-history` may; everyone else ends
+ * an assignment in progress rather than deleting it.
+ */
+export class AssignmentHistoryLockedException extends DomainException {
+  readonly kind: DomainErrorKind = 'conflict';
+
+  constructor(field: 'worksiteId' | 'startDate' | 'endDate' | 'id') {
+    const message =
+      field === 'id'
+        ? 'This assignment has started: its past days are in the worksite’s cost. End it instead.'
+        : `Changing ${field} would rewrite days that already happened`;
+    super(message, [{ field, code: 'form.errors.assignmentHistoryLocked', message }]);
+  }
+}

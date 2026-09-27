@@ -196,7 +196,8 @@
       "beforeEquipmentAvailable": "المعدّة غير متاحة بعد في هذا التاريخ",
       "afterEquipmentAvailable": "المعدّة لم تعد متاحة في هذا التاريخ (تفويت أو نهاية عقد)",
       "unknownWorksite": "هذا الورش غير موجود",
-      "equipmentAlreadyAssigned": "هذه المعدّة مخصصة لورش آخر خلال هذه الفترة"
+      "equipmentAlreadyAssigned": "هذه المعدّة مخصصة لورش آخر خلال هذه الفترة",
+      "assignmentHistoryLocked": "هذه الأيام قد مضت: لا يمكن تعديلها"
     }
   },
   "login": {
@@ -425,7 +426,16 @@
     "startDate": "من",
     "endDate": "إلى (ضمناً)",
     "assignmentPreview": "التكلفة على الورش خلال الفترة: {amount}.",
-    "assign": "تخصيص"
+    "assign": "تخصيص",
+    "phase": {
+      "upcoming": "قادم",
+      "in_progress": "جارٍ",
+      "past": "منتهٍ"
+    },
+    "endToday": "إنهاء اليوم",
+    "endTodayFor": "إنهاء التخصيص لـ {worksite} اليوم",
+    "frozenHint": "بدأ التخصيص: لم يعد الورش وتاريخ البدء قابلين للتغيير، ولا يمكن أن تعود النهاية إلى ما قبل الأمس — هذه الأيام ضمن تكلفة الورش.",
+    "correctAssignmentDescription": "بدأ هذا التخصيص: حذفه يُخرج أيامه الماضية من تكلفة {worksite}. يُستعمل فقط لتصحيح خطأ."
   },
   "acquisitionMethod": {
     "cash_purchase": "شراء نقدي",

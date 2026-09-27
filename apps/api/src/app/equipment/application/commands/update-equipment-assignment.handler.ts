@@ -1,8 +1,12 @@
 import { Inject } from '@nestjs/common';
+import { frozenFieldTouched } from '@chantia/shared';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { EquipmentAssignment } from '../../domain/entities/equipment-assignment.entity';
-import { InvalidAssignmentException } from '../../domain/exceptions/equipment-assignment.exceptions';
+import {
+  AssignmentHistoryLockedException,
+  InvalidAssignmentException,
+} from '../../domain/exceptions/equipment-assignment.exceptions';
 import {
   EQUIPMENT_ASSIGNMENT_REPOSITORY_PORT,
   EquipmentAssignmentRepositoryPort,
@@ -14,7 +18,12 @@ import {
 import { checkPlacement } from '../check-placement';
 import { UpdateEquipmentAssignmentCommand } from './update-equipment-assignment.command';
 
-/** Other dates, or another worksite — the machine stays, and every rule is checked again. */
+/**
+ * Other dates, or another worksite — the machine stays, and every rule is
+ * checked again. Days before today are frozen (see `assignment-rules.ts` in
+ * shared): an assignment in progress can be ended, not rewritten, unless the
+ * caller may correct history.
+ */
 @CommandHandler(UpdateEquipmentAssignmentCommand)
 export class UpdateEquipmentAssignmentHandler
   implements ICommandHandler<UpdateEquipmentAssignmentCommand>
@@ -27,11 +36,19 @@ export class UpdateEquipmentAssignmentHandler
   ) {}
 
   async execute(command: UpdateEquipmentAssignmentCommand): Promise<EquipmentAssignment> {
-    const { assignmentId, data } = command;
+    const { assignmentId, data, mayCorrectHistory } = command;
 
     const current = await this.assignments.findById(assignmentId);
     if (!current) {
       throw new ResourceNotFoundException('EquipmentAssignment', assignmentId);
+    }
+
+    if (!mayCorrectHistory) {
+      const today = new Date().toISOString().slice(0, 10);
+      const touched = frozenFieldTouched(current, data, today);
+      if (touched) {
+        throw new AssignmentHistoryLockedException(touched);
+      }
     }
 
     if (data.worksiteId !== undefined && data.worksiteId !== current.worksiteId) {

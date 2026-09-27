@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AcquisitionMethod } from '@chantia/shared';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import { CreateEquipmentAssignmentCommand } from './commands/create-equipment-assignment.command';
@@ -12,6 +12,7 @@ import { GetEquipmentAssignmentsQuery } from './queries/get-equipment-assignment
 import { EquipmentAssignment } from '../domain/entities/equipment-assignment.entity';
 import { Equipment } from '../domain/entities/equipment.entity';
 import {
+  AssignmentHistoryLockedException,
   EquipmentAlreadyAssignedException,
   InvalidAssignmentException,
 } from '../domain/exceptions/equipment-assignment.exceptions';
@@ -86,6 +87,14 @@ function setup(
   } satisfies EquipmentRepositoryPort;
   return { assignments, equipment, saved };
 }
+
+// Today is 2026-03-25: the booking of 2026-04-01 → 04-10 has not started.
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-03-25T10:00:00Z'));
+});
+
+afterEach(() => vi.useRealTimers());
 
 function create(dates: { startDate: string; endDate: string }) {
   return new CreateEquipmentAssignmentCommand('org-1', {
@@ -210,8 +219,64 @@ describe('UpdateEquipmentAssignmentHandler', () => {
   });
 });
 
+describe('the days that already happened', () => {
+  // Today is 2026-04-05: the booking of 04-01 → 04-10 is in progress.
+  beforeEach(() => vi.setSystemTime(new Date('2026-04-05T10:00:00Z')));
+
+  it('lets an assignment in progress be ended today', async () => {
+    const { assignments, equipment, saved } = setup();
+
+    await new UpdateEquipmentAssignmentHandler(assignments, equipment).execute(
+      new UpdateEquipmentAssignmentCommand('as-1', { endDate: '2026-04-05' }),
+    );
+
+    expect(saved[0].endDate).toBe('2026-04-05');
+  });
+
+  it('refuses to move it elsewhere, shift its start, or trim a day that happened', async () => {
+    const { assignments, equipment } = setup();
+    const handler = new UpdateEquipmentAssignmentHandler(assignments, equipment);
+
+    for (const [change, field] of [
+      [{ worksiteId: MONASTIR.id }, 'worksiteId'],
+      [{ startDate: '2026-04-02' }, 'startDate'],
+      [{ endDate: '2026-04-03' }, 'endDate'],
+    ] as const) {
+      await expect(
+        handler.execute(new UpdateEquipmentAssignmentCommand('as-1', change)),
+      ).rejects.toMatchObject({ fieldErrors: [{ field, code: 'form.errors.assignmentHistoryLocked' }] });
+    }
+    expect(assignments.save).not.toHaveBeenCalled();
+  });
+
+  it('refuses to delete it — it is ended instead', async () => {
+    const { assignments } = setup();
+
+    await expect(
+      new DeleteEquipmentAssignmentHandler(assignments).execute(
+        new DeleteEquipmentAssignmentCommand('as-1'),
+      ),
+    ).rejects.toBeInstanceOf(AssignmentHistoryLockedException);
+    expect(assignments.delete).not.toHaveBeenCalled();
+  });
+
+  it('lets whoever may correct history do both', async () => {
+    const { assignments, equipment, saved } = setup();
+
+    await new UpdateEquipmentAssignmentHandler(assignments, equipment).execute(
+      new UpdateEquipmentAssignmentCommand('as-1', { startDate: '2026-04-02' }, true),
+    );
+    await new DeleteEquipmentAssignmentHandler(assignments).execute(
+      new DeleteEquipmentAssignmentCommand('as-1', true),
+    );
+
+    expect(saved[0].startDate).toBe('2026-04-02');
+    expect(assignments.delete).toHaveBeenCalledWith('as-1');
+  });
+});
+
 describe('DeleteEquipmentAssignmentHandler and the query', () => {
-  it('really deletes — nothing hangs off an assignment', async () => {
+  it('really deletes one that has not started — nothing hangs off it', async () => {
     const { assignments } = setup();
 
     await new DeleteEquipmentAssignmentHandler(assignments).execute(

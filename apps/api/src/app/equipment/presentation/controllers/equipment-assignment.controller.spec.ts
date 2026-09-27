@@ -94,13 +94,17 @@ describe('EquipmentAssignmentController', () => {
       startDate: '2026-04-01',
       endDate: '2026-04-10',
     });
-    await controller.update(UserRole.ADMIN, 'as-1', { endDate: '2026-04-12' });
-    await expect(controller.remove('as-1')).resolves.toBeUndefined();
+    await controller.update(UserRole.SITE_MANAGER, 'as-1', { endDate: '2026-04-12' });
+    await expect(controller.remove(UserRole.ADMIN, 'as-1')).resolves.toBeUndefined();
 
     const [create, update, remove] = commandBus.execute.mock.calls.map((call) => call[0]);
     expect(create).toBeInstanceOf(CreateEquipmentAssignmentCommand);
     expect(update).toBeInstanceOf(UpdateEquipmentAssignmentCommand);
     expect(remove).toBeInstanceOf(DeleteEquipmentAssignmentCommand);
+    // The right to correct history follows the role — the site manager's
+    // change is held to the frozen days, the admin's delete is not.
+    expect((update as UpdateEquipmentAssignmentCommand).mayCorrectHistory).toBe(false);
+    expect((remove as DeleteEquipmentAssignmentCommand).mayCorrectHistory).toBe(true);
   });
 });
 

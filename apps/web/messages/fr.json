@@ -196,7 +196,8 @@
       "beforeEquipmentAvailable": "Le matériel n’est pas encore disponible à cette date",
       "afterEquipmentAvailable": "Le matériel n’est plus disponible à cette date (cession ou fin de contrat)",
       "unknownWorksite": "Ce chantier n’existe pas ou plus",
-      "equipmentAlreadyAssigned": "Ce matériel est déjà affecté ailleurs sur cette période"
+      "equipmentAlreadyAssigned": "Ce matériel est déjà affecté ailleurs sur cette période",
+      "assignmentHistoryLocked": "Ces jours ont déjà eu lieu : ils ne peuvent plus être modifiés"
     }
   },
   "login": {
@@ -425,7 +426,16 @@
     "startDate": "Du",
     "endDate": "Au (inclus)",
     "assignmentPreview": "Coût pour le chantier sur la période : {amount}.",
-    "assign": "Affecter"
+    "assign": "Affecter",
+    "phase": {
+      "upcoming": "À venir",
+      "in_progress": "En cours",
+      "past": "Terminée"
+    },
+    "endToday": "Terminer aujourd’hui",
+    "endTodayFor": "Terminer aujourd’hui l’affectation à {worksite}",
+    "frozenHint": "L’affectation a commencé : le chantier et la date de début ne changent plus, et la fin ne peut pas revenir avant hier — ces jours sont dans le coût du chantier.",
+    "correctAssignmentDescription": "Cette affectation a commencé : la supprimer retire ses jours passés du coût de {worksite}. À réserver à la correction d’une erreur."
   },
   "acquisitionMethod": {
     "cash_purchase": "Achat comptant",

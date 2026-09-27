@@ -47,6 +47,10 @@ export class EquipmentAssignmentController {
     return { includeMoney: roleHasEveryPermission(role, [Permission.BUDGET_READ]) };
   }
 
+  private mayCorrectHistory(role: UserRole): boolean {
+    return roleHasEveryPermission(role, [Permission.EQUIPMENT_CORRECT_HISTORY]);
+  }
+
   @Get()
   @RequirePermissions(Permission.EQUIPMENT_READ)
   @ApiOperation({ summary: 'List assignments, by machine or by worksite — chronological' })
@@ -94,9 +98,16 @@ export class EquipmentAssignmentController {
 
   @Patch(':id')
   @RequirePermissions(Permission.EQUIPMENT_MANAGE)
-  @ApiOperation({ summary: 'Move an assignment — other dates, or another worksite' })
+  @ApiOperation({
+    summary: 'Move an assignment — other dates, or another worksite',
+    description:
+      'Days before today are frozen: once started, an assignment keeps its worksite and its ' +
+      'start, and may end no earlier than yesterday. Only `equipment:correct-history` (admin) ' +
+      'may rewrite them.',
+  })
   @ApiResponse({ status: 200, type: EquipmentAssignmentResponseDto })
   @ApiResponse({ status: 404, description: 'Unknown assignment, or another tenant’s' })
+  @ApiResponse({ status: 409, description: 'Would rewrite days that already happened' })
   async update(
     @CurrentUser('role') role: UserRole,
     @Param('id', ParseUUIDPipe) id: string,
@@ -105,17 +116,28 @@ export class EquipmentAssignmentController {
     const assignment = await this.commandBus.execute<
       UpdateEquipmentAssignmentCommand,
       EquipmentAssignment
-    >(new UpdateEquipmentAssignmentCommand(id, dto));
+    >(new UpdateEquipmentAssignmentCommand(id, dto, this.mayCorrectHistory(role)));
     return EquipmentAssignmentResponseDto.fromDomain(assignment, this.includeMoney(role));
   }
 
   @Delete(':id')
   @RequirePermissions(Permission.EQUIPMENT_MANAGE)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Cancel an assignment — its cost leaves the worksite’s' })
+  @ApiOperation({
+    summary: 'Cancel an assignment that has not started — its cost leaves the worksite’s',
+    description:
+      'One that started is refused (409): its past days are in the worksite’s cost. End it ' +
+      'instead — its end moved to today. Only `equipment:correct-history` (admin) may delete it.',
+  })
   @ApiResponse({ status: 204, description: 'Cancelled' })
   @ApiResponse({ status: 404, description: 'Unknown assignment, or another tenant’s' })
-  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    await this.commandBus.execute(new DeleteEquipmentAssignmentCommand(id));
+  @ApiResponse({ status: 409, description: 'Already started' })
+  async remove(
+    @CurrentUser('role') role: UserRole,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new DeleteEquipmentAssignmentCommand(id, this.mayCorrectHistory(role)),
+    );
   }
 }

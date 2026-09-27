@@ -66,6 +66,14 @@ describe('equipment permissions', () => {
     expect(roleHasPermission(UserRole.FOREMAN, Permission.EQUIPMENT_MANAGE)).toBe(false);
     expect(roleHasPermission(UserRole.WORKER, Permission.EQUIPMENT_READ)).toBe(false);
   });
+
+  it('keeps correcting the planning’s past to the admin alone', () => {
+    for (const role of Object.values(UserRole)) {
+      expect(roleHasPermission(role, Permission.EQUIPMENT_CORRECT_HISTORY)).toBe(
+        role === UserRole.ADMIN,
+      );
+    }
+  });
 });
 
 describe('roleHasEveryPermission', () => {

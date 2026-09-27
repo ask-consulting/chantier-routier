@@ -28,11 +28,15 @@ vi.mock('@/features/auth', () => ({
 }));
 
 /** Stands in for the worksites feature's picker, which the route hands in. */
-function StubWorksitePicker({ label, value, onChange, error }: WorksitePickerProps) {
+function StubWorksitePicker({ label, value, onChange, error, disabled }: WorksitePickerProps) {
   return (
     <label>
       {label}
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      >
         <option value="">—</option>
         <option value="ws-1">RN1</option>
         <option value="ws-2">MN-04</option>
@@ -102,7 +106,15 @@ function open(equipment: IEquipment = roller) {
   );
 }
 
+/** Only `Date` — Testing Library's own waits keep their real timers. */
+function today(day: string): void {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(`${day}T10:00:00Z`));
+}
+
 beforeEach(() => {
+  // Before the booking of 2026-04-01 → 04-10: it has not started.
+  today('2026-03-25');
   granted = new Set(Object.values(Permission));
   mock = new MockAdapter(apiClient);
   serve([atSousse]);
@@ -115,6 +127,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   mock.restore();
   cleanup();
 });
@@ -124,6 +137,7 @@ describe('AssignmentsDrawer, the planning', () => {
     open();
 
     expect(await screen.findByText('RN1 · Réfection RN1')).toBeTruthy();
+    expect(screen.getByText('À venir')).toBeTruthy();
     expect(screen.getByText(/10 jours/)).toBeTruthy();
     expect(screen.getByText(/Coût pour le chantier : 4\s?500,00/)).toBeTruthy();
     expect(screen.getByText('Avec chauffeur')).toBeTruthy();
@@ -256,5 +270,67 @@ describe('AssignmentsDrawer, moving and cancelling', () => {
 
     expect([...document.querySelectorAll('dialog')].every((dialog) => !dialog.open)).toBe(true);
     expect(mock.history.get).toHaveLength(0);
+  });
+});
+
+describe('AssignmentsDrawer, what already happened', () => {
+  /** A site manager: may book, may not rewrite history. */
+  function asSiteManager(): void {
+    granted = new Set(
+      [...Object.values(Permission)].filter((p) => p !== Permission.EQUIPMENT_CORRECT_HISTORY),
+    );
+  }
+
+  it('offers to end an assignment in progress today, not to cancel it', async () => {
+    today('2026-04-05');
+    asSiteManager();
+    open();
+
+    expect(await screen.findByText('En cours')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Annuler l’affectation à RN1/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Terminer aujourd’hui l’affectation à RN1/ }));
+
+    await waitFor(() => {
+      expect(mock.history.patch[0]?.url).toMatch(/\/equipment-assignments\/as-1$/);
+      expect(JSON.parse(mock.history.patch[0]?.data as string)).toEqual({ endDate: '2026-04-05' });
+    });
+  });
+
+  it('locks the worksite and the start of one that started, and keeps the end from going back', async () => {
+    today('2026-04-05');
+    asSiteManager();
+    open();
+    fireEvent.click(await screen.findByRole('button', { name: /Modifier l’affectation à RN1/ }));
+
+    expect((screen.getByLabelText('Chantier') as HTMLSelectElement).disabled).toBe(true);
+    expect((screen.getByLabelText('Du') as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getByText(/l’affectation a commencé/i)).toBeTruthy();
+
+    change('Au (inclus)', '2026-04-02');
+
+    expect(screen.getByText('Ces jours ont déjà eu lieu : ils ne peuvent plus être modifiés')).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Enregistrer' }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+  });
+
+  it('shows a past assignment as ended, with nothing to end or cancel', async () => {
+    today('2026-05-01');
+    asSiteManager();
+    open();
+
+    expect(await screen.findByText('Terminée')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Terminer aujourd’hui/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Annuler l’affectation à RN1/ })).toBeNull();
+  });
+
+  it('gives an admin the cancellation back, and says what it rewrites', async () => {
+    today('2026-05-01');
+    open();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Annuler l’affectation à RN1/ }));
+
+    expect(screen.getAllByText(/retire ses jours passés du coût/).length).toBeGreaterThan(0);
   });
 });

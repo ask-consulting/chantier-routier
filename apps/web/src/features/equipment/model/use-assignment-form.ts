@@ -2,8 +2,10 @@
 
 import { useCallback, useState } from 'react';
 import {
+  earliestEndDate,
   equipmentAvailability,
   equipmentCostOverPeriod,
+  frozenFieldTouched,
   type EquipmentCostInput,
   type IEquipment,
   type IEquipmentAssignment,
@@ -17,7 +19,8 @@ export type AssignmentFieldErrorKey =
   | 'beforeEquipmentAvailable'
   | 'afterEquipmentAvailable'
   | 'unknownWorksite'
-  | 'equipmentAlreadyAssigned';
+  | 'equipmentAlreadyAssigned'
+  | 'assignmentHistoryLocked';
 
 export interface AssignmentFormValues {
   /** A worksite id, or `''` before one is picked. */
@@ -75,8 +78,17 @@ function costInputOf(equipment: IEquipment): EquipmentCostInput | null {
  *
  * **The cost is previewed** over the whole period, with the functions the
  * API prices it with — for a reader who may see money.
+ *
+ * **Days before today are frozen** once the assignment has started — the rule
+ * of `assignment-rules.ts` in shared, the one the API enforces. The worksite
+ * and the start are locked, and the end cannot go back past yesterday; the
+ * `mayCorrectHistory` reader (an admin) is held to none of it.
  */
-export function useAssignmentForm(equipment: IEquipment, editing: IEquipmentAssignment | null) {
+export function useAssignmentForm(
+  equipment: IEquipment,
+  editing: IEquipmentAssignment | null,
+  mayCorrectHistory = false,
+) {
   const [values, setValues] = useState<AssignmentFormValues>(() => valuesOf(editing));
   const [serverFieldErrors, setServerFieldErrors] = useState<FieldErrors>({});
   const [conflict, setConflict] = useState<string | null>(null);
@@ -92,6 +104,11 @@ export function useAssignmentForm(equipment: IEquipment, editing: IEquipmentAssi
     setFailed(false);
   }, []);
 
+  const today = new Date().toISOString().slice(0, 10);
+  const endFloor = editing && !mayCorrectHistory ? earliestEndDate(editing, today) : null;
+  /** The worksite and the start of an assignment that started, for a reader who may not rewrite it. */
+  const locked = endFloor !== null;
+
   const clientErrors: FieldErrors = {};
   const { from, until } = equipmentAvailability(equipment);
   if (values.startDate && values.startDate < from) {
@@ -102,6 +119,12 @@ export function useAssignmentForm(equipment: IEquipment, editing: IEquipmentAssi
   }
   if (values.startDate && values.endDate && values.endDate < values.startDate) {
     clientErrors.endDate = 'endBeforeStart';
+  }
+  if (editing && locked) {
+    const touched = frozenFieldTouched(editing, values, today);
+    if (touched) {
+      clientErrors[touched] = 'assignmentHistoryLocked';
+    }
   }
 
   const isComplete =
@@ -171,6 +194,9 @@ export function useAssignmentForm(equipment: IEquipment, editing: IEquipmentAssi
     previewCost,
     availableFrom: from,
     availableUntil: until,
+    locked,
+    /** The earliest end the reader may give — `null` when nothing is frozen. */
+    endFloor,
   };
 }
 
@@ -179,6 +205,7 @@ const KNOWN: Record<string, AssignmentFieldErrorKey> = {
   'form.errors.beforeEquipmentAvailable': 'beforeEquipmentAvailable',
   'form.errors.afterEquipmentAvailable': 'afterEquipmentAvailable',
   'form.errors.unknownWorksite': 'unknownWorksite',
+  'form.errors.assignmentHistoryLocked': 'assignmentHistoryLocked',
 };
 
 function toFieldErrors(caught: unknown): FieldErrors {

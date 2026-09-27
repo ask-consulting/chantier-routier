@@ -31,3 +31,4 @@ export * from './clients/client-rules';
 
 // Equipment: what a machine costs per day (the catalog itself lives in the database)
 export * from './equipment/equipment-costs';
+export * from './equipment/assignment-rules';

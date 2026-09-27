@@ -17,12 +17,14 @@ export function WorksiteSelect({
   value,
   onChange,
   error,
+  disabled = false,
 }: {
   label: string;
   /** A worksite id, or `''` for none. */
   value: string;
   onChange: (worksiteId: string) => void;
   error?: string;
+  disabled?: boolean;
 }) {
   const t = useTranslations('worksites');
   const { data, isPending } = useWorksiteOptions();
@@ -38,7 +40,7 @@ export function WorksiteSelect({
         })),
       ]}
       value={value}
-      disabled={isPending}
+      disabled={disabled || isPending}
       error={error}
       onChange={(event) => onChange(event.target.value)}
     />

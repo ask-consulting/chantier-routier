@@ -2,13 +2,35 @@
 
 import { useState, type ComponentType } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Permission, type IEquipment, type IEquipmentAssignment } from '@chantia/shared';
-import { Alert, Button, Card, CardBody, ConfirmDialog, Drawer, Field, Skeleton } from '@/shared/ui';
+import {
+  Permission,
+  assignmentPhase,
+  mayCancelAssignment,
+  type AssignmentPhase,
+  type IEquipment,
+  type IEquipmentAssignment,
+} from '@chantia/shared';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  ConfirmDialog,
+  Drawer,
+  Field,
+  Skeleton,
+  type Tone,
+} from '@/shared/ui';
 import { DeleteIcon, EditIcon } from '@/shared/lib/icons';
 import { formatAmount, formatDate } from '@/shared/lib/format';
 import type { Locale } from '@/shared/i18n/config';
 import { usePermission } from '@/features/auth';
-import { useAssignments, useDeleteAssignment } from '../api/equipment.queries';
+import {
+  useAssignments,
+  useDeleteAssignment,
+  useUpdateAssignment,
+} from '../api/equipment.queries';
 import { useAssignmentForm } from '../model/use-assignment-form';
 
 /**
@@ -22,6 +44,8 @@ export interface WorksitePickerProps {
   value: string;
   onChange: (worksiteId: string) => void;
   error?: string;
+  /** Locked — an assignment that started stays on its worksite. */
+  disabled?: boolean;
 }
 
 export type WorksitePicker = ComponentType<WorksitePickerProps>;
@@ -33,7 +57,22 @@ export type WorksitePicker = ComponentType<WorksitePickerProps>;
  * Anyone who sees the fleet sees the planning; `equipment:manage` adds the
  * form to book, move and cancel. A machine is never in two places on the same
  * day: the API refuses it, naming the worksite in the way.
+ *
+ * **What happened stays.** An assignment that started cannot be cancelled —
+ * its past days are in its worksite's cost — only ended today; one that ended
+ * keeps its days. The actions offered follow that, and `equipment:correct-history`
+ * (an admin) gets them all back, to correct a real mistake.
  */
+
+const PHASE_TONE: Record<AssignmentPhase, Tone> = {
+  upcoming: 'neutral',
+  in_progress: 'info',
+  past: 'success',
+};
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 export function AssignmentsDrawer({
   equipment,
   onClose,
@@ -67,6 +106,7 @@ function Planning({
 }) {
   const t = useTranslations('equipment');
   const canManage = usePermission(Permission.EQUIPMENT_MANAGE);
+  const mayCorrectHistory = usePermission(Permission.EQUIPMENT_CORRECT_HISTORY);
   const { data, isPending, isError } = useAssignments({ equipmentId: equipment.id });
   const [editing, setEditing] = useState<IEquipmentAssignment | null>(null);
 
@@ -78,6 +118,7 @@ function Planning({
           key={editing?.id ?? 'new'}
           equipment={equipment}
           editing={editing}
+          mayCorrectHistory={mayCorrectHistory}
           onDone={() => setEditing(null)}
           WorksitePicker={WorksitePicker}
         />
@@ -97,6 +138,7 @@ function Planning({
                 key={assignment.id}
                 assignment={assignment}
                 canManage={canManage}
+                mayCorrectHistory={mayCorrectHistory}
                 onEdit={() => setEditing(assignment)}
               />
             ))}
@@ -110,24 +152,36 @@ function Planning({
 function AssignmentRow({
   assignment,
   canManage,
+  mayCorrectHistory,
   onEdit,
 }: {
   assignment: IEquipmentAssignment;
   canManage: boolean;
+  mayCorrectHistory: boolean;
   onEdit: () => void;
 }) {
   const t = useTranslations('equipment');
   const locale = useLocale() as Locale;
   const [confirming, setConfirming] = useState(false);
   const remove = useDeleteAssignment();
+  const end = useUpdateAssignment();
   const where = `${assignment.worksite.code} · ${assignment.worksite.name}`;
+  const phase = assignmentPhase(assignment, today());
+  const mayCancel = mayCorrectHistory || mayCancelAssignment(assignment, today());
+  // Ending today only shortens what is still to come.
+  const mayEndToday = phase === 'in_progress' && assignment.endDate > today();
 
   return (
     <li>
       <Card>
         <CardBody className="flex items-start justify-between gap-2">
           <div className="min-w-0 text-sm">
-            <p className="truncate font-medium">{where}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate font-medium">{where}</p>
+              <Badge tone={PHASE_TONE[phase]} dot>
+                {t(`phase.${phase}`)}
+              </Badge>
+            </div>
             <p className="text-fg-muted">
               {t('period', {
                 from: formatDate(assignment.startDate, locale),
@@ -141,7 +195,7 @@ function AssignmentRow({
               </p>
             )}
             {assignment.notes && <p className="text-xs text-fg-muted">{assignment.notes}</p>}
-            {remove.error && (
+            {(remove.error || end.error) && (
               <p role="alert" className="text-2xs text-danger">
                 {t('actionFailed')}
               </p>
@@ -149,6 +203,19 @@ function AssignmentRow({
           </div>
           {canManage && (
             <div className="flex shrink-0 items-center gap-1">
+              {mayEndToday && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={end.isPending}
+                  onClick={() =>
+                    end.mutate({ id: assignment.id, data: { endDate: today() } })
+                  }
+                  aria-label={t('endTodayFor', { worksite: where })}
+                >
+                  {t('endToday')}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -158,16 +225,18 @@ function AssignmentRow({
               >
                 <EditIcon className="size-4 shrink-0" aria-hidden />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setConfirming(true)}
-                title={t('cancelAssignment')}
-                aria-label={t('cancelAssignmentFor', { worksite: where })}
-                className="text-danger"
-              >
-                <DeleteIcon className="size-4 shrink-0" aria-hidden />
-              </Button>
+              {mayCancel && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setConfirming(true)}
+                  title={t('cancelAssignment')}
+                  aria-label={t('cancelAssignmentFor', { worksite: where })}
+                  className="text-danger"
+                >
+                  <DeleteIcon className="size-4 shrink-0" aria-hidden />
+                </Button>
+              )}
             </div>
           )}
         </CardBody>
@@ -176,7 +245,11 @@ function AssignmentRow({
       <ConfirmDialog
         open={confirming}
         title={t('cancelAssignmentTitle')}
-        description={t('cancelAssignmentDescription', { worksite: where })}
+        description={
+          phase === 'upcoming'
+            ? t('cancelAssignmentDescription', { worksite: where })
+            : t('correctAssignmentDescription', { worksite: where })
+        }
         confirmLabel={t('cancelAssignment')}
         cancelLabel={t('deleteDismiss')}
         tone="danger"
@@ -191,18 +264,20 @@ function AssignmentRow({
 function AssignmentForm({
   equipment,
   editing,
+  mayCorrectHistory,
   onDone,
   WorksitePicker,
 }: {
   equipment: IEquipment;
   editing: IEquipmentAssignment | null;
+  mayCorrectHistory: boolean;
   onDone: () => void;
   WorksitePicker: WorksitePicker;
 }) {
   const t = useTranslations('equipment');
   const tFieldError = useTranslations('form.errors');
   const locale = useLocale() as Locale;
-  const form = useAssignmentForm(equipment, editing);
+  const form = useAssignmentForm(equipment, editing, mayCorrectHistory);
   const error = (field: 'worksiteId' | 'startDate' | 'endDate') =>
     form.fieldErrors[field] && tFieldError(form.fieldErrors[field]);
 
@@ -221,10 +296,12 @@ function AssignmentForm({
 
       {form.conflict && <Alert tone="danger">{form.conflict}</Alert>}
       {form.failed && <Alert tone="danger">{t('assignmentFailed')}</Alert>}
+      {form.locked && <p className="text-xs text-fg-muted">{t('frozenHint')}</p>}
 
       <WorksitePicker
         label={t('worksite')}
         value={form.values.worksiteId}
+        disabled={form.locked}
         error={error('worksiteId')}
         onChange={(worksiteId) => form.setValue('worksiteId', worksiteId)}
       />
@@ -236,6 +313,7 @@ function AssignmentForm({
           required
           min={form.availableFrom}
           max={form.availableUntil ?? undefined}
+          disabled={form.locked}
           value={form.values.startDate}
           error={error('startDate')}
           onChange={(event) => form.setValue('startDate', event.target.value)}
@@ -244,7 +322,7 @@ function AssignmentForm({
           label={t('endDate')}
           type="date"
           required
-          min={form.values.startDate || form.availableFrom}
+          min={form.endFloor ?? (form.values.startDate || form.availableFrom)}
           max={form.availableUntil ?? undefined}
           value={form.values.endDate}
           error={error('endDate')}
