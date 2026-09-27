@@ -15,7 +15,8 @@
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests --coverage",
     "clean": "rm -rf dist",
-    "bootstrap:admin": "node dist/scripts/bootstrap-admin.js"
+    "bootstrap:admin": "node dist/scripts/bootstrap-admin.js",
+    "seed:demo": "node dist/scripts/seed-demo.js"
   },
   "dependencies": {
     "@chantia/shared": "workspace:*",
