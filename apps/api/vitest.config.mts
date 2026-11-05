@@ -72,7 +72,10 @@ export default defineConfig({
       // `docs/14-etat-des-lieux.md` §2.3. Au-delà de 80, le cliquet tient sans monter.
       // 66 → 71 : les affectations de matériel aux chantiers, le référentiel lu
       // en base, et les deux gardes d'accès enfin testées contre la vraie matrice.
-      thresholds: { statements: 71, branches: 72, functions: 70, lines: 71 },
+      // 71 → 78 : le hachage scrypt, l'émetteur de jetons et le garde JWT (avec
+      // la preuve que l'un accepte ce que l'autre signe), FreshAccountGuard, et
+      // changement de mot de passe, déconnexion, suppression de compte.
+      thresholds: { statements: 78, branches: 79, functions: 77, lines: 78 },
     },
   },
 });
