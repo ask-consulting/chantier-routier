@@ -392,14 +392,29 @@ Dependabot           53 alertes ouvertes · 0 jamais passée à « fixed »
 ```
 
 Les 53 ont été créées entre le 3 septembre et le 4 novembre, toutes avant le
-correctif, et sur chacune `created_at == updated_at`. Le graphe de dépendances
-qui devrait dire à GitHub ce qui est installé répond `404` à l'API
-(`/dependency-graph/sbom`) — d'où, probablement, des alertes jamais
-réévaluées. *Probablement* : non vérifié.
+correctif, et sur chacune `created_at == updated_at`. **Vérifiées une par une**
+— la plage vulnérable de chaque alerte confrontée par `semver` à toutes les
+versions du paquet présentes dans `pnpm-lock.yaml` : **aucune n'est installée
+dans une version vulnérable.** Les 53 sont fausses.
 
-**Action** — inchangée, et devenue plus urgente : vérifier que le graphe de
-dépendances est activé (Settings → Code security), puis fermer à la main ce
-qui reste ouvert après réévaluation.
+La cause, elle, n'est pas trouvée. *Le 5 novembre, ce document en avançait
+une à tort* : un graphe de dépendances désactivé, parce que l'API répondait
+`404` sur `/dependency-graph/sbom`. Or sur un dépôt public le graphe est
+toujours actif et ne se désactive pas, et les alertes sont bien activées
+(`/vulnerability-alerts` → `204`). Le `404` venait vraisemblablement des droits
+du jeton qui interrogeait. Une hypothèse présentée avec un « probablement »
+reste une hypothèse — celle-ci a coûté une recherche de réglage qui n'existe
+pas.
+
+Deux indices pour qui reprendra la question : des alertes sont **créées**
+contre des versions que le verrou n'a jamais contenues au moment de leur
+création (alerte n° 53, `vite <= 6.4.3`, créée le 2 novembre quand le verrou
+ne contenait que `vite@8.2.2`), ce qui fait soupçonner une lecture erronée du verrou pnpm v9 par
+Dependabot ; et aucune alerte n'est jamais passée d'elle-même à « fixed ».
+
+**Action** — fermer les 53 avec le motif `inaccurate`, chacune vérifiée. Et
+garder le contrôle dans le dépôt : `pnpm audit --prod` en CI (§1.6) est la
+mesure qui fait foi, Dependabot un second avis.
 
 ### 1.3 En-têtes de sécurité ✅
 
