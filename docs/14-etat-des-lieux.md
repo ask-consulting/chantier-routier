@@ -1,20 +1,59 @@
 # 14 — État des lieux et priorités
 
-*Arrêté au 14 août 2026. Révisé les 17, 18, 20, 21 et 26 août 2026.*
+*Arrêté au 14 août 2026. Révisé les 17, 18, 20, 21 et 26 août, et le 5 novembre 2026.*
 
 ## Le constat en une phrase
 
 **Les fondations sont plus solides que le produit.** L'authentification, le
 multi-tenant, les permissions, l'architecture front et le durcissement de l'API
-tiendront des années — mais un chef de chantier ne peut toujours rien pointer,
-et personne ne peut être invité sans copier-coller une URL à la main.
+tiendront des années — mais un chef de chantier ne peut toujours rien pointer.
+Les invitations, elles, partent par email depuis le 2 septembre (§5.1).
 
 La priorité 1 est close, et vérifiée là où ça compte : sur la production, pas
-dans le dépôt.
+dans le dépôt. Elle s'est rouverte d'elle-même pendant six semaines sans
+commit, et refermée le 5 novembre (§1.6) — une sécurité de dépendances n'est
+jamais « faite », elle est à jour ou elle ne l'est pas.
 
 Ce document classe ce qui manque. L'ordre est une décision prise, pas une
 suggestion : sécurité, puis qualité de code, puis observabilité, puis le mobile,
 puis le module utilisateurs complet avec les notifications. Le métier vient après.
+
+> **Révision du 5 novembre.** Rien n'avait bougé depuis le 27 septembre — six
+> semaines. Pendant ce temps le produit, lui, avait avancé avant la pause plus
+> que ce document ne le disait : clients, parc matériel et affectations, CRUD des
+> chantiers, accueil et page de gestion d'un chantier, une organisation de démo
+> (PR #36 à #45). Aucune de ces livraisons ne figurait ici. C'est réparé, dans
+> l'annexe et en priorité 6.
+>
+> **Les failles sont revenues sans qu'une ligne change.** `pnpm audit` rendait
+> 83 failles, dont **3 critiques sur `next`** ; le §1.2 annonçait toujours
+> « zéro ». Ce n'est pas que le 20 août avait tort : c'est qu'un verrou figé
+> vieillit. Refermé par la PR #46 — et la seule faille qui touchait vraiment le
+> serveur était invisible dans les manifestes : `@nestjs/platform-fastify` fige
+> sa propre copie de `fastify` (§1.6).
+>
+> **La priorité 0 s'est rejouée, à plus petite échelle.** Deux commits écrits,
+> jamais livrés : un correctif CORS resté en local depuis le 25 septembre, une
+> précision de `docker-compose.yml` poussée le 9 août et jamais fusionnée.
+> Retrouvés en nettoyant les branches — 41 fusionnées, supprimées — et livrés
+> par la PR #47. La leçon du 26 août tient : un correctif non fusionné ne
+> protège personne. Ce qui manquait, c'était le geste qui la rend vérifiable —
+> **une branche fusionnée se supprime**, sinon les orphelines se cachent parmi
+> quarante branches mortes.
+>
+> **Le mobile est tranché (priorité 4).** La PWA a été construite puis écartée
+> le 27 septembre (PR #43, fermée) : le mobile sera une application Expo. La
+> recommandation de ce document disait l'inverse ; elle est remplacée.
+>
+> **Ce qui n'a pas pu être vérifié, et doit l'être.** La production n'a pas été
+> re-mesurée après les PR #46 et #47 — l'environnement de cette révision
+> interceptait le TLS vers Render. Dependabot affiche encore 53 alertes, toutes
+> antérieures au correctif, aucune réévaluée (§1.2 bis, qui se répète). Ces deux
+> mesures restent à faire, et rien ici ne les remplace.
+>
+> Revérifié dans le code plutôt que recopié : 439 tests sur l'API, 301 sur le
+> web, 87 sur le paquet partagé ; lint, typecheck et build verts. Tous les points
+> ouverts des priorités 3 à 6 ont été reconfirmés — aucun ne s'est fermé seul.
 
 > **Révision du 26 août.** Aucune ligne n'avait été écrite depuis le 21 — et
 > c'était précisément le constat. Il est clos le soir même : la priorité 0 que
@@ -185,9 +224,10 @@ les deux sens :
   des en-têtes. Ici il en ajoute — donc l'inquiétude ne porte plus. Les 404 sur
   `/api` et `/api-json`, eux, n'ont jamais dépendu du proxy.
 
-### 0.2 `main` est 17 commits derrière `develop`
+### 0.2 `main` est 95 commits derrière `develop`
 
-Les deux branches ont divergé et personne ne les a rapprochées. Ça n'a aucune
+*17 le 26 août, 95 le 5 novembre.* Les deux branches ont divergé et personne ne
+les a rapprochées. Ça n'a aucune
 conséquence tant que `develop` est la branche déployée — mais c'est précisément
 ce qui rend la question du §3.3 urgente : le jour où la production est promue
 depuis `main`, ce retard devient la production elle-même.
@@ -343,6 +383,24 @@ jour, sera vraie.
 vérifier que le compte retombe à zéro. Et ne plus écrire « zéro alerte » sans
 dire **avec quoi** ça a été mesuré.
 
+*Le 5 novembre, ça se répète.* Après la PR #46, les deux instruments :
+
+```
+pnpm audit --prod     0 faille
+pnpm audit            3 (dev, sous @nestjs/cli)
+Dependabot           53 alertes ouvertes · 0 jamais passée à « fixed »
+```
+
+Les 53 ont été créées entre le 3 septembre et le 4 novembre, toutes avant le
+correctif, et sur chacune `created_at == updated_at`. Le graphe de dépendances
+qui devrait dire à GitHub ce qui est installé répond `404` à l'API
+(`/dependency-graph/sbom`) — d'où, probablement, des alertes jamais
+réévaluées. *Probablement* : non vérifié.
+
+**Action** — inchangée, et devenue plus urgente : vérifier que le graphe de
+dépendances est activé (Settings → Code security), puis fermer à la main ce
+qui reste ouvert après réévaluation.
+
 ### 1.3 En-têtes de sécurité ✅
 
 *Écrit le 21 août, livré et vérifié en production le 26 (§0.1).* Le constat de
@@ -489,6 +547,42 @@ préproduction du §3.3 existera et voudra Swagger, ce sera une décision à pre
 *Fusionné (PR #17, commit `c147b26`).* `totalBudget` partait vers tous les rôles ;
 masquer la colonne côté front ne retenait rien. Voir la PR pour le détail, y compris
 la fuite par le tri, plus discrète.
+
+### 1.6 Les failles de dépendances, six semaines plus tard ✅
+
+*Fusionné le 5 novembre (PR #46, commit `febc50d`).* Aucun commit entre le
+27 septembre et le 5 novembre ; le verrou, lui, a vieilli. Mesuré à `pnpm audit` :
+
+```
+avant   tout  83 failles   3 critiques · 38 hautes · 33 moyennes · 9 faibles
+après   tout   3 failles                              2 moyennes  · 1 faible
+        prod   0 faille
+```
+
+Les trois critiques étaient sur `next`, côté web. La correction est une mise à
+jour dans les majeures en place (`pnpm update -r`) : `next` 15.5.29, `@nestjs/*`
+11.2.8, `prisma` 6.19, et les transitives à leur version corrigée.
+
+**La faille qui comptait le plus ne se voyait pas dans les manifestes.**
+`apps/api` déclarait `fastify ^5.6.2`, et la mise à jour l'a porté à 5.12.8. Mais
+`@nestjs/platform-fastify` **fige `fastify` à une version exacte** (5.11.3) — et
+c'est cette copie-là que Nest instancie. Le serveur tournait donc sur une version
+vulnérable quelle que soit celle déclarée par l'API. Une surcharge
+`fastify: ^5.12.8` à la racine la remplace ; l'API compilée a été démarrée pour
+vérifier que Nest l'accepte (`/health` 200, en-têtes de §1.3 intacts).
+
+C'est la troisième fois qu'une dépendance trompe à la lecture : une peer que la
+surcharge ne touche pas (§1.2), un chargement dynamique invisible au `grep`
+(§1.4), une version figée sous une version déclarée. **La version qui compte est
+celle que `pnpm why` montre résolue, pas celle du `package.json`.**
+
+Les trois restantes — `glob`, `minimatch`, `deepmerge` — sont sous
+`@nestjs/cli`, outil de build absent de la production. `glob` demande une
+majeure que la CLI ne déclare pas ; `deepmerge` n'a pas de correctif.
+
+**Action** — re-mesurer la production après déploiement, et inscrire
+`pnpm audit --prod` dans la CI pour qu'un verrou qui vieillit fasse échouer un
+build plutôt que d'attendre la prochaine révision.
 
 ---
 
@@ -860,11 +954,37 @@ En l'état, Chantia est un outil de direction. Ce n'était pas le projet décrit
 | **React Native** | plus fidèle au terrain, accès natif complet | une troisième application à construire **et à maintenir** |
 | **Web seul en v1** | rien à construire | il faut réécrire le périmètre MVP, et le chef de chantier reste sans outil |
 
-**Recommandation : la PWA.** Le pointage hors-ligne y est faisable — `IndexedDB`
-pour la file, l'API de géolocalisation pour la preuve de présence — et ça évite
-d'ouvrir un troisième chantier avant d'avoir fini le premier. L'architecture en
-features et le design system sont déjà là ; une application native repartirait de
-zéro sur les deux.
+~~**Recommandation : la PWA.**~~ *Remplacée le 27 septembre — voir la décision
+ci-dessous.*
+
+### Décision : une application Expo ⏳
+
+*Décidé le 27 septembre, inscrit ici le 5 novembre.* La PWA a été construite et
+vérifiée — manifeste, service worker, page hors-ligne (PR #43) — puis **fermée
+sans fusion** : le mobile sera une vraie application, en Expo. C'est l'option
+« React Native » du tableau, celle que ce document déconseillait ; la décision
+prime sur la recommandation.
+
+Ce que ça engage, et qu'il faut regarder en face plutôt que découvrir :
+
+- **une troisième application** à construire et à maintenir — le coût du tableau
+  ne disparaît pas, il est accepté ;
+- **le design system ne se transporte pas** : les composants web sont du DOM. Ce
+  qui se partage, ce sont les jetons et `packages/shared` (contrats, permissions,
+  politique de mot de passe) — `03-architecture.md` prévoit déjà NativeWind et
+  `expo-sqlite` pour le hors-ligne ;
+- **la session ne se partage pas non plus** : le web garde son jeton de
+  rafraîchissement dans un cookie `httpOnly` derrière ses propres routes serveur.
+  L'application parlera directement à l'API, avec le jeton dans le stockage
+  sécurisé du téléphone. L'API sait déjà faire — rotation et détection de
+  réemploi ne dépendent pas du client.
+
+La branche `feat/web-pwa` reste en place : le manifeste et la règle
+`isNeverCached` (« ne jamais mettre l'API en cache ») resserviront si le web doit
+un jour s'installer.
+
+**Action** — ouvrir `apps/mobile` avec le seul parcours qui justifie
+l'application : se connecter, puis pointer. Tout le reste attend.
 
 ---
 
@@ -1091,15 +1211,20 @@ email est plus exposé qu'un écran : il part sans qu'on le revoie.
 ### 5.3 Ce qui manque au module utilisateurs
 
 Le back est complet : invitation, acceptation, changement de rôle, désactivation,
-changement de mot de passe. Le **front n'expose rien de tout ça** — il n'y a ni
-écran de liste des comptes, ni écran d'invitation, ni gestion de son propre profil.
+changement de mot de passe. Le front en expose désormais la moitié — les
+invitations (§5.1 bis) et les ouvriers (§5.1 ter). *Revérifié le 5 novembre* :
+il n'y a toujours ni écran de liste des comptes, ni gestion de son propre profil.
 
 À construire, sur web **et** sur mobile :
 
 - liste des comptes, avec rôle et état
-- inviter, relancer une invitation, révoquer
+- ~~inviter, relancer une invitation, révoquer~~ — fait sur le web (§5.1 bis)
 - changer un rôle, désactiver un compte
 - profil : nom, langue, mot de passe
+
+Les handlers derrière ces écrans sont couverts depuis le 5 novembre — changement
+de mot de passe, déconnexion, suppression, et `FreshAccountGuard` qui relit le
+compte avant toute action sur les accès (PR #47).
 
 Le garde-fou existant côté API doit rester visible côté front : on ne peut ni se
 désactiver soi-même, ni changer son propre rôle, ni retirer le dernier admin.
@@ -1112,13 +1237,16 @@ Dans l'ordre de dépendance, une fois les cinq priorités ci-dessus tenues.
 
 | module | schéma Prisma | code | dépend de |
 |---|---|---|---|
-| **Ouvriers** | ✓ | — | — |
-| **Pointage** | ✓ | — | ouvriers |
+| **Ouvriers** | ✓ | ✓ API et web | — |
+| **Pointage** | ✓ | — | ouvriers, et l'application mobile (priorité 4) |
 | **Dépenses** | ✓ | — | chantiers |
-| **Tableau de bord** | — | — | les trois précédents |
+| **Budget par poste** | — | — | chantiers |
+| **Tableau de bord** | — | — | pointage, dépenses, budget |
 
-**Commencer par les ouvriers** : le pointage et le calcul du coût de main-d'œuvre en
-dépendent tous les deux.
+Les ouvriers sont faits (PR #35 et #36) ; le **pointage** est donc le suivant, et
+le seul à attendre autre chose que du code métier : il est mobile par nature, et
+l'application n'existe pas encore. Les dépenses ne dépendent de rien d'ouvert —
+elles peuvent avancer en parallèle.
 
 Le module chantier se crée, se modifie et se supprime — la suppression pose
 `deleted_at`, comme pour les ouvriers, parce que pointages et dépenses cascadent
@@ -1167,6 +1295,25 @@ Sur `develop`, donc en ligne — solide et documenté :
   pour la seule page Swagger, sept tests qui la fixent (§1.3)
 - **Surface d'API non publiée** — Swagger et `/api-json` mis hors production, ce
   qui retire aussi `@fastify/static` du chemin d'exécution (§1.4)
+- **CORS** — production, previews Vercel par déploiement et par branche, et elles
+  seules (PR #38, #47)
+
+Le métier, livré en septembre (PR #36 à #45) :
+
+- **Ouvriers** — la fiche RH, distincte du compte ; supprimer désactive dès qu'il
+  y a un historique, jamais de `DELETE`
+- **Chantiers** — création, modification, suppression logique ; accueil des
+  chantiers en cours et page de gestion d'un chantier
+- **Clients** — personne physique ou morale, contacts, adresse de facturation ;
+  le chantier pointe vers son client
+- **Parc matériel** — référentiel de 74 types en base (FR/AR), engins par
+  organisation et leur coût par jour, affectations aux chantiers au prix du jour
+  de l'affectation, jours passés figés sauf pour l'admin ; le coût entre dans
+  celui du chantier
+- **Organisation de démo** — « Chantia Démo », remplie par un script
+
+La couverture, au 5 novembre : API 78 %, web au plafond de 80, paquet partagé au
+plafond (§2.3).
 
 Une réserve sur l'arabe : **il n'a jamais été relu par un locuteur natif.** Les
 traductions sont plausibles, ce n'est pas la même chose que justes.
