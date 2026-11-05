@@ -48,6 +48,13 @@ services:
       # (see render.yaml) — never reuse this value outside a dev machine.
       JWT_ACCESS_SECRET: local-development-only-not-a-real-secret-6f2b9c
       JWT_ISSUER: chantia-identity
+      # Durée de vie de l'access token. C'est la fenêtre pendant laquelle une
+      # désactivation ou un changement de rôle n'a pas encore d'effet — le guard
+      # ne lit jamais la base (docs/08 §3).
+      JWT_ACCESS_TTL: "300"
+      # Inscription publique fermée : les comptes arrivent par invitation.
+      # C'est déjà le défaut, écrit ici pour que la pile locale le dise.
+      ALLOW_SELF_REGISTRATION: "false"
     ports:
       - "8080:8080"
 

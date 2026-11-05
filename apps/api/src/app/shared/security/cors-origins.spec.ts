@@ -25,6 +25,30 @@ describe('isAllowedOrigin', () => {
     ).toBe(true);
   });
 
+  it('allows the branch alias — the preview URL people actually share', () => {
+    expect(
+      isAllowedOrigin(
+        'https://chantier-routier-git-feat-worksite-crud-aellouzes-projects.vercel.app',
+        ALLOWED,
+      ),
+    ).toBe(true);
+    expect(
+      isAllowedOrigin('https://chantier-routier-git-develop-aellouzes-projects.vercel.app', ALLOWED),
+    ).toBe(true);
+  });
+
+  it('refuses a branch alias from another team', () => {
+    expect(
+      isAllowedOrigin('https://chantier-routier-git-feat-x-attacker-team.vercel.app', ALLOWED),
+    ).toBe(false);
+  });
+
+  it('refuses a branch alias with nothing after git-', () => {
+    expect(isAllowedOrigin('https://chantier-routier-git--aellouzes-projects.vercel.app', ALLOWED)).toBe(
+      false,
+    );
+  });
+
   it('refuses a same-named project in another Vercel team', () => {
     // Anyone can name a project `chantier-routier-<x>`; only the team slug is ours.
     expect(isAllowedOrigin('https://chantier-routier-abc123-a-different-team.vercel.app', ALLOWED)).toBe(
