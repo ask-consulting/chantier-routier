@@ -319,6 +319,7 @@ model Expense {
 /// migration, not a row silently missing at send time.
 enum NotificationSubject {
   invitation
+  access_request
 
   @@map("notification_subject")
   @@schema("notification")
@@ -613,5 +614,40 @@ model EquipmentTypeTranslation {
 
   @@id([typeCode, locale], map: "pk_equipment_type_translations")
   @@map("equipment_type_translations")
+  @@schema("public")
+}
+
+enum AccessRequestKind {
+  building
+  roads
+  networks
+  earthworks
+  other
+
+  @@map("access_request_kind")
+  @@schema("public")
+}
+
+enum AccessRequestLocale {
+  ar
+  la
+  fr
+
+  @@map("access_request_locale")
+  @@schema("public")
+}
+
+/// A company asking for access from the public showcase. It belongs to no
+/// organization: none exists yet, which is the whole point of the request.
+model AccessRequest {
+  id        String              @id(map: "pk_access_requests") @default(uuid()) @db.Uuid
+  company   String
+  phone     String
+  kind      AccessRequestKind
+  locale    AccessRequestLocale
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  @@index([createdAt], map: "ix_access_requests_created_at")
+  @@map("access_requests")
   @@schema("public")
 }

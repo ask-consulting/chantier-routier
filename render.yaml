@@ -38,6 +38,9 @@ services:
       # fell back to its development default and said nothing. It now refuses to
       # boot without it, and the value lives here rather than in the dashboard so
       # the next environment cannot forget it silently.
+      # Where a request sent from the showcase is announced.
+      - key: ACCESS_REQUEST_NOTIFY_EMAIL
+        value: contact@chantia.tn
       - key: WEB_APP_URL
         value: https://chantier-routier.vercel.app
       # HS256 secret signing the access tokens. `generateValue` lets Render mint

@@ -75,7 +75,9 @@ export default defineConfig({
       // 71 → 78 : le hachage scrypt, l'émetteur de jetons et le garde JWT (avec
       // la preuve que l'un accepte ce que l'autre signe), FreshAccountGuard, et
       // changement de mot de passe, déconnexion, suppression de compte.
-      thresholds: { statements: 78, branches: 79, functions: 77, lines: 78 },
+      // 78 → 80, le plafond : le module des demandes d'accès, l'inscription, l'aperçu
+      // d'une invitation et le profil. Mesure du jour : 82 %.
+      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
     },
   },
 });
