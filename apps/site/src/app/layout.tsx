@@ -1,20 +1,8 @@
 import type { Metadata } from 'next';
-import { Bricolage_Grotesque, Readex_Pro } from 'next/font/google';
+// Bundled rather than fetched: the build must not depend on a font server.
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/readex-pro';
 import './globals.css';
-
-const display = Bricolage_Grotesque({
-  subsets: ['latin'],
-  weight: ['500', '700', '800'],
-  variable: '--font-display',
-  display: 'swap',
-});
-
-const body = Readex_Pro({
-  subsets: ['latin', 'arabic'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-body',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chantia.tn'),
@@ -33,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="aeb" dir="rtl" className={`${display.variable} ${body.variable}`}>
+    <html lang="aeb" dir="rtl">
       <body>{children}</body>
     </html>
   );

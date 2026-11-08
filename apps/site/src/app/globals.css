@@ -20,7 +20,7 @@ body {
   margin: 0;
   background: var(--ink);
   color: #fff;
-  font-family: var(--font-body), 'Segoe UI', Tahoma, sans-serif;
+  font-family: 'Readex Pro Variable', 'Segoe UI', Tahoma, sans-serif;
   font-size: 18px;
   line-height: 1.55;
   overflow-x: hidden;
@@ -31,12 +31,12 @@ h1, h2, h3, p { margin: 0; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding-inline: 28px; }
 .display {
-  font-family: var(--font-display), 'Segoe UI', sans-serif;
+  font-family: 'Bricolage Grotesque Variable', 'Segoe UI', sans-serif;
   letter-spacing: -0.035em;
   line-height: 0.98;
   font-weight: 800;
 }
-[dir='rtl'] .display { font-family: var(--font-body), Tahoma, sans-serif; letter-spacing: 0; line-height: 1.28; }
+[dir='rtl'] .display { font-family: 'Readex Pro Variable', Tahoma, sans-serif; letter-spacing: 0; line-height: 1.28; }
 .nums { font-variant-numeric: tabular-nums; }
 
 .btn {
