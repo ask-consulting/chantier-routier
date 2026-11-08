@@ -1,0 +1,32 @@
+{
+  "name": "@chantia/site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vitrine publique chantia.tn (Next.js, export statique)",
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/readex-pro": "^5.3.0",
+    "next": "^15.5.29",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^4.1.12",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.29",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "^4.1.12"
+  }
+}
