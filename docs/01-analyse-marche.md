@@ -1,8 +1,13 @@
 # 01 — Analyse du marché & des solutions existantes
 
+> **Positionnement révisé le 8 novembre 2026.** Chantia vise tous les types de chantiers en
+> Tunisie, pas seulement la route (voir [`02-mvp-perimetre.md`](02-mvp-perimetre.md)). Les
+> appréciations des concurrents ci-dessous datent du cadrage initial et restent à lire avec
+> cet angle routier.
+
 ## 1. Contexte du besoin
 
-La gestion de chantiers routiers repose aujourd'hui, dans beaucoup de PME de TP, sur un
+La gestion de chantiers repose aujourd'hui, dans beaucoup de PME de construction, sur un
 mélange d'outils non spécialisés :
 
 - **Excel / Google Sheets** pour les dépenses et le planning,
@@ -48,7 +53,7 @@ chantier.
                         ▲
                         │
      Kizeo/Finalcad     │      ⭐ NOTRE POSITIONNEMENT
-     (formulaires)      │      (chantier routier + coûts + pointage,
+     (formulaires)      │      (chantier + coûts + pointage,      
                         │       mobile-first, hors-ligne, abordable)
    ─────────────────────┼─────────────────────► Complet / Gestion
                         │
@@ -59,14 +64,14 @@ chantier.
 ```
 
 **Aucune solution ne combine bien, à prix PME :**
-1. La **spécificité routière** (chantiers linéaires, sections, ateliers/engins, métrés).
+1. Le **suivi par tâche** qui relie planning, pointage, matières, engins et contrôle.
 2. Le **suivi des coûts en temps réel** (main d'œuvre + matériaux + engins) par chantier.
 3. Le **pointage terrain des ouvriers** simple, mobile, hors-ligne, géolocalisé.
 4. Un **prix et une simplicité** adaptés aux PME du Maghreb / francophones.
 
 ## 4. Facteurs différenciants visés
 
-- 📱 **Mobile-first & hors-ligne** : les chantiers routiers manquent souvent de réseau.
+- 📱 **Mobile-first & hors-ligne** : les chantiers manquent souvent de réseau.
 - 🌍 **Adapté au marché francophone / Maghreb** : langue, devise, pratiques locales.
 - 💰 **Coût de main d'œuvre lié au pointage** : le pointage alimente directement le coût réel du chantier.
 - 🧭 **Géolocalisation du pointage** : preuve de présence sur le bon chantier.
@@ -76,13 +81,13 @@ chantier.
 
 | Risque | Mitigation |
 |---|---|
-| Alobees ou un acteur FR ajoute la spécialisation routière | Aller vite sur le terrain, se concentrer sur l'UX ouvrier + hors-ligne |
+| Un acteur établi s'adapte au marché tunisien | Aller vite sur le terrain, se concentrer sur l'UX ouvrier + hors-ligne |
 | Résistance au changement (papier/Excel ancrés) | Onboarding ultra simple, import Excel, valeur visible en 1 chantier |
 | Acteur local low-cost | Différenciation par la fiabilité hors-ligne et le suivi de marge |
 
 ## 6. Conclusion
 
 Le marché est mûr (digitalisation du BTP en cours) mais **mal servi sur le segment
-PME routière francophone**. Un MVP centré sur **projet + dépenses + planning + pointage
+des entreprises tunisiennes**. Un MVP centré sur **projet + dépenses + planning + pointage
 ouvrier**, mobile-first et hors-ligne, a un espace clair. Voir
 [`02-mvp-perimetre.md`](02-mvp-perimetre.md) pour le périmètre.

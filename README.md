@@ -1,7 +1,7 @@
-# Chantia — Gestion de chantiers routiers
+# Chantia — Gestion de chantiers
 
-> Application (web + mobile) de gestion de chantiers routiers.
-> MVP : gestion de projet (création, dépenses, planning), gestion des ouvriers et pointage.
+> Application (web + mobile) de suivi complet des chantiers, pour les entreprises tunisiennes.
+> MVP : planning par tâches, équipes, pointage et paie, matières, engins, contrôle qualité, coût total par chantier.
 
 Ce dépôt contient la **documentation de cadrage** du projet. Ces fichiers servent de
 référence (contexte) pour toutes les décisions et développements ultérieurs.
@@ -14,20 +14,20 @@ référence (contexte) pour toutes les décisions et développements ultérieurs
 | [`docs/02-mvp-perimetre.md`](docs/02-mvp-perimetre.md) | Périmètre fonctionnel du MVP, user stories, ce qui est hors périmètre |
 | [`docs/03-architecture.md`](docs/03-architecture.md) | Architecture technique (web, mobile, back-end), modèle de données |
 | [`docs/04-deploiement-gratuit.md`](docs/04-deploiement-gratuit.md) | Plan de déploiement 100% gratuit pour la phase de test |
-| [`docs/05-roadmap.md`](docs/05-roadmap.md) | Roadmap, phasage, estimation d'effort |
+| [`docs/05-roadmap.md`](docs/05-roadmap.md) | Roadmap et découpage en lots |
 | [`docs/06-api-conventions-ddd-cqrs.md`](docs/06-api-conventions-ddd-cqrs.md) | Conventions de l'API back-end (DDD / CQRS, code en anglais) |
 
 ## 🎯 Résumé en une phrase
 
-Un outil simple, mobile-first et hors-ligne, pensé pour les **conducteurs de travaux**
-et **chefs de chantier** afin de suivre en temps réel les **coûts**, l'**avancement** et
-la **présence des ouvriers** sur les chantiers routiers — là où les outils génériques
-(Excel, WhatsApp) montrent leurs limites.
+Un outil pensé pour la **direction**, les **conducteurs de travaux** et les **chefs de
+chantier** afin de voir les **retards** et les **contrôles mal faits** avant qu'ils ne coûtent,
+et de connaître le **coût réel de chaque chantier**, tâche par tâche, là où Excel et
+WhatsApp montrent leurs limites.
 
 ## 👤 Cible
 
-- Petites et moyennes entreprises de travaux publics / routiers (5 à 200 salariés).
-- Marché initial : francophone (France, Maghreb).
+- Entreprises de construction de tous types de chantiers : bâtiment, routes, réseaux, terrassement.
+- Marché : la Tunisie.
 - Utilisateurs : direction, conducteur de travaux, chef de chantier, ouvrier.
 
 ## 🚦 État
