@@ -1,102 +1,208 @@
-# 05 — Roadmap & phasage
+# 05 — Roadmap et découpage en lots
 
-> Estimation indicative pour **1 développeur full-stack** (ajuster selon l'équipe).
-> Les durées sont des ordres de grandeur, pas des engagements.
+*Réécrit le 8 novembre 2026. Le périmètre est dans [`02-mvp-perimetre.md`](02-mvp-perimetre.md).*
 
-## 1. Phasage global
+> **La vitrine `chantia.tn` se fait en premier (§2, LV).** Tous les lots suivants font partie du
+> MVP. Leur ordre vient des dépendances entre modules, puis de la valeur : les retards arrivent
+> dès le lot 1, les contrôles au lot 4.
+
+**Pas de durées ici.** Les estimations de la version précédente ne reposaient sur aucune
+mesure. Le lot 1 donnera une première vitesse réelle ; les durées des lots suivants en
+découleront. La taille indiquée (S, M, L, XL) compare les lots entre eux.
+
+## 1. Vue d'ensemble
 
 ```
-Sprint 0        Sprint 1-2       Sprint 3-4        Sprint 5-6        Pilote
-Fondations  →   Chantiers &   →  Ouvriers &     →  Tableau de     →  Test terrain
-& socle         dépenses         pointage          bord & polish     & itérations
+LV Vitrine chantia.tn
+ └─ L0 Socle
+ └─ L1 Tâches et planning (retards)
+     └─ L2 Équipes, pointage, paie
+         └─ L3 Application mobile ───── premier test sur un vrai chantier
+             ├─ L4 Contrôle qualité
+             ├─ L5 Dépenses, matières, achats
+             │   └─ L6 Coût total, prévisions, alertes
+             │       └─ L8 Argent client
+             ├─ L7 Engins complets, sous-traitants
+             └─ L9 Rapports, saisie vocale
 ```
 
-## 2. Détail des lots
+| Lot | Contenu | Taille | Dépend de |
+|---|---|---|---|
+| **LV** | Vitrine `chantia.tn` | M | — |
+| **L0** | Socle : montants, fichiers, observabilité | M | — |
+| **L1** | Tâches, planning, Gantt, retards | L | L0 |
+| **L2** | Équipes, affectations, pointage, paie | L | L1 |
+| **L3** | Application mobile et hors-ligne | XL | L2 |
+| **L4** | Contrôle qualité | L | L1, L3 |
+| **L5** | Dépenses, matières, achats, stock | XL | L1, L3 |
+| **L6** | Coût total, prévisions, alertes | M | L2, L5 |
+| **L7** | Engins complets, sous-traitants | M | L1 |
+| **L8** | Devis, situations, trésorerie, facture électronique | L | L6 |
+| **L9** | Rapports WhatsApp, saisie vocale en tounsi | M | L3 |
 
-### 🧱 Sprint 0 — Fondations (1 à 2 semaines)
-- Monorepo (web + mobile + shared), TypeScript, lint/format.
-- Projet Supabase, schéma BDD initial, RLS de base.
-- Auth (login, rôles), squelette de navigation web & mobile.
-- CI/CD minimal + premier déploiement gratuit (web sur Vercel, APK de test).
-- **Livrable :** on se connecte, on voit un écran vide par rôle, déployé.
+## 2. Les lots
 
-### 🏗️ Sprint 1-2 — Gestion de projet & dépenses (2 à 3 semaines)
-- CRUD chantiers + postes de budget.
-- Saisie des dépenses + **photo de facture** (upload Storage).
-- Vue **budget vs réel** par chantier et par poste.
-- **Livrable :** un conducteur crée un chantier et suit ses dépenses.
+Chaque lot se livre en plusieurs PRs courtes vers `develop`.
 
-### 👷 Sprint 3-4 — Ouvriers & pointage (2 à 3 semaines) ⭐ cœur
-- Fiches ouvriers + taux horaire + affectation aux chantiers.
-- **Pointage mobile** (présence, heures, géolocalisation).
-- **Mode hors-ligne + synchronisation** (le plus technique).
-- Calcul auto du **coût main d'œuvre** injecté dans les dépenses.
-- **Livrable :** un chef de chantier pointe son équipe hors-ligne, le coût remonte.
+### LV — Vitrine `chantia.tn` (M)
 
-### 📊 Sprint 5-6 — Planning, tableau de bord & polish (2 à 3 semaines)
-- Planning (calendrier des tâches, affectations, avancement).
-- Tableau de bord direction (KPIs, alertes dépassement).
-- Export CSV pointage (préparation paie).
-- Corrections UX, performance, robustesse offline.
-- **Livrable :** MVP complet prêt pour le pilote.
+- Page interactive en tounsi (lettres arabes et latines) et en français.
+- Démo du chantier : Gantt, coûts, alertes, mode de paie, contrôle.
+- Inscription ou demande d'accès (`02`, question 1), liens vers les applications.
+- Nom de domaine, déploiement, référencement, mentions légales.
+- Tant que le produit n'est pas livré, la page dit clairement qu'il est en construction.
 
-### 🚀 Phase pilote — Test terrain (3 à 6 semaines)
-- Déploiement sur 1-3 chantiers, formation express des utilisateurs.
-- Collecte feedback (Sentry, PostHog, retours terrain).
-- Itérations rapides (OTA updates mobile).
-- **Décision :** go / no-go pour l'industrialisation.
+**Sortie :** `chantia.tn` est en ligne, et une demande envoyée depuis la page arrive réellement.
 
-## 3. Jalons (milestones)
+### L0 — Socle (M)
 
-| Jalon | Critère de sortie |
-|---|---|
-| **M1 — Socle déployé** | Auth + rôles + déploiement gratuit fonctionnels |
-| **M2 — Suivi des coûts** | Chantier + dépenses + budget vs réel utilisables |
-| **M3 — Pointage offline** | Pointage terrain hors-ligne synchronisé sans perte |
-| **M4 — MVP complet** | Dashboard + planning + export, prêt pilote |
-| **M5 — Validé terrain** | Critères de succès du `02-mvp-perimetre.md` atteints |
+Ce qui doit être juste avant que le reste s'appuie dessus.
 
-## 4. Priorisation (MoSCoW)
+- Passer les montants restants à trois décimales : `worksites.total_budget`,
+  `workers.hourly_rate`, `expenses.amount`.
+- Stockage des fichiers (photos, plans) isolé par organisation.
+- Suivi des erreurs en production (`14-etat-des-lieux.md`, §3.1).
+- Journaux structurés (§3.2) et tâche planifiée pour `deleteExpired()` (§3.5).
+- Préproduction, restauration de sauvegarde testée (§3.3 et §3.4).
+- Écrans de comptes et de profil (§5.3).
 
-**Must have**
-- Chantiers, dépenses avec photo, budget vs réel.
-- Ouvriers + pointage hors-ligne + coût main d'œuvre.
-- Auth + rôles + multi-tenant.
+**Sortie :** un fichier envoyé par une entreprise est inaccessible aux autres ; une erreur en
+production est visible sans qu'un utilisateur la signale.
 
-**Should have**
-- Planning / calendrier, tableau de bord direction, export CSV.
+### L1 — Tâches et planning (L)
 
-**Could have**
-- Auto-pointage ouvrier, alertes push, géofencing avancé.
+- Hiérarchie à trois niveaux, type de chantier.
+- Dates prévues et réelles, avancement, dépendances, jalons.
+- Planning initial conservé, replanification qui garde l'ancienne référence.
+- Attribution à des personnes, budget par tâche.
+- Gantt web prévu contre réel, liste, calendrier.
+- Détection des retards et propagation aux tâches dépendantes.
 
-**Won't have (cette version)**
-- Facturation, paie complète, stock, engins détaillés, QHSE, BIM.
-  (voir « Hors périmètre » dans `02-mvp-perimetre.md`)
+**Sortie :** un conducteur planifie un chantier ; une tâche qui glisse apparaît en retard, avec
+son effet sur la date de fin.
 
-## 5. Principaux risques & mitigation
+### L2 — Équipes, affectations, pointage, paie (L)
 
-| Risque | Impact | Mitigation |
+- Tarifs par défaut sur la fiche ouvrier.
+- Affectation ouvrier et tâche, avec mode de paie et tarifs figés.
+- Affectation d'un engin à une tâche.
+- `timesheets` rattaché à la tâche, unicité par ouvrier, tâche et date.
+- Pointage web, validation et verrouillage.
+- Calcul de ce qui est dû, avances, coefficient de charges, exports.
+
+**Sortie :** le même ouvrier, payé à la tâche ici et au jour là, reçoit le bon montant, et une
+hausse de son tarif ne change pas le passé.
+
+**Bloqué par :** question 3 de `02`, et question 4 pour tout calcul légal.
+
+### L3 — Application mobile et hors-ligne (XL)
+
+Le lot le plus risqué : à prototyper dès son ouverture, sur le pointage seul.
+
+- `apps/mobile` en Expo, jeton de session dans le stockage sécurisé.
+- « Ma journée », pointage, position GPS, auto-pointage activable.
+- Base locale et file de synchronisation idempotente.
+- Prise de photo rattachée à une tâche, envoi différé.
+- Publication sur App Store et Google Play.
+
+**Sortie :** un chef de chantier pointe son équipe sans réseau, et tout remonte sans perte ni
+doublon. Les boutons de la vitrine reçoivent leurs vrais liens.
+
+**Jalon proposé :** dès la fin de ce lot, une entreprise peut essayer Chantia sur un vrai
+chantier, sans attendre les lots suivants, pour corriger le reste du MVP avec de vrais retours.
+
+### L4 — Contrôle qualité (L)
+
+- Modèles de listes de contrôle, points de contrôle par tâche.
+- Plans versionnés.
+- Photos avant et après, liées au plan, à la tâche et au résultat.
+- Clôture de tâche bloquée sans validation, exception admin motivée et tracée.
+- Saisie sur mobile, hors ligne comprise.
+
+**Sortie :** une tâche sous contrôle obligatoire ne se clôt pas sans validation ; chaque photo
+est retrouvable depuis sa tâche, son plan et son résultat.
+
+### L5 — Dépenses, matières, achats, stock (XL)
+
+Découpé en deux parties livrables séparément.
+
+**L5a — Dépenses et matières**
+- Module dépenses, justificatif en photo.
+- Catalogue de matières et unités, fournisseurs.
+- Quantités prévues par tâche, consommation réelle.
+
+**L5b — Achats et stock**
+- Bons de commande, bon de livraison en photo.
+- Rapprochement commandé, livré, facturé.
+- Stock par chantier, transferts, comparaison des prix fournisseurs.
+
+**Sortie :** une tâche qui consomme plus que prévu est signalée ; un écart de livraison est
+visible dès la réception du camion.
+
+### L6 — Coût total, prévisions, alertes (M)
+
+- Coût réel par tâche et par chantier, toutes sources réunies.
+- Budget contre réel, prévision de date et de coût de fin, marge attendue.
+- Centre d'alertes, seuils paramétrables, notifications.
+- Tableau de bord chantier et direction.
+
+**Sortie :** le coût d'un chantier réel correspond à ce que l'entreprise a payé, à l'écart près
+de ce qui n'a pas été saisi.
+
+### L7 — Engins complets et sous-traitants (M)
+
+- Gasoil par engin, entretien, échéances et alertes.
+- Sous-traitants : travaux confiés, avancement, montants dus et payés.
+
+Peut démarrer dès la fin de L1. Ces coûts rejoignent L6 quand il existe.
+
+**Sortie :** le gasoil d'un engin entre dans son coût réel ; une assurance qui expire déclenche
+une alerte.
+
+### L8 — Argent client (L)
+
+- Devis transformé en budget.
+- Situations de travaux, encaissements, trésorerie par chantier.
+- Facture électronique.
+
+**Sortie :** la direction voit, par chantier, ce qui est facturé, encaissé et en attente.
+
+**Bloqué par :** question 5 de `02`.
+
+### L9 — Rapports et saisie vocale (M)
+
+- Rapport journalier généré, partagé sur WhatsApp.
+- Prototype de saisie vocale en tounsi, puis intégration s'il est assez fiable.
+
+**Sortie :** un rapport part en moins d'une minute ; la saisie vocale est gardée ou écartée sur
+la base de vrais enregistrements.
+
+**Bloqué par :** questions 6 et 7 de `02`.
+
+## 3. Règles de livraison
+
+- Chaque PR remonte le cliquet de couverture des paquets touchés, jusqu'à 80 %.
+- Une fonctionnalité n'est « faite » que fusionnée sur `develop` et vérifiée en production
+  (`14-etat-des-lieux.md`, priorité 0).
+- Une migration de données se relit à part du code qui l'utilise.
+- Nouveaux modules API : suivre `06-api-conventions-ddd-cqrs.md`.
+
+## 4. Risques
+
+| Risque | Impact | Parade |
 |---|---|---|
-| Complexité de la **sync hors-ligne** | Élevé | Prototyper tôt (Sprint 3), lib éprouvée (WatermelonDB), pointage idempotent |
-| **Adoption terrain** faible | Élevé | UX ultra simple, onboarding en 5 min, impliquer les pilotes tôt |
-| Dérive du périmètre | Moyen | S'en tenir au MoSCoW, tout « nice to have » → backlog |
-| Dépassement des free tiers en pilote | Faible | Surveiller Supabase, 2 projets (test/prod), migrer si besoin |
-| Spécificités iOS coûteuses | Faible | Android d'abord, iOS après validation |
+| Périmètre du MVP très large, sans utilisateur à ce jour | Élevé | Test réel dès L3, avant les lots suivants |
+| Synchronisation hors ligne | Élevé | Prototype au début de L3, écritures idempotentes |
+| Adoption sur le terrain | Élevé | « Ma journée » très simple, essai avec de vrais chefs de chantier |
+| Règles légales de paie et de facturation mal comprises | Élevé | Expert-comptable tunisien avant L2 et L8 |
+| Fiabilité de la saisie vocale en tounsi | Moyen | Prototype avant engagement |
+| Coût du stockage des photos | Moyen | Compression à l'envoi, suivi de la consommation dès L0 |
+| Limites des offres gratuites d'hébergement | Moyen | Surveillance, budget d'hébergement à prévoir avant le premier client |
 
-## 6. Prochaines étapes immédiates
+## 5. Après le MVP
 
-1. Valider ce cadrage (ces fichiers `docs/`).
-2. Réaliser des **wireframes** des 5 écrans clés : liste chantiers, détail chantier
-   (budget vs réel), saisie dépense, écran de pointage, tableau de bord.
-3. Choisir définitivement la stack (Option A Supabase recommandée — `03-architecture.md`).
-4. Lancer le **Sprint 0** (fondations + déploiement gratuit).
-
-## 7. Après le MVP (vision produit)
-
-- Facturation & situations de travaux, export comptable.
-- Gestion des engins (carburant, maintenance, localisation).
-- Module paie complet, gestion des congés/absences.
-- Métrés routiers, avancement au linéaire, import de plans.
-- Application ouvrier enrichie (planning, documents, messagerie).
-- Multi-langue (arabe, anglais), multi-devise avancée.
-- Offre commerciale : freemium + abonnement par utilisateur.
+- Analyse approfondie des photos par l'IA.
+- Détection des défauts d'exécution à partir des plans.
+- BIM et métrés sur plans, suivi GPS des engins, signature électronique.
+- Intégrations comptables directes.
+- Offre commerciale à définir.
