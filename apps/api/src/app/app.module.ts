@@ -9,6 +9,7 @@ import { AccessControlModule } from '@shared/auth';
 import { PrismaModule } from '@shared/prisma/prisma.module';
 import { TenantContextMiddleware, TenantModule } from '@shared/tenant';
 import { ThrottlingModule } from '@shared/throttling';
+import { AccessRequestModule } from './access-request/access-request.module';
 import { ClientModule } from './client/client.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { HealthModule } from './health/health.module';
@@ -41,6 +42,7 @@ const ENV = process.env.NODE_ENV;
     ClientModule,
     EquipmentModule,
     WorksiteModule,
+    AccessRequestModule,
   ],
 })
 export class AppModule implements NestModule {

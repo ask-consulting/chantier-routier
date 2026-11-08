@@ -7,6 +7,7 @@
  */
 export enum NotificationSubject {
   INVITATION = 'invitation',
+  ACCESS_REQUEST = 'access_request',
 }
 
 export enum NotificationChannel {

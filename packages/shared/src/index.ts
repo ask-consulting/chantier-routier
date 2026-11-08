@@ -5,6 +5,7 @@ export * from './enums/equipment.enums';
 export * from './enums/user.enums';
 export * from './enums/permission.enums';
 export * from './enums/locale.enums';
+export * from './enums/access-request.enums';
 
 // Authorization (role → permissions matrix, shared by API, web and mobile)
 export * from './access/role-permissions';
@@ -22,6 +23,7 @@ export * from './interfaces/user.interface';
 export * from './interfaces/worker.interface';
 export * from './interfaces/invitation.interface';
 export * from './interfaces/auth.interface';
+export * from './interfaces/access-request.interface';
 
 // Pure business computations (reusable on server & offline on mobile)
 export * from './costs/worksite-costs';
