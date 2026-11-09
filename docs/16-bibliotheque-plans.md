@@ -27,9 +27,10 @@ sa version ne bouge pas si la référence évolue, et la référence reste la m�
 | `PUT /organization-plans/:id` | Renommer, ou remplacer tout l'arbre |
 | `DELETE /organization-plans/:id` | Supprimer |
 
-Modèles et lignes ont un **UUID** comme clé primaire et un **code** unique, lisible et stable
-(`villa`, `villa.03.02`). Un code ne sert qu'à nommer : une nouvelle ligne reçoit un nouveau code,
-et les codes existants ne sont jamais renumérotés, même si l'ordre des lignes change.
+Modèles et lignes ont un **UUID** comme clé primaire et un **code** unique, lisible et stable.
+Celui d'une ligne est construit à partir des libellés français de ses parents, par exemple
+`villa.gros-oeuvre.etage.coulage-plancher`. Il ne dépend pas de l'ordre des lignes, et il ne
+change pas si un libellé est reformulé plus tard.
 
 Une ligne marquée **[contrôle]** est un point à valider avant de continuer. Elle servira au lot L4.
 
@@ -42,9 +43,12 @@ Une ligne marquée **[contrôle]** est un point à valider avant de continuer. E
   ONAS ou STEG. Les règles des concessionnaires priment sur ces modèles.
 - Aucune durée ni dépendance : les sources n'en donnent pas de fiables, et les inventer fausserait
   les plannings.
-- Libellés en français et en arabe, les deux langues de l'application. **La traduction arabe est à
-  faire relire par un professionnel tunisien**, surtout les termes techniques. Un libellé sans
-  traduction s'affiche en français, et une nouvelle langue s'ajoute sans changer le schéma.
+- Libellés en français (`fr`), en arabe (`ar`) et en tounsi, en lettres arabes (`aeb`) et latines
+  (`aeb-Latn`), comme sur la vitrine : les mots techniques restent ceux du métier. **Traductions à
+  faire relire par un professionnel tunisien.** Un libellé sans traduction s'affiche en français,
+  et une nouvelle langue s'ajoute sans changer le schéma.
+- L'interface de l'application reste en français et en arabe. Le tounsi est disponible dans les
+  données, et à la copie d'un modèle.
 - Corriger la référence demande une nouvelle migration, tant que l'application d'administration
   n'existe pas.
 

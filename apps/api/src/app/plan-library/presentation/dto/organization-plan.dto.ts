@@ -20,6 +20,8 @@ import {
   WorksiteKind,
 } from '@chantia/shared';
 
+/** French, Arabic, and Tunisian in Arabic (`aeb`) and in Latin letters. */
+const PLAN_LABEL_LOCALES = ['fr', 'ar', 'aeb', 'aeb-Latn'];
 const MAX_LABEL = 200;
 const MAX_NAME = 120;
 const MAX_CHILDREN = 200;
@@ -87,10 +89,10 @@ export class CreateOrganizationPlanDto implements ICreateOrganizationPlan {
   kind?: WorksiteKind;
 
   @ApiPropertyOptional({
-    enum: ['fr', 'ar'],
+    enum: PLAN_LABEL_LOCALES,
     description: 'Language of the copied labels',
   })
-  @IsIn(['fr', 'ar'])
+  @IsIn(PLAN_LABEL_LOCALES)
   @IsOptional()
   locale?: string;
 }

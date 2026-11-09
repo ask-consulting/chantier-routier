@@ -712,7 +712,7 @@ model PlanTemplateTranslation {
 /// marks a check that must be passed before the work continues.
 model PlanTemplateNode {
   id         String        @id(map: "pk_plan_template_nodes") @default(uuid()) @db.Uuid
-  /// Readable and stable: a new line gets a new code, none is ever renumbered.
+  /// Readable and stable, built from the French labels: `villa.gros-oeuvre.etage.coulage-plancher`.
   code       String        @unique(map: "uq_plan_template_nodes_code")
   templateId String        @map("template_id") @db.Uuid
   parentId   String?       @map("parent_id") @db.Uuid
