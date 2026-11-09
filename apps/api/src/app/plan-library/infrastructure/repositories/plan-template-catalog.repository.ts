@@ -12,6 +12,7 @@ import { PlanTemplateCatalogPort } from '../../domain/ports/plan-template-catalo
 
 interface NodeRow {
   id: string;
+  code: string;
   parentId: string | null;
   level: string;
   isControl: boolean;
@@ -32,6 +33,7 @@ function treeOf(rows: readonly NodeRow[]): IPlanTemplateNode[] {
   const childrenOf = (parent: string | null): IPlanTemplateNode[] =>
     (byParent.get(parent) ?? []).map((row) => ({
       id: row.id,
+      code: row.code,
       level: row.level as PlanNodeLevel,
       isControl: row.isControl,
       labels: labelsOf(row.translations),
@@ -58,6 +60,7 @@ export class PlanTemplateCatalogRepository implements PlanTemplateCatalogPort {
     });
     return rows.map((row) => ({
       id: row.id,
+      code: row.code,
       kind: row.kind as WorksiteKind,
       labels: labelsOf(row.translations),
       nodeCount: row._count.nodes,
@@ -80,6 +83,7 @@ export class PlanTemplateCatalogRepository implements PlanTemplateCatalogPort {
     }
     return {
       id: row.id,
+      code: row.code,
       kind: row.kind as WorksiteKind,
       labels: labelsOf(row.translations),
       nodes: treeOf(row.nodes),

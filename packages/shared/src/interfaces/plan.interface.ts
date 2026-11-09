@@ -4,6 +4,7 @@ import { Translations } from './equipment.interface';
 /** A reference plan as listed: enough to choose one without loading its tree. */
 export interface IPlanTemplateSummary {
   id: string;
+  code: string;
   kind: WorksiteKind;
   labels: Translations;
   nodeCount: number;
@@ -11,6 +12,7 @@ export interface IPlanTemplateSummary {
 
 export interface IPlanTemplateNode {
   id: string;
+  code: string;
   level: PlanNodeLevel;
   isControl: boolean;
   labels: Translations;

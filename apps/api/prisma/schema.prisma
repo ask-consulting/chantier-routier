@@ -682,6 +682,8 @@ enum PlanNodeLevel {
 /// by migrations for now, and by the administration app once it exists.
 model PlanTemplate {
   id        String       @id(map: "pk_plan_templates") @default(uuid()) @db.Uuid
+  /// Readable and stable; the primary key stays the UUID.
+  code      String       @unique(map: "uq_plan_templates_code")
   kind      WorksiteKind
   sortOrder Int          @map("sort_order")
 
@@ -710,6 +712,8 @@ model PlanTemplateTranslation {
 /// marks a check that must be passed before the work continues.
 model PlanTemplateNode {
   id         String        @id(map: "pk_plan_template_nodes") @default(uuid()) @db.Uuid
+  /// Readable and stable: a new line gets a new code, none is ever renumbered.
+  code       String        @unique(map: "uq_plan_template_nodes_code")
   templateId String        @map("template_id") @db.Uuid
   parentId   String?       @map("parent_id") @db.Uuid
   level      PlanNodeLevel
