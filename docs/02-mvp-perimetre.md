@@ -231,7 +231,7 @@ Chacun se mesure sur un vrai chantier.
 | # | Question | Recommandation |
 |---|---|---|
 | 1 | Inscription libre, ou demande d'accès avec invitation ? | Demande d'accès au début |
-| 2 | Noms des trois niveaux : Epic / Feature / Tâche, ou Phase / Tâche / Sous-tâche ? | Phase / Tâche / Sous-tâche, plus parlants sur un chantier |
+| 2 | Noms des trois niveaux | **Décidé le 9 novembre 2026 : Phase / Tâche / Sous-tâche** |
 | 3 | Un forfait à la tâche compte-t-il au prorata de l'avancement, ou à la validation de la tâche ? | Prorata pour le coût affiché, validation pour ce qui est dû à l'ouvrier |
 | 4 | Règles légales de paie : CNSS, retenues, convention applicable | À établir avec un expert-comptable tunisien avant de construire le calcul |
 | 5 | Facture électronique : quelles entreprises sont concernées, et par quelle voie se raccorder ? | À valider avec le même expert ; les sources publiques consultées se contredisent |
