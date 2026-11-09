@@ -23,17 +23,20 @@ import { GetOrganizationPlanQuery, GetPlanTemplateQuery } from './queries/plan-l
 
 const template: IPlanTemplate = {
   id: 'villa',
+  code: 'villa',
   kind: WorksiteKind.BUILDING,
   labels: { fr: 'Villa', ar: 'فيلا' },
   nodes: [
     {
       id: 'villa.01',
+      code: 'villa.01',
       level: PlanNodeLevel.PHASE,
       isControl: false,
       labels: { fr: 'Fondations' },
       children: [
         {
           id: 'villa.01.01',
+          code: 'villa.01.01',
           level: PlanNodeLevel.TASK,
           isControl: true,
           labels: { fr: 'Réception', ar: 'استلام' },

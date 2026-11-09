@@ -27,6 +27,10 @@ sa version ne bouge pas si la référence évolue, et la référence reste la m�
 | `PUT /organization-plans/:id` | Renommer, ou remplacer tout l'arbre |
 | `DELETE /organization-plans/:id` | Supprimer |
 
+Modèles et lignes ont un **UUID** comme clé primaire et un **code** unique, lisible et stable
+(`villa`, `villa.03.02`). Un code ne sert qu'à nommer : une nouvelle ligne reçoit un nouveau code,
+et les codes existants ne sont jamais renumérotés, même si l'ordre des lignes change.
+
 Une ligne marquée **[contrôle]** est un point à valider avant de continuer. Elle servira au lot L4.
 
 ## 2. Limites du contenu

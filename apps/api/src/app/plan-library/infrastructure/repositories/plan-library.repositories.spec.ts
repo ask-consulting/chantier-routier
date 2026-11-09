@@ -28,6 +28,7 @@ describe('PlanTemplateCatalogRepository', () => {
     planTemplate.findMany.mockResolvedValue([
       {
         id: 'villa',
+        code: 'villa',
         kind: 'building',
         translations: [{ locale: 'fr', label: 'Villa' }],
         _count: { nodes: 3 },
@@ -37,6 +38,7 @@ describe('PlanTemplateCatalogRepository', () => {
     await expect(repository.list()).resolves.toEqual([
       {
         id: 'villa',
+        code: 'villa',
         kind: 'building',
         labels: { fr: 'Villa' },
         nodeCount: 3,
@@ -47,6 +49,7 @@ describe('PlanTemplateCatalogRepository', () => {
   it('rebuilds the tree in the order received', async () => {
     const node = (id: string, parentId: string | null, level: string) => ({
       id,
+      code: `code-${id}`,
       parentId,
       level,
       isControl: false,
@@ -54,6 +57,7 @@ describe('PlanTemplateCatalogRepository', () => {
     });
     planTemplate.findUnique.mockResolvedValue({
       id: 'villa',
+      code: 'villa',
       kind: 'building',
       translations: [],
       nodes: [node('a', null, 'phase'), node('a.1', 'a', 'task'), node('b', null, 'phase')],
@@ -63,6 +67,7 @@ describe('PlanTemplateCatalogRepository', () => {
 
     expect(template?.nodes.map((n) => n.id)).toEqual(['a', 'b']);
     expect(template?.nodes[0].children[0].id).toBe('a.1');
+    expect(template?.nodes[0].children[0].code).toBe('code-a.1');
   });
 
   it('answers null for an unknown id', async () => {
