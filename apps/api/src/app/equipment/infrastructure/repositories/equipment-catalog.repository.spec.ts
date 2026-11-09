@@ -8,6 +8,7 @@ function setup(type: { defaultUsefulLifeMonths: number } | null = { defaultUsefu
     equipmentCategory: {
       findMany: vi.fn(async () => [
         {
+          id: 'compaction-id',
           code: 'compaction',
           sortOrder: 20,
           translations: [
@@ -18,8 +19,9 @@ function setup(type: { defaultUsefulLifeMonths: number } | null = { defaultUsefu
           ],
           types: [
             {
+              id: 'tandem_roller-id',
               code: 'tandem_roller',
-              categoryCode: 'compaction',
+              categoryId: 'compaction-id',
               defaultUsefulLifeMonths: 60,
               sortOrder: 20,
               translations: [{ locale: 'fr', label: 'Compacteur tandem' }],
@@ -33,7 +35,7 @@ function setup(type: { defaultUsefulLifeMonths: number } | null = { defaultUsefu
 }
 
 describe('EquipmentCatalogRepository', () => {
-  it('reads a type’s defaults, or null for an unknown code', async () => {
+  it('reads a type’s defaults, or null for an unknown id', async () => {
     expect(await setup().repository.findType('tandem_roller')).toEqual({ defaultUsefulLifeMonths: 60 });
     expect(await setup(null).repository.findType('spaceship')).toBeNull();
   });
@@ -54,12 +56,14 @@ describe('EquipmentCatalogRepository', () => {
       },
     });
     expect(category).toEqual({
+      id: 'compaction-id',
       code: 'compaction',
       labels: { fr: 'Compactage', ar: 'الدمك', en: 'Compaction' },
       types: [
         {
+          id: 'tandem_roller-id',
           code: 'tandem_roller',
-          categoryCode: 'compaction',
+          categoryId: 'compaction-id',
           defaultUsefulLifeMonths: 60,
           // Only French so far: the client falls back to it — see `translated`.
           labels: { fr: 'Compacteur tandem' },

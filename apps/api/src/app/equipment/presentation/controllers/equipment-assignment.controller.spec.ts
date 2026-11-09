@@ -29,7 +29,7 @@ const assignment = EquipmentAssignment.create(
     equipment: Equipment.create({
       id: 'eq-1',
       organizationId: 'org-1',
-      typeCode: 'tandem_roller',
+      typeId: 'tandem_roller',
       designation: 'Compacteur HAMM',
       fleetNumber: 'CP-03',
       acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
@@ -71,7 +71,7 @@ describe('EquipmentAssignmentController', () => {
     expect(manager.equipment).toEqual({
       id: 'eq-1',
       designation: 'Compacteur HAMM',
-      typeCode: 'tandem_roller',
+      typeId: 'tandem_roller',
       fleetNumber: 'CP-03',
     });
     expect(manager.days).toBe(10);

@@ -7,7 +7,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  MaxLength,
+  IsUUID,
   Min,
 } from 'class-validator';
 import { AcquisitionMethod, EquipmentStatus } from '@chantia/shared';
@@ -20,7 +20,6 @@ import { AcquisitionMethod, EquipmentStatus } from '@chantia/shared';
 export const EQUIPMENT_SORT_FIELDS = [
   'designation',
   'fleetNumber',
-  'typeCode',
   'status',
   'acquisitionDate',
   'createdAt',
@@ -54,9 +53,8 @@ export class GetEquipmentListDto {
   @IsOptional()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'A category code of `GET /equipment-catalog`.' })
-  @IsString()
-  @MaxLength(60)
+  @ApiPropertyOptional({ format: 'uuid', description: 'A category id of `GET /equipment-catalog`.' })
+  @IsUUID()
   @IsOptional()
   category?: string;
 

@@ -32,7 +32,7 @@ vi.mock('@/features/auth', () => ({
 const roller: IEquipment = {
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'tandem_roller',
+  typeId: 'tandem_roller',
   designation: 'Compacteur HAMM HD12',
   fleetNumber: 'CP-03',
   brand: null,

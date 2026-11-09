@@ -37,7 +37,7 @@ function existing(): Equipment {
   return Equipment.create({
     id: 'eq-1',
     organizationId: 'org-1',
-    typeCode: 'motor_grader',
+    typeId: 'motor_grader',
     designation: 'Niveleuse 140K',
     acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
     acquisitionDate: '2025-03-01',
@@ -85,7 +85,7 @@ describe('CreateEquipmentHandler', () => {
 
     await new CreateEquipmentHandler(repository, catalog).execute(
       new CreateEquipmentCommand('org-1', {
-        typeCode: 'tandem_roller',
+        typeId: 'tandem_roller',
         designation: 'Compacteur tandem',
         acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
         acquisitionDate: '2026-09-01',
@@ -104,7 +104,7 @@ describe('CreateEquipmentHandler', () => {
 
     const attempt = new CreateEquipmentHandler(repository, catalog).execute(
       new CreateEquipmentCommand('org-1', {
-        typeCode: 'spaceship',
+        typeId: 'spaceship',
         designation: 'X',
         acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
         acquisitionDate: '2026-09-01',
@@ -113,7 +113,7 @@ describe('CreateEquipmentHandler', () => {
     );
 
     await expect(attempt).rejects.toBeInstanceOf(UnknownEquipmentTypeException);
-    await expect(attempt).rejects.toMatchObject({ fieldErrors: [{ field: 'typeCode' }] });
+    await expect(attempt).rejects.toMatchObject({ fieldErrors: [{ field: 'typeId' }] });
     expect(repository.save).not.toHaveBeenCalled();
   });
 
@@ -123,7 +123,7 @@ describe('CreateEquipmentHandler', () => {
     await expect(
       new CreateEquipmentHandler(repository, catalog).execute(
         new CreateEquipmentCommand('org-1', {
-          typeCode: 'tandem_roller',
+          typeId: 'tandem_roller',
           designation: 'X',
           acquisitionMethod: AcquisitionMethod.LEASING,
           acquisitionDate: '2026-09-01',
@@ -169,7 +169,7 @@ describe('UpdateEquipmentHandler', () => {
 
     await expect(
       new UpdateEquipmentHandler(repository, catalog, assignments).execute(
-        new UpdateEquipmentCommand('eq-1', { typeCode: 'spaceship' }),
+        new UpdateEquipmentCommand('eq-1', { typeId: 'spaceship' }),
       ),
     ).rejects.toBeInstanceOf(UnknownEquipmentTypeException);
   });

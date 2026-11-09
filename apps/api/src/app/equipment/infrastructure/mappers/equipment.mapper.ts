@@ -20,7 +20,7 @@ export class EquipmentMapper {
     return Equipment.create({
       id: row.id,
       organizationId: row.organizationId,
-      typeCode: row.typeCode,
+      typeId: row.typeId,
       designation: row.designation,
       fleetNumber: row.fleetNumber,
       brand: row.brand,
@@ -51,7 +51,7 @@ export class EquipmentMapper {
     return {
       id: equipment.id,
       organizationId: equipment.organizationId,
-      typeCode: equipment.typeCode,
+      typeId: equipment.typeId,
       designation: equipment.designation,
       fleetNumber: equipment.fleetNumber,
       brand: equipment.brand,

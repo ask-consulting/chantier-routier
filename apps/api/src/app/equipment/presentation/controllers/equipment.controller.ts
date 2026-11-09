@@ -73,7 +73,7 @@ export class EquipmentController {
           status: dto.status,
           acquisitionMethod: dto.acquisitionMethod,
           // A category is not a column of the machine: filtered through its type.
-          type: dto.category ? { categoryCode: dto.category } : undefined,
+          type: dto.category ? { categoryId: dto.category } : undefined,
         },
       }),
     );

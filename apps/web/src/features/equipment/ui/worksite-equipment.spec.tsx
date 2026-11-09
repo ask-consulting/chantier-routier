@@ -23,7 +23,7 @@ const stay: IEquipmentAssignment = {
   endDate: '2026-09-10',
   days: 10,
   notes: null,
-  equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeCode: 'tandem_roller', fleetNumber: 'CP-03' },
+  equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeId: 'tandem_roller', fleetNumber: 'CP-03' },
   worksite: { id: 'ws-1', code: 'RN1', name: 'Réfection RN1' },
   cost: 4500000,
 };

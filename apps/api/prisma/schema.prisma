@@ -215,7 +215,7 @@ model Worksite {
   plannedStartDate DateTime?      @map("planned_start_date")
   plannedEndDate   DateTime?      @map("planned_end_date")
   status           WorksiteStatus @default(upcoming)
-  totalBudget      BigInt?       @map("total_budget")
+  totalBudget      BigInt?        @map("total_budget")
   /// Set instead of a real delete: `timesheets` and `expenses` cascade from
   /// this row, and an actual `DELETE` would erase hours somebody was paid for.
   /// `null` means current; every query that lists or looks up a worksite
@@ -247,7 +247,7 @@ model Worker {
   organizationId String    @map("organization_id") @db.Uuid
   name           String
   qualification  String?
-  hourlyRate     BigInt   @map("hourly_rate")
+  hourlyRate     BigInt    @map("hourly_rate")
   /// Still on the payroll — a reversible, voluntary state the admin sets by
   /// hand (on leave, seasonal). Distinct from `deletedAt`: that one is not
   /// reversible from the interface and is not something the admin "sets".
@@ -470,7 +470,7 @@ model Equipment {
   id                 String            @id(map: "pk_equipment") @default(uuid()) @db.Uuid
   /// Soft reference to `identity.organizations.id` — no foreign key by design.
   organizationId     String            @map("organization_id") @db.Uuid
-  typeCode           String            @map("type_code")
+  typeId             String            @map("type_id") @db.Uuid
   designation        String
   fleetNumber        String?           @map("fleet_number")
   brand              String?
@@ -483,15 +483,15 @@ model Equipment {
   acquisitionDate    DateTime          @map("acquisition_date") @db.Date
   supplier           String?
   /// Owned: price excluding tax, residual value, straight-line lifetime.
-  purchasePrice      BigInt?          @map("purchase_price")
-  residualValue      BigInt?          @map("residual_value")
+  purchasePrice      BigInt?           @map("purchase_price")
+  residualValue      BigInt?           @map("residual_value")
   usefulLifeMonths   Int?              @map("useful_life_months")
   /// Leasing and long-term rental.
-  monthlyPayment     BigInt?          @map("monthly_payment")
+  monthlyPayment     BigInt?           @map("monthly_payment")
   /// Leasing: the price of keeping it at the end of the contract.
-  buyoutValue        BigInt?          @map("buyout_value")
+  buyoutValue        BigInt?           @map("buyout_value")
   /// Short-term rental.
-  dailyRate          BigInt?          @map("daily_rate")
+  dailyRate          BigInt?           @map("daily_rate")
   contractEndDate    DateTime?         @map("contract_end_date") @db.Date
   disposalDate       DateTime?         @map("disposal_date") @db.Date
   notes              String?
@@ -501,7 +501,7 @@ model Equipment {
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
 
-  type        EquipmentType         @relation(fields: [typeCode], references: [code], onDelete: NoAction, map: "fk_equipment_equipment_types")
+  type        EquipmentType         @relation(fields: [typeId], references: [id], onDelete: NoAction, map: "fk_equipment_equipment_types")
   assignments EquipmentAssignment[]
 
   /// Partial in the database — `WHERE deleted_at IS NULL` — like the worksite
@@ -559,7 +559,9 @@ model EquipmentAssignment {
 /// and written only by migrations: organizations pick from it, never edit it.
 /// Its labels live in `equipment_category_translations`, one row per language.
 model EquipmentCategory {
-  code      String @id(map: "pk_equipment_categories")
+  id        String @id(map: "pk_equipment_categories") @default(uuid()) @db.Uuid
+  /// Readable and stable; the primary key is the UUID.
+  code      String @unique(map: "uq_equipment_categories_code")
   sortOrder Int    @map("sort_order")
 
   types        EquipmentType[]
@@ -575,17 +577,19 @@ model EquipmentCategory {
 /// maximum straight-line rates (décret 2008-492). Its labels live in
 /// `equipment_type_translations`, one row per language.
 model EquipmentType {
-  code                    String @id(map: "pk_equipment_types")
-  categoryCode            String @map("category_code")
+  id                      String @id(map: "pk_equipment_types") @default(uuid()) @db.Uuid
+  /// Readable and stable; the primary key is the UUID.
+  code                    String @unique(map: "uq_equipment_types_code")
+  categoryId              String @map("category_id") @db.Uuid
   /// Straight-line depreciation period proposed for a new owned machine.
   defaultUsefulLifeMonths Int    @map("default_useful_life_months")
   sortOrder               Int    @map("sort_order")
 
-  category     EquipmentCategory          @relation(fields: [categoryCode], references: [code], onDelete: NoAction, map: "fk_equipment_types_equipment_categories")
+  category     EquipmentCategory          @relation(fields: [categoryId], references: [id], onDelete: NoAction, map: "fk_equipment_types_equipment_categories")
   equipment    Equipment[]
   translations EquipmentTypeTranslation[]
 
-  @@index([categoryCode], map: "ix_equipment_types_category_code")
+  @@index([categoryId], map: "ix_equipment_types_category_id")
   @@map("equipment_types")
   @@schema("public")
 }
@@ -594,26 +598,26 @@ model EquipmentType {
 /// no column, no schema change. `locale` is a language code (`fr`, `ar`, `en`…);
 /// a reader whose language has no row falls back to French.
 model EquipmentCategoryTranslation {
-  categoryCode String @map("category_code")
-  locale       String
-  label        String
+  categoryId String @map("category_id") @db.Uuid
+  locale     String
+  label      String
 
-  category EquipmentCategory @relation(fields: [categoryCode], references: [code], onDelete: Cascade, map: "fk_equipment_category_translations_equipment_categories")
+  category EquipmentCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "fk_equipment_category_translations_equipment_categories")
 
-  @@id([categoryCode, locale], map: "pk_equipment_category_translations")
+  @@id([categoryId, locale], map: "pk_equipment_category_translations")
   @@map("equipment_category_translations")
   @@schema("public")
 }
 
 /// A type's label in one language — see `EquipmentCategoryTranslation`.
 model EquipmentTypeTranslation {
-  typeCode String @map("type_code")
-  locale   String
-  label    String
+  typeId String @map("type_id") @db.Uuid
+  locale String
+  label  String
 
-  type EquipmentType @relation(fields: [typeCode], references: [code], onDelete: Cascade, map: "fk_equipment_type_translations_equipment_types")
+  type EquipmentType @relation(fields: [typeId], references: [id], onDelete: Cascade, map: "fk_equipment_type_translations_equipment_types")
 
-  @@id([typeCode, locale], map: "pk_equipment_type_translations")
+  @@id([typeId, locale], map: "pk_equipment_type_translations")
   @@map("equipment_type_translations")
   @@schema("public")
 }

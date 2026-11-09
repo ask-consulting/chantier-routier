@@ -93,6 +93,10 @@ fixe un UUID en dur. Le `@db.Uuid` apporte en plus 16 octets au lieu de 36 carac
 de texte — index plus compacts, comparaisons plus rapides — et une **validation par la
 base** : une chaîne malformée est rejetée, elle ne peut plus s'insérer silencieusement.
 
+Les tables de référence communes suivent la même règle : un UUID comme clé primaire, et un
+`code` unique, lisible et stable. Leurs UUID sont fixes, pour être identiques dans tous les
+environnements, et les clés étrangères pointent vers l'UUID, jamais vers le code.
+
 ## 4. Clés étrangères
 
 `onDelete` est **toujours** explicite. Le défaut silencieux de Prisma est un piège :

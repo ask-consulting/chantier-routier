@@ -20,7 +20,7 @@ const PRICE = 365_000;
 const machine = Equipment.create({
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'crawler_excavator',
+  typeId: 'crawler_excavator',
   designation: 'Pelle CAT 320',
   acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
   acquisitionDate: '2026-01-01',
@@ -97,7 +97,7 @@ describe('EquipmentController — requests', () => {
     await controller.findAll(UserRole.ADMIN, dto);
 
     const query = queryBus.execute.mock.calls[0][0] as GetEquipmentListQuery;
-    expect((query.params.filters as { type: unknown }).type).toEqual({ categoryCode: 'compaction' });
+    expect((query.params.filters as { type: unknown }).type).toEqual({ categoryId: 'compaction' });
     expect(query.params.sort).toEqual({ field: 'fleetNumber', order: 'asc' });
   });
 
@@ -114,7 +114,7 @@ describe('EquipmentController — requests', () => {
     const { controller, commandBus } = build();
 
     await controller.create('org-1', UserRole.ADMIN, {
-      typeCode: 'bulldozer',
+      typeId: 'bulldozer',
       designation: 'Bull D6',
       acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
       acquisitionDate: '2026-01-01',

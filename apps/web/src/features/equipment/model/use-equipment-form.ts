@@ -29,9 +29,9 @@ export type EquipmentFieldErrorKey =
 
 /** Everything as the boxes hold it — strings, parsed at submission. Empty is "not set". */
 export interface EquipmentFormValues {
-  /** A category code of the catalog — a UI value, never sent. */
+  /** A category id of the catalog — a UI value, never sent. */
   category: string;
-  typeCode: string;
+  typeId: string;
   designation: string;
   fleetNumber: string;
   brand: string;
@@ -71,8 +71,8 @@ function valuesOf(
 ): EquipmentFormValues {
   if (!equipment) {
     return {
-      category: catalog[0]?.code ?? '',
-      typeCode: '',
+      category: catalog[0]?.id ?? '',
+      typeId: '',
       designation: '',
       fleetNumber: '',
       brand: '',
@@ -96,8 +96,8 @@ function valuesOf(
     };
   }
   return {
-    category: findType(catalog, equipment.typeCode)?.categoryCode ?? catalog[0]?.code ?? '',
-    typeCode: equipment.typeCode,
+    category: findType(catalog, equipment.typeId)?.categoryId ?? catalog[0]?.id ?? '',
+    typeId: equipment.typeId,
     designation: equipment.designation,
     fleetNumber: text(equipment.fleetNumber),
     brand: text(equipment.brand),
@@ -178,9 +178,9 @@ export function useEquipmentForm(
         const next = { ...previous, [field]: value };
         if (field === 'category') {
           // A type from another category would be a contradiction on screen.
-          next.typeCode = '';
+          next.typeId = '';
         }
-        if (field === 'typeCode' && !lifetimeTouched) {
+        if (field === 'typeId' && !lifetimeTouched) {
           next.usefulLifeMonths = text(findType(catalog, String(value))?.defaultUsefulLifeMonths);
         }
         return next;
@@ -268,7 +268,7 @@ export function useEquipmentForm(
 
   const unparsable = Object.values(numbers).some((value) => value !== null && Number.isNaN(value));
   const isComplete =
-    values.typeCode !== '' &&
+    values.typeId !== '' &&
     values.designation.trim() !== '' &&
     values.acquisitionDate !== '' &&
     Object.keys(clientErrors).length === 0 &&
@@ -301,7 +301,7 @@ export function useEquipmentForm(
     setServerFieldErrors({});
 
     const payload = {
-      typeCode: values.typeCode,
+      typeId: values.typeId,
       designation: values.designation.trim(),
       fleetNumber: orNull(values.fleetNumber),
       brand: orNull(values.brand),

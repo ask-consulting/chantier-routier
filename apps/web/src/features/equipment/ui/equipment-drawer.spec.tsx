@@ -24,7 +24,7 @@ import { EquipmentDrawer } from './equipment-drawer';
 const grader: IEquipment = {
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'motor_grader',
+  typeId: 'motor_grader',
   designation: 'Niveleuse 140K',
   fleetNumber: 'NV-01',
   brand: 'Caterpillar',
@@ -134,7 +134,7 @@ describe('EquipmentDrawer, the money', () => {
 
     await waitFor(() => {
       expect(JSON.parse(mock.history.post[0]?.data as string)).toMatchObject({
-        typeCode: 'tandem_roller',
+        typeId: 'tandem_roller',
         acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
         acquisitionDate: '2026-01-01',
         purchasePrice: 219000000,

@@ -21,7 +21,7 @@ export interface EquipmentListParams {
   limit?: number;
   /** Free text over designation, fleet number, brand, model, serial and plate. */
   search?: string;
-  /** A category code of the catalog. */
+  /** A category id of the catalog. */
   category?: string;
   status?: EquipmentStatus;
   acquisitionMethod?: AcquisitionMethod;

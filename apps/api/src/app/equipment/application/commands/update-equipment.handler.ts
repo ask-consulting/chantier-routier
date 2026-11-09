@@ -47,10 +47,10 @@ export class UpdateEquipmentHandler implements ICommandHandler<UpdateEquipmentCo
     // The type's defaults are needed only if its lifetime has to be filled —
     // a new type, or a machine becoming owned — but reading them always keeps
     // one path, and refuses an unknown new type on its field.
-    const typeCode = data.typeCode ?? equipment.typeCode;
-    const type = await this.catalog.findType(typeCode);
+    const typeId = data.typeId ?? equipment.typeId;
+    const type = await this.catalog.findType(typeId);
     if (!type) {
-      throw new UnknownEquipmentTypeException(typeCode);
+      throw new UnknownEquipmentTypeException(typeId);
     }
 
     const changed = equipment.with(data, type);

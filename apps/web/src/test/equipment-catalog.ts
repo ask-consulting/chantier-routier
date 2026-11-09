@@ -7,54 +7,63 @@ import type { IEquipmentCategory } from '@chantia/shared';
  */
 export const CATALOG: IEquipmentCategory[] = [
   {
+    id: 'earthmoving',
     code: 'earthmoving',
     labels: { fr: 'Terrassement', ar: 'تحريك التربة' },
     types: [
       {
+        id: 'motor_grader',
         code: 'motor_grader',
-        categoryCode: 'earthmoving',
+        categoryId: 'earthmoving',
         defaultUsefulLifeMonths: 60,
         labels: { fr: 'Niveleuse', ar: 'ممهدة (قريدر)' },
       },
       {
+        id: 'earthmoving_other',
         code: 'earthmoving_other',
-        categoryCode: 'earthmoving',
+        categoryId: 'earthmoving',
         defaultUsefulLifeMonths: 60,
         labels: { fr: 'Autre engin de terrassement', ar: 'آلة تحريك تربة أخرى' },
       },
     ],
   },
   {
+    id: 'compaction',
     code: 'compaction',
     labels: { fr: 'Compactage', ar: 'الدمك' },
     types: [
       {
+        id: 'tandem_roller',
         code: 'tandem_roller',
-        categoryCode: 'compaction',
+        categoryId: 'compaction',
         defaultUsefulLifeMonths: 60,
         labels: { fr: 'Compacteur tandem', ar: 'مدحلة ترادفية' },
       },
     ],
   },
   {
+    id: 'site_equipment',
     code: 'site_equipment',
     labels: { fr: 'Matériel de chantier', ar: 'معدات الورش' },
     types: [
       {
+        id: 'site_hut',
         code: 'site_hut',
-        categoryCode: 'site_equipment',
+        categoryId: 'site_equipment',
         defaultUsefulLifeMonths: 120,
         labels: { fr: 'Bungalow de chantier', ar: 'مكتب متنقل للورش' },
       },
     ],
   },
   {
+    id: 'surveying',
     code: 'surveying',
     labels: { fr: 'Topographie', ar: 'المسح الطبوغرافي' },
     types: [
       {
+        id: 'total_station',
         code: 'total_station',
-        categoryCode: 'surveying',
+        categoryId: 'surveying',
         defaultUsefulLifeMonths: 80,
         labels: { fr: 'Station totale', ar: 'محطة مسح شاملة' },
       },

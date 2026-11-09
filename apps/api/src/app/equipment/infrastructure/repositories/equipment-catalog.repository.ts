@@ -25,9 +25,9 @@ export class EquipmentCatalogRepository implements EquipmentCatalogPort {
     private readonly prisma: TenantPrismaClient,
   ) {}
 
-  async findType(code: string): Promise<EquipmentTypeDefaults | null> {
+  async findType(id: string): Promise<EquipmentTypeDefaults | null> {
     const row = await this.prisma.equipmentType.findUnique({
-      where: { code },
+      where: { id },
       select: { defaultUsefulLifeMonths: true },
     });
     return row ? { defaultUsefulLifeMonths: row.defaultUsefulLifeMonths } : null;
@@ -45,11 +45,13 @@ export class EquipmentCatalogRepository implements EquipmentCatalogPort {
       },
     });
     return rows.map((category) => ({
+      id: category.id,
       code: category.code,
       labels: labelsOf(category.translations),
       types: category.types.map((type) => ({
+        id: type.id,
         code: type.code,
-        categoryCode: type.categoryCode,
+        categoryId: type.categoryId,
         defaultUsefulLifeMonths: type.defaultUsefulLifeMonths,
         labels: labelsOf(type.translations),
       })),

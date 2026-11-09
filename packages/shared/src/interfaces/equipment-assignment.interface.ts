@@ -19,7 +19,7 @@ export interface IEquipmentAssignment {
   /** Calendar days, both ends included. */
   days: number;
   notes: string | null;
-  equipment: { id: string; designation: string; typeCode: string; fleetNumber: string | null };
+  equipment: { id: string; designation: string; typeId: string; fleetNumber: string | null };
   worksite: { id: string; code: string; name: string };
   /**
    * What the machine costs the worksite over the period — stored, computed
