@@ -71,7 +71,8 @@ production est visible sans qu'un utilisateur la signale.
 
 ### L1 — Tâches et planning (L)
 
-- Hiérarchie à trois niveaux, type de chantier.
+- Hiérarchie Phase / Tâche / Sous-tâche, type de chantier.
+- Démarrage d'un chantier depuis la [bibliothèque de plans](16-bibliotheque-plans.md).
 - Dates prévues et réelles, avancement, dépendances, jalons.
 - Planning initial conservé, replanification qui garde l'ancienne référence.
 - Attribution à des personnes, budget par tâche.
