@@ -81,7 +81,7 @@ function EquipmentForm({
   const tFieldError = useTranslations('form.errors');
   const locale = useLocale() as Locale;
   const form = useEquipmentForm(equipment, catalog);
-  const types = catalog.find((category) => category.code === form.values.category)?.types ?? [];
+  const types = catalog.find((category) => category.id === form.values.category)?.types ?? [];
 
   const close = (): void => {
     onClose();
@@ -142,7 +142,7 @@ function EquipmentForm({
             <Select
               label={t('category')}
               options={catalog.map((category) => ({
-                value: category.code,
+                value: category.id,
                 label: labelOf(category, locale),
               }))}
               value={form.values.category}
@@ -152,11 +152,11 @@ function EquipmentForm({
               label={t('type')}
               options={[
                 { value: '', label: t('pickType') },
-                ...types.map((type) => ({ value: type.code, label: labelOf(type, locale) })),
+                ...types.map((type) => ({ value: type.id, label: labelOf(type, locale) })),
               ]}
-              value={form.values.typeCode}
-              error={form.fieldErrors.typeCode && tFieldError(form.fieldErrors.typeCode)}
-              onChange={(event) => form.setValue('typeCode', event.target.value)}
+              value={form.values.typeId}
+              error={form.fieldErrors.typeId && tFieldError(form.fieldErrors.typeId)}
+              onChange={(event) => form.setValue('typeId', event.target.value)}
             />
           </div>
 

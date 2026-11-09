@@ -111,7 +111,7 @@ function EquipmentTable({ equipment, onEdit, onPlan }: RowsProps) {
           <TRow key={machine.id}>
             <TD className="font-mono text-xs text-fg-muted">{machine.fleetNumber ?? '—'}</TD>
             <TD className="font-medium">{machine.designation}</TD>
-            <TD className="text-fg-muted">{tType(machine.typeCode)}</TD>
+            <TD className="text-fg-muted">{tType(machine.typeId)}</TD>
             <TD className="text-fg-muted">{tMethod(machine.acquisitionMethod)}</TD>
             <TD>
               <Badge tone={EQUIPMENT_STATUS_TONE[machine.status]} dot>
@@ -157,7 +157,7 @@ function EquipmentCards({ equipment, onEdit, onPlan }: RowsProps) {
                     {machine.fleetNumber && (
                       <span className="font-mono text-xs">{machine.fleetNumber} · </span>
                     )}
-                    {tType(machine.typeCode)}
+                    {tType(machine.typeId)}
                   </p>
                 </div>
                 <Badge tone={EQUIPMENT_STATUS_TONE[machine.status]} dot>

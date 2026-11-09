@@ -6,8 +6,8 @@ import { EquipmentTypeDefaults } from '../entities/equipment.entity';
  * only by migrations. Read here, never written.
  */
 export interface EquipmentCatalogPort {
-  /** One type's defaults, or `null` for a code the catalog does not have. */
-  findType(code: string): Promise<EquipmentTypeDefaults | null>;
+  /** One type's defaults, or `null` for an id the catalog does not have. */
+  findType(id: string): Promise<EquipmentTypeDefaults | null>;
   /** Every category with its types, both in display order. */
   listCategories(): Promise<IEquipmentCategory[]>;
 }

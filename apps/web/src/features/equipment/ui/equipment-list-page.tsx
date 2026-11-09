@@ -89,7 +89,7 @@ export function EquipmentListPage({ WorksitePicker }: { WorksitePicker?: Worksit
           options={[
             { value: 'all', label: t('allCategories') },
             ...(catalog.data ?? []).map((category) => ({
-              value: category.code,
+              value: category.id,
               label: labelOf(category, locale),
             })),
           ]}

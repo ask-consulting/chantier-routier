@@ -11,7 +11,7 @@ export interface IEquipment {
   id: string;
   organizationId: string;
   /** A code of the catalog — `GET /equipment-catalog`. */
-  typeCode: string;
+  typeId: string;
   /** What people call it — "Pelle CAT 320 n°2". */
   designation: string;
   /** Fleet number (numéro de parc), unique within the organization. */
@@ -54,7 +54,7 @@ export interface IEquipment {
 
 /** Payload to add a machine to the fleet. */
 export interface ICreateEquipment {
-  typeCode: string;
+  typeId: string;
   designation: string;
   fleetNumber?: string | null;
   brand?: string | null;
@@ -95,8 +95,10 @@ export type Translations = Readonly<Record<string, string>>;
  * `GET /equipment-catalog` with all its labels, the client picking its language.
  */
 export interface IEquipmentType {
+  id: string;
+  /** Readable and stable; the catalog is identified by `id`. */
   code: string;
-  categoryCode: string;
+  categoryId: string;
   /** Straight-line lifetime proposed for a new owned machine of this type. */
   defaultUsefulLifeMonths: number;
   labels: Translations;
@@ -104,6 +106,7 @@ export interface IEquipmentType {
 
 /** A family of the catalog, with its types — already in display order. */
 export interface IEquipmentCategory {
+  id: string;
   code: string;
   labels: Translations;
   types: IEquipmentType[];

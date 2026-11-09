@@ -10,7 +10,7 @@ function row(overrides: Record<string, unknown> = {}) {
   return {
     id: 'eq-1',
     organizationId: 'org-1',
-    typeCode: 'crawler_excavator',
+    typeId: 'crawler_excavator',
     designation: 'Pelle CAT 320',
     fleetNumber: 'PL-02',
     brand: null,
@@ -60,7 +60,7 @@ function setup(upsertError?: unknown) {
 const machine = Equipment.create({
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'crawler_excavator',
+  typeId: 'crawler_excavator',
   designation: 'Pelle CAT 320',
   fleetNumber: 'PL-02',
   acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
@@ -73,14 +73,14 @@ describe('EquipmentRepository', () => {
   it('excludes soft-deleted rows from the list and its count, sorted by designation', async () => {
     const { repository, prisma } = setup();
 
-    await repository.search({ filters: { typeCode: { in: ['bulldozer'] } } });
+    await repository.search({ filters: { typeId: { in: ['bulldozer'] } } });
 
     const args = prisma.equipment.findMany.mock.calls[0][0] as {
       where: Record<string, unknown>;
       orderBy: unknown;
     };
     expect(args.where.deletedAt).toBeNull();
-    expect(args.where.typeCode).toEqual({ in: ['bulldozer'] });
+    expect(args.where.typeId).toEqual({ in: ['bulldozer'] });
     expect(args.where.organizationId).toBeUndefined();
     expect(args.orderBy).toEqual({ designation: 'asc' });
     expect(

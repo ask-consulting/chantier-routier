@@ -26,12 +26,12 @@ export class FleetNumberTakenException extends DomainException {
 
 /** A type code the catalog does not have. */
 export class UnknownEquipmentTypeException extends InvalidEquipmentException {
-  constructor(typeCode: string) {
+  constructor(typeId: string) {
     super([
       {
-        field: 'typeCode',
+        field: 'typeId',
         code: 'form.errors.unknownEquipmentType',
-        message: `Unknown equipment type ${typeCode}`,
+        message: `Unknown equipment type ${typeId}`,
       },
     ]);
   }

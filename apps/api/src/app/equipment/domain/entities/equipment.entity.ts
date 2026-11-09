@@ -14,7 +14,7 @@ import { InvalidEquipmentException } from '../exceptions/equipment.exceptions';
 export interface EquipmentProps {
   id: string;
   organizationId: string;
-  typeCode: string;
+  typeId: string;
   designation: string;
   fleetNumber?: string | null;
   brand?: string | null;
@@ -74,7 +74,7 @@ export class Equipment {
   private constructor(private readonly props: Normalized) {}
 
   /**
-   * @param typeDefaults the catalog's defaults for `input.typeCode` — needed
+   * @param typeDefaults the catalog's defaults for `input.typeId` — needed
    *   only to fill a lifetime that was not given. A row read back always has
    *   its own, so the mapper passes none.
    */
@@ -101,7 +101,7 @@ export class Equipment {
     return {
       id: input.id,
       organizationId: input.organizationId,
-      typeCode: input.typeCode,
+      typeId: input.typeId,
       designation: input.designation.trim(),
       fleetNumber: clean(input.fleetNumber),
       brand: clean(input.brand),
@@ -188,8 +188,8 @@ export class Equipment {
   get organizationId(): string {
     return this.props.organizationId;
   }
-  get typeCode(): string {
-    return this.props.typeCode;
+  get typeId(): string {
+    return this.props.typeId;
   }
   get designation(): string {
     return this.props.designation;

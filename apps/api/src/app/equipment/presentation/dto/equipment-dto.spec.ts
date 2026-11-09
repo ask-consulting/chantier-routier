@@ -11,7 +11,7 @@ async function invalid(cls: new () => object, body: object): Promise<string[]> {
 }
 
 const valid = {
-  typeCode: 'bulldozer',
+  typeId: '2f1c6c1e-7c1f-5a52-8b8e-5d0a9f266e1d',
   designation: 'Bull D6',
   acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
   acquisitionDate: '2026-01-15',
@@ -23,9 +23,10 @@ describe('CreateEquipmentDto', () => {
     expect(await invalid(CreateEquipmentDto, valid)).toEqual([]);
   });
 
-  it('takes any type code of the right shape — the catalog, in the database, judges', async () => {
-    expect(await invalid(CreateEquipmentDto, { ...valid, typeCode: 'spaceship' })).toEqual([]);
-    expect(await invalid(CreateEquipmentDto, { ...valid, typeCode: 42 })).toContain('typeCode');
+  it('takes any UUID as a type — the catalog, in the database, judges', async () => {
+    expect(await invalid(CreateEquipmentDto, { ...valid, typeId: '00000000-0000-4000-8000-000000000000' })).toEqual([]);
+    expect(await invalid(CreateEquipmentDto, { ...valid, typeId: 'spaceship' })).toContain('typeId');
+    expect(await invalid(CreateEquipmentDto, { ...valid, typeId: 42 })).toContain('typeId');
   });
 
   it('takes a day, not an instant — nor a day that does not exist', async () => {
@@ -70,8 +71,10 @@ describe('GetEquipmentListDto', () => {
     );
   });
 
-  it('takes a category code as text', async () => {
-    expect(await invalid(GetEquipmentListDto, { category: 'compaction' })).toEqual([]);
-    expect(await invalid(GetEquipmentListDto, { category: 'x'.repeat(61) })).toContain('category');
+  it('takes a category by its UUID', async () => {
+    expect(
+      await invalid(GetEquipmentListDto, { category: '2f1c6c1e-7c1f-5a52-8b8e-5d0a9f266e1d' }),
+    ).toEqual([]);
+    expect(await invalid(GetEquipmentListDto, { category: 'compaction' })).toContain('category');
   });
 });

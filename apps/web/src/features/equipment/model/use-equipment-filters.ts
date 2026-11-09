@@ -7,7 +7,7 @@ import type { EquipmentListParams } from '../api/equipment.api';
 /** How long the list waits after the last keystroke before asking the server. */
 export const SEARCH_DEBOUNCE_MS = 300;
 
-/** A category code of the catalog, or every one. */
+/** A category id of the catalog, or every one. */
 export type CategoryFilter = string;
 export type StatusFilter = EquipmentStatus | 'all';
 

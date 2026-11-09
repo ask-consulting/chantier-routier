@@ -146,7 +146,7 @@ export class EquipmentAssignmentResponseDto implements IEquipmentAssignment {
     dto.equipment = {
       id: assignment.equipmentId,
       designation: machine?.designation ?? '',
-      typeCode: machine?.typeCode ?? '',
+      typeId: machine?.typeId ?? '',
       fleetNumber: machine?.fleetNumber ?? null,
     };
     dto.worksite = assignment.worksite ?? { id: assignment.worksiteId, code: '', name: '' };

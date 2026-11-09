@@ -14,7 +14,7 @@ const PUBLIC_WORKS = { defaultUsefulLifeMonths: 60 };
 const bought: EquipmentProps = {
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'crawler_excavator',
+  typeId: 'crawler_excavator',
   designation: ' Pelle CAT 320 n°2 ',
   fleetNumber: ' PL-02 ',
   registrationNumber: '215 tu 4521',

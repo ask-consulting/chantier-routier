@@ -5,6 +5,7 @@ import {
   IsISO8601,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -26,12 +27,11 @@ const DAY_MESSAGE = 'must be a date (YYYY-MM-DD)';
  */
 export class CreateEquipmentDto implements ICreateEquipment {
   @ApiProperty({
-    example: 'crawler_excavator',
-    description: 'A type code of `GET /equipment-catalog`. An unknown one is refused (400).',
+    format: 'uuid',
+    description: 'A type id of `GET /equipment-catalog`. An unknown one is refused (400).',
   })
-  @IsString()
-  @MaxLength(60)
-  typeCode: string;
+  @IsUUID()
+  typeId: string;
 
   @ApiProperty({ example: 'Pelle CAT 320 n°2' })
   @IsString()

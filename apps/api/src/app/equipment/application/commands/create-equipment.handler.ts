@@ -26,9 +26,9 @@ export class CreateEquipmentHandler implements ICommandHandler<CreateEquipmentCo
     const { organizationId, data } = command;
 
     // Before the foreign key, for a 400 on the field rather than a 500.
-    const type = await this.catalog.findType(data.typeCode);
+    const type = await this.catalog.findType(data.typeId);
     if (!type) {
-      throw new UnknownEquipmentTypeException(data.typeCode);
+      throw new UnknownEquipmentTypeException(data.typeId);
     }
 
     // Every other rule — money per acquisition method, dates — is the

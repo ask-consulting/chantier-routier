@@ -43,13 +43,13 @@ export function labelOf(entry: IEquipmentCategory | IEquipmentType, locale: stri
   return translated(entry.labels, locale, entry.code);
 }
 
-/** A type of the catalog by its code, or `undefined` while it loads or for an unknown code. */
+/** A type of the catalog by its id, or `undefined` while it loads or for an unknown id. */
 export function findType(
   catalog: readonly IEquipmentCategory[] | undefined,
-  code: string,
+  id: string,
 ): IEquipmentType | undefined {
   for (const category of catalog ?? []) {
-    const type = category.types.find((candidate) => candidate.code === code);
+    const type = category.types.find((candidate) => candidate.id === id);
     if (type) {
       return type;
     }

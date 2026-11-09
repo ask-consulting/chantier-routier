@@ -7,7 +7,7 @@ const money = { required: false, nullable: true, description: 'Omitted without b
 export class EquipmentResponseDto implements IEquipment {
   @ApiProperty() id: string;
   @ApiProperty() organizationId: string;
-  @ApiProperty() typeCode: string;
+  @ApiProperty() typeId: string;
   @ApiProperty() designation: string;
   @ApiProperty({ nullable: true }) fleetNumber: string | null;
   @ApiProperty({ nullable: true }) brand: string | null;
@@ -53,7 +53,7 @@ export class EquipmentResponseDto implements IEquipment {
     const dto = new EquipmentResponseDto();
     dto.id = equipment.id;
     dto.organizationId = equipment.organizationId;
-    dto.typeCode = equipment.typeCode;
+    dto.typeId = equipment.typeId;
     dto.designation = equipment.designation;
     dto.fleetNumber = equipment.fleetNumber;
     dto.brand = equipment.brand;

@@ -50,7 +50,7 @@ function StubWorksitePicker({ label, value, onChange, error, disabled }: Worksit
 const roller: IEquipment = {
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'tandem_roller',
+  typeId: 'tandem_roller',
   designation: 'Compacteur HAMM',
   fleetNumber: 'CP-03',
   brand: null,
@@ -78,7 +78,7 @@ const atSousse: IEquipmentAssignment = {
   endDate: '2026-04-10',
   days: 10,
   notes: 'Avec chauffeur',
-  equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeCode: 'tandem_roller', fleetNumber: 'CP-03' },
+  equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeId: 'tandem_roller', fleetNumber: 'CP-03' },
   worksite: { id: 'ws-1', code: 'RN1', name: 'Réfection RN1' },
   cost: 4500000,
   // Booked at 400 a day — the machine's rate has gone up to 450 since.

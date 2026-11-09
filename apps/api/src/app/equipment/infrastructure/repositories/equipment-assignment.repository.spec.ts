@@ -24,7 +24,7 @@ function row() {
     equipment: {
       id: 'eq-1',
       organizationId: 'org-1',
-      typeCode: 'tandem_roller',
+      typeId: 'tandem_roller',
       designation: 'Compacteur HAMM',
       fleetNumber: null,
       brand: null,

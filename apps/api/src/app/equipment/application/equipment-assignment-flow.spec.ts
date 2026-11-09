@@ -35,7 +35,7 @@ const MONASTIR = { id: 'ws-2', code: 'MN-04', name: 'Rocade Monastir' };
 const roller = Equipment.create({
   id: 'eq-1',
   organizationId: 'org-1',
-  typeCode: 'tandem_roller',
+  typeId: 'tandem_roller',
   designation: 'Compacteur HAMM',
   acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
   acquisitionDate: '2026-03-01',

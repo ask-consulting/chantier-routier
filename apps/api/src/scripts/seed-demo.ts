@@ -184,11 +184,20 @@ async function seed(prisma: PrismaClient, organizationId: string, data: DemoData
       await tx.worker.upsert({ where: { id: worker.id }, create: { id: worker.id, ...row }, update: row });
     }
 
+    const catalogTypes = await tx.equipmentType.findMany({ select: { id: true, code: true } });
+    const typeIdOf = (code: string): string => {
+      const type = catalogTypes.find((candidate) => candidate.code === code);
+      if (!type) {
+        throw new Error(`Unknown equipment type in the demo data: ${code}`);
+      }
+      return type.id;
+    };
+
     for (const machine of data.equipment) {
       const { pricing } = machine;
       const row = {
         organizationId,
-        typeCode: machine.typeCode,
+        typeId: typeIdOf(machine.typeCode),
         designation: machine.designation,
         fleetNumber: machine.fleetNumber,
         brand: machine.brand,
