@@ -42,8 +42,9 @@ Une ligne marquée **[contrôle]** est un point à valider avant de continuer. E
   ONAS ou STEG. Les règles des concessionnaires priment sur ces modèles.
 - Aucune durée ni dépendance : les sources n'en donnent pas de fiables, et les inventer fausserait
   les plannings.
-- Libellés en français seulement. Un libellé sans traduction s'affiche en français ; l'arabe
-  s'ajoutera par des lignes de traduction, sans changer le schéma.
+- Libellés en français et en arabe, les deux langues de l'application. **La traduction arabe est à
+  faire relire par un professionnel tunisien**, surtout les termes techniques. Un libellé sans
+  traduction s'affiche en français, et une nouvelle langue s'ajoute sans changer le schéma.
 - Corriger la référence demande une nouvelle migration, tant que l'application d'administration
   n'existe pas.
 
