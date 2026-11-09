@@ -96,4 +96,11 @@ describe('roleHasEveryPermission', () => {
   it('is satisfied by an empty requirement', () => {
     expect(roleHasEveryPermission(UserRole.WORKER, [])).toBe(true);
   });
+
+  it('lets the people who plan change plans, and the field only read them', () => {
+    expect(roleHasPermission(UserRole.SITE_MANAGER, Permission.PLAN_MANAGE)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.PLAN_READ)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.PLAN_MANAGE)).toBe(false);
+    expect(roleHasPermission(UserRole.WORKER, Permission.PLAN_READ)).toBe(false);
+  });
 });

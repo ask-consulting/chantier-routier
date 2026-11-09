@@ -38,6 +38,11 @@ export enum Permission {
    */
   EQUIPMENT_CORRECT_HISTORY = 'equipment:correct-history',
 
+  /** The reference project plans and the organization's own plans. */
+  PLAN_READ = 'plan:read',
+  /** Copy a reference plan, edit or delete the organization's own plans. */
+  PLAN_MANAGE = 'plan:manage',
+
   WORKER_READ = 'worker:read',
   WORKER_MANAGE = 'worker:manage',
 
