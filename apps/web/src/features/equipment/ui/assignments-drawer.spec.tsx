@@ -65,8 +65,8 @@ const roller: IEquipment = {
   contractEndDate: '2026-12-31',
   disposalDate: null,
   notes: null,
-  dailyRate: 450,
-  dailyCost: 450,
+  dailyRate: 450000,
+  dailyCost: 450000,
 };
 
 const atSousse: IEquipmentAssignment = {
@@ -80,12 +80,12 @@ const atSousse: IEquipmentAssignment = {
   notes: 'Avec chauffeur',
   equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeCode: 'tandem_roller', fleetNumber: 'CP-03' },
   worksite: { id: 'ws-1', code: 'RN1', name: 'Réfection RN1' },
-  cost: 4500,
+  cost: 4500000,
   // Booked at 400 a day — the machine's rate has gone up to 450 since.
   pricing: {
     acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
     acquisitionDate: '2026-03-01',
-    dailyRate: 400,
+    dailyRate: 400000,
     contractEndDate: '2026-12-31',
   },
 };

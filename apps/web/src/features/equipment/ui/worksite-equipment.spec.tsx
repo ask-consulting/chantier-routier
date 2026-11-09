@@ -25,7 +25,7 @@ const stay: IEquipmentAssignment = {
   notes: null,
   equipment: { id: 'eq-1', designation: 'Compacteur HAMM', typeCode: 'tandem_roller', fleetNumber: 'CP-03' },
   worksite: { id: 'ws-1', code: 'RN1', name: 'Réfection RN1' },
-  cost: 4500,
+  cost: 4500000,
 };
 
 let mock: MockAdapter;

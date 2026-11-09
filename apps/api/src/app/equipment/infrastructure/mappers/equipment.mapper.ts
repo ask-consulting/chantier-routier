@@ -2,8 +2,8 @@ import { Equipment as PrismaEquipment, Prisma } from '@prisma/client';
 import { AcquisitionMethod, EquipmentStatus } from '@chantia/shared';
 import { Equipment } from '../../domain/entities/equipment.entity';
 
-function money(value: Prisma.Decimal | null): number | null {
-  return value === null ? null : value.toNumber();
+function money(value: bigint | null): number | null {
+  return value === null ? null : Number(value);
 }
 
 /** A `@db.Date` comes back as midnight UTC; the domain speaks `YYYY-MM-DD`. */

@@ -47,8 +47,8 @@ const roller: IEquipment = {
   contractEndDate: null,
   disposalDate: null,
   notes: null,
-  purchasePrice: 219000,
-  dailyCost: 120,
+  purchasePrice: 219000000,
+  dailyCost: 120000,
   depreciationEndDate: '2030-12-31',
 };
 

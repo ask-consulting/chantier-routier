@@ -58,7 +58,7 @@ Chaque lot se livre en plusieurs PRs courtes vers `develop`.
 
 Ce qui doit être juste avant que le reste s'appuie dessus.
 
-- Passer les montants restants à trois décimales : `worksites.total_budget`,
+- Stocker tous les montants en entiers, dans la plus petite unité de la devise : `worksites.total_budget`,
   `workers.hourly_rate`, `expenses.amount`.
 - Stockage des fichiers (photos, plans) isolé par organisation.
 - Suivi des erreurs en production (`14-etat-des-lieux.md`, §3.1).

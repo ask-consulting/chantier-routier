@@ -22,7 +22,7 @@ export class WorksiteMapper {
       plannedStartDate: row.plannedStartDate,
       plannedEndDate: row.plannedEndDate,
       status: row.status as WorksiteStatus,
-      totalBudget: row.totalBudget ? row.totalBudget.toNumber() : null,
+      totalBudget: row.totalBudget === null ? null : Number(row.totalBudget),
       deletedAt: row.deletedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

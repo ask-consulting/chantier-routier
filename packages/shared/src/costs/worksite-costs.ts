@@ -1,4 +1,7 @@
 import { IWorksiteCosts } from '../interfaces/worksite.interface';
+import { roundMinor } from '../money/money';
+
+/** Every amount here is a whole number of the smallest unit: see `money.ts`. */
 
 /** A timesheet reduced to what the labor cost computation needs. */
 export interface TimesheetCost {
@@ -30,16 +33,16 @@ export interface CalculateActualCostInput {
 }
 
 /**
- * Labor cost = Σ (hoursWorked × hourlyRate).
+ * Labor cost = Σ (hoursWorked × hourlyRate), each line rounded once.
  * See docs/03-architecture.md §5.
  */
 export function calculateLaborCost(timesheets: TimesheetCost[]): number {
-  return round(timesheets.reduce((total, t) => total + t.hoursWorked * t.hourlyRate, 0));
+  return timesheets.reduce((total, t) => total + roundMinor(t.hoursWorked * t.hourlyRate), 0);
 }
 
 /** Expenses cost = Σ amount. */
 export function calculateExpensesCost(expenses: ExpenseCost[]): number {
-  return round(expenses.reduce((total, e) => total + e.amount, 0));
+  return expenses.reduce((total, e) => total + e.amount, 0);
 }
 
 /**
@@ -52,7 +55,7 @@ export function calculateExpensesCost(expenses: ExpenseCost[]): number {
  * rewrite what past worksites cost.
  */
 export function calculateEquipmentCost(assignments: EquipmentAssignmentCost[]): number {
-  return round(assignments.reduce((total, a) => total + a.cost, 0));
+  return assignments.reduce((total, a) => total + a.cost, 0);
 }
 
 /**
@@ -63,7 +66,7 @@ export function calculateActualCost(input: CalculateActualCostInput): IWorksiteC
   const laborCost = calculateLaborCost(input.timesheets);
   const expensesCost = calculateExpensesCost(input.expenses);
   const equipmentCost = calculateEquipmentCost(input.equipment ?? []);
-  const actualCost = round(laborCost + expensesCost + equipmentCost);
+  const actualCost = laborCost + expensesCost + equipmentCost;
   const totalBudget = input.totalBudget ?? null;
 
   return {
@@ -73,11 +76,6 @@ export function calculateActualCost(input: CalculateActualCostInput): IWorksiteC
     equipmentCost,
     actualCost,
     totalBudget,
-    variance: totalBudget === null ? null : round(totalBudget - actualCost),
+    variance: totalBudget === null ? null : totalBudget - actualCost,
   };
-}
-
-/** Monetary rounding to the millime, resilient to floating-point drift. */
-function round(value: number): number {
-  return Math.round((value + Number.EPSILON) * 1000) / 1000;
 }

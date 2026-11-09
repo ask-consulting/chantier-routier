@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@chantia/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Invitation } from '../domain/entities/invitation.entity';
+import { Organization } from '../domain/entities/organization.entity';
 import { RefreshToken } from '../domain/entities/refresh-token.entity';
 import { User } from '../domain/entities/user.entity';
 import { InvitationRepositoryPort } from '../domain/ports/invitation-repository.port';
@@ -165,7 +166,10 @@ function setup() {
   const invitations = new InMemoryInvitations();
   const hasher = new FakePasswordHasher();
   const tokenIssuer = new FakeTokenIssuer();
-  const sessionIssuer = new SessionIssuer(tokenIssuer, refreshTokens);
+  const sessionIssuer = new SessionIssuer(tokenIssuer, refreshTokens, {
+    findById: async () => Organization.create({ id: 'org-1', name: 'Org', currency: 'EUR' }),
+    save: async (organization) => organization,
+  });
 
   const config = {
     getOrThrow: () => ({ minPasswordLength: 12 }),
@@ -227,6 +231,7 @@ describe('signing in', () => {
     expect(session.accessToken).toBeTruthy();
     expect(session.refreshToken).toBeTruthy();
     expect(session.expiresIn).toBe(300);
+    expect(session.currency).toBe('EUR');
     expect(h.users.rows.get('user-1')?.lastLoginAt).toBeInstanceOf(Date);
     expect(h.refreshTokens.live('user-1')).toHaveLength(1);
   });

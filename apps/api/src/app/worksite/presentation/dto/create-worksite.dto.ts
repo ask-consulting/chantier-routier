@@ -9,6 +9,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ICreateWorksite, WorksiteStatus } from '@chantia/shared';
+import { IsMoney } from '@shared/validation/is-money.decorator';
 
 export class CreateWorksiteDto implements ICreateWorksite {
   @ApiProperty({ example: 'RN7-2026' })
@@ -60,7 +61,7 @@ export class CreateWorksiteDto implements ICreateWorksite {
   status?: WorksiteStatus;
 
   @ApiPropertyOptional({ nullable: true, example: 250000 })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @IsOptional()
   totalBudget?: number | null;
 }

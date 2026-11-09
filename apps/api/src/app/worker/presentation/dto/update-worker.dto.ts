@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 import { IUpdateWorker } from '@chantia/shared';
+import { IsMoney } from '@shared/validation/is-money.decorator';
 
 /**
  * Every field optional — the same payload renames, re-rates and deactivates.
@@ -26,7 +27,7 @@ export class UpdateWorkerDto implements IUpdateWorker {
   @ApiPropertyOptional({
     description: 'Applies to hours recorded from now on; past timesheets keep their own value.',
   })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @IsPositive()
   @IsOptional()
   hourlyRate?: number;

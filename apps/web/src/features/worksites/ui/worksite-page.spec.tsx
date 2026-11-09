@@ -45,7 +45,7 @@ const rn1: IWorksite = {
   plannedStartDate: '2026-09-01T00:00:00.000Z',
   plannedEndDate: '2026-09-10T00:00:00.000Z',
   status: WorksiteStatus.IN_PROGRESS,
-  totalBudget: 250000,
+  totalBudget: 250000000,
 };
 
 let mock: MockAdapter;
@@ -62,7 +62,7 @@ beforeEach(() => {
     expensesCost: 0,
     equipmentCost: 4500,
     actualCost: 4500,
-    totalBudget: 250000,
+    totalBudget: 250000000,
     variance: 245500,
   });
   mock.onGet(/\/worksites\?/).reply(200, { items: [rn1], total: 1, page: 1, limit: 1 });

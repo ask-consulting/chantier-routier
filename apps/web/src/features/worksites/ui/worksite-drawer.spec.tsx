@@ -51,7 +51,7 @@ const existing: IWorksite = {
   plannedStartDate: '2026-09-01T00:00:00.000Z',
   plannedEndDate: '2026-12-15T00:00:00.000Z',
   status: WorksiteStatus.IN_PROGRESS,
-  totalBudget: 250000,
+  totalBudget: 250000000,
 };
 
 let mock: MockAdapter;
@@ -127,7 +127,7 @@ describe('WorksiteDrawer, creating', () => {
         plannedStartDate: null,
         plannedEndDate: null,
         status: WorksiteStatus.UPCOMING,
-        totalBudget: 250000,
+        totalBudget: 250000000,
       });
     });
   });

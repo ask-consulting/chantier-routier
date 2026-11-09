@@ -21,12 +21,12 @@ describe('WorksiteCosts', () => {
   it('breaks the cost down — labour, expenses, equipment — against the budget', async () => {
     mock.onGet('/worksites/ws-1/costs').reply(200, {
       worksiteId: 'ws-1',
-      laborCost: 160,
-      expensesCost: 1000,
-      equipmentCost: 4500,
-      actualCost: 5660,
-      totalBudget: 10000,
-      variance: 4340,
+      laborCost: 160000,
+      expensesCost: 1000000,
+      equipmentCost: 4500000,
+      actualCost: 5660000,
+      totalBudget: 10000000,
+      variance: 4340000,
     });
     renderWithProviders(<WorksiteCosts worksiteId="ws-1" />);
 

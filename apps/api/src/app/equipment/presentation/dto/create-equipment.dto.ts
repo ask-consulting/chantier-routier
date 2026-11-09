@@ -3,7 +3,6 @@ import {
   IsEnum,
   IsInt,
   IsISO8601,
-  IsNumber,
   IsOptional,
   IsString,
   Matches,
@@ -13,6 +12,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { AcquisitionMethod, EquipmentStatus, ICreateEquipment } from '@chantia/shared';
+import { IsMoney } from '@shared/validation/is-money.decorator';
 
 /** A day, not an instant: `2026-09-01`, never `2026-09-01T01:00+02:00`. */
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -97,13 +97,13 @@ export class CreateEquipmentDto implements ICreateEquipment {
   supplier?: string | null;
 
   @ApiPropertyOptional({ nullable: true, description: 'Owned: price excluding tax.' })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @Min(0)
   @IsOptional()
   purchasePrice?: number | null;
 
   @ApiPropertyOptional({ nullable: true, description: 'Owned: value at the end. 0 by default.' })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @Min(0)
   @IsOptional()
   residualValue?: number | null;
@@ -120,19 +120,19 @@ export class CreateEquipmentDto implements ICreateEquipment {
   usefulLifeMonths?: number | null;
 
   @ApiPropertyOptional({ nullable: true, description: 'Leasing and long-term rental.' })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @Min(0)
   @IsOptional()
   monthlyPayment?: number | null;
 
   @ApiPropertyOptional({ nullable: true, description: 'Leasing: the price of keeping it.' })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @Min(0)
   @IsOptional()
   buyoutValue?: number | null;
 
   @ApiPropertyOptional({ nullable: true, description: 'Short-term rental.' })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @Min(0)
   @IsOptional()
   dailyRate?: number | null;

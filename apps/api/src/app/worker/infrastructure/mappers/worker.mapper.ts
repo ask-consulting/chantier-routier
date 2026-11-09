@@ -8,9 +8,9 @@ export class WorkerMapper {
       organizationId: row.organizationId,
       name: row.name,
       qualification: row.qualification,
-      // Prisma hands back a Decimal; the domain works in numbers, and an hourly
+      // Prisma hands back a BigInt; the domain works in numbers, and an hourly
       // rate at two decimals is nowhere near the precision that would hurt.
-      hourlyRate: row.hourlyRate.toNumber(),
+      hourlyRate: Number(row.hourlyRate),
       active: row.active,
       deletedAt: row.deletedAt,
       createdAt: row.createdAt,

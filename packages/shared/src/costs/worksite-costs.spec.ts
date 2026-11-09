@@ -66,7 +66,7 @@ describe('calculateActualCost', () => {
 
 describe('the equipment in a worksite’s cost', () => {
   it('sums the costs stored on the assignments — never recomputed', () => {
-    expect(calculateEquipmentCost([{ cost: 10_000 }, { cost: 900.005 }])).toBe(10_900.005);
+    expect(calculateEquipmentCost([{ cost: 10_000 }, { cost: 905 }])).toBe(10_905);
   });
 
   it('adds up with labour and expenses, against the budget', () => {
@@ -87,5 +87,14 @@ describe('the equipment in a worksite’s cost', () => {
     expect(
       calculateActualCost({ worksiteId: 'w-1', timesheets: [], expenses: [] }).equipmentCost,
     ).toBe(0);
+  });
+
+  it('rounds labour once per line, to a whole millime', () => {
+    expect(
+      calculateLaborCost([
+        { hoursWorked: 7.25, hourlyRate: 3333 },
+        { hoursWorked: 7.25, hourlyRate: 3333 },
+      ]),
+    ).toBe(48328);
   });
 });
