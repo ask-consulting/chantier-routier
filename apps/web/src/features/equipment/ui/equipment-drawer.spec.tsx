@@ -39,7 +39,7 @@ const grader: IEquipment = {
   contractEndDate: null,
   disposalDate: null,
   notes: null,
-  purchasePrice: 420000,
+  purchasePrice: 420000000,
   residualValue: null,
   usefulLifeMonths: 72,
   monthlyPayment: null,
@@ -137,7 +137,7 @@ describe('EquipmentDrawer, the money', () => {
         typeCode: 'tandem_roller',
         acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
         acquisitionDate: '2026-01-01',
-        purchasePrice: 219000,
+        purchasePrice: 219000000,
         usefulLifeMonths: 60,
         monthlyPayment: null,
         dailyRate: null,
@@ -162,8 +162,8 @@ describe('EquipmentDrawer, the money', () => {
     await waitFor(() => {
       expect(JSON.parse(mock.history.post[0]?.data as string)).toMatchObject({
         acquisitionMethod: AcquisitionMethod.LEASING,
-        monthlyPayment: 3650,
-        buyoutValue: 15000,
+        monthlyPayment: 3650000,
+        buyoutValue: 15000000,
         purchasePrice: null,
         usefulLifeMonths: null,
       });
@@ -183,7 +183,7 @@ describe('EquipmentDrawer, the money', () => {
 
     await waitFor(() => {
       expect(JSON.parse(mock.history.post[0]?.data as string)).toMatchObject({
-        dailyRate: 450.5,
+        dailyRate: 450500,
         contractEndDate: null,
       });
     });
@@ -211,7 +211,7 @@ describe('EquipmentDrawer, editing and state', () => {
           acquisitionMethod: AcquisitionMethod.SHORT_TERM_RENTAL,
           purchasePrice: null,
           usefulLifeMonths: null,
-          dailyRate: 450,
+          dailyRate: 450000,
         }}
         onClose={() => {}}
       />,

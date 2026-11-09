@@ -25,6 +25,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       accessToken: session.accessToken,
       expiresIn: session.expiresIn,
       user: session.user,
+      currency: session.currency,
     });
 
     // The interface follows the account, not the browser: somebody who set their

@@ -31,6 +31,7 @@ export async function POST(): Promise<NextResponse> {
       accessToken: session.accessToken,
       expiresIn: session.expiresIn,
       user: session.user,
+      currency: session.currency,
     });
   } catch (error) {
     await clearRefreshToken();

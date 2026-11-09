@@ -26,8 +26,9 @@ Ces cinq règles traversent tous les modules. Les changer après coup coûte che
 4. **Une photo a toujours un contexte.** Chaque photo est liée à un chantier, une tâche et,
    quand il existe, un plan et un résultat de contrôle. L'IA prévue après le MVP (§8) a
    besoin de cet historique, et il ne se reconstitue pas après coup.
-5. **Le dinar compte trois décimales.** Tout montant en TND est stocké en millimes
-   (`Decimal(14, 3)`).
+5. **Un montant est un nombre entier de la plus petite unité de la devise** : des millimes pour
+   le dinar, des centimes pour l'euro (`BIGINT`). La devise de l'organisation lui donne son
+   sens, elle ne change donc plus dès qu'il y a des données ([`10`](10-conventions-base-de-donnees.md), §5 bis).
 
 ## 2. Rôles
 

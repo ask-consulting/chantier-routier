@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { WorksiteStatus, type IWorksite } from '@chantia/shared';
 import { ApiError } from '@/shared/api/http-client';
+import { fromStoredAmount, toStoredAmount } from '@/shared/lib/currency';
 import { useCreateWorksite, useUpdateWorksite } from '../api/worksite.queries';
 
 /** Why a worksite could not be saved, as a key under `worksites.error.*`. */
@@ -49,7 +50,7 @@ function valuesOf(worksite: IWorksite | null): WorksiteFormValues {
         totalBudget:
           worksite.totalBudget === null || worksite.totalBudget === undefined
             ? ''
-            : String(worksite.totalBudget),
+            : String(fromStoredAmount(worksite.totalBudget)),
       }
     : {
         code: '',
@@ -148,7 +149,7 @@ export function useWorksiteForm(
       plannedEndDate: values.plannedEndDate || null,
       status: values.status,
       ...(withBudget
-        ? { totalBudget: values.totalBudget.trim() === '' ? null : parsedBudget }
+        ? { totalBudget: values.totalBudget.trim() === '' ? null : toStoredAmount(parsedBudget) }
         : {}),
     };
 

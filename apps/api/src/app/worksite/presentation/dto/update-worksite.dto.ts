@@ -11,6 +11,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { IUpdateWorksite, WorksiteStatus } from '@chantia/shared';
+import { IsMoney } from '@shared/validation/is-money.decorator';
 
 /**
  * Every field optional. `null` clears a field that may be empty; `undefined`
@@ -74,7 +75,7 @@ export class UpdateWorksiteDto implements IUpdateWorksite {
   status?: WorksiteStatus;
 
   @ApiPropertyOptional({ nullable: true, example: 250000 })
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @Min(0)
   @IsOptional()
   totalBudget?: number | null;

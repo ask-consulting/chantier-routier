@@ -1,7 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { DEFAULT_CURRENCY } from '@chantia/shared';
 import { RefreshToken } from '../../domain/entities/refresh-token.entity';
 import { User } from '../../domain/entities/user.entity';
+import {
+  ORGANIZATION_REPOSITORY_PORT,
+  OrganizationRepositoryPort,
+} from '../../domain/ports/organization-repository.port';
 import {
   REFRESH_TOKEN_REPOSITORY_PORT,
   RefreshTokenRepositoryPort,
@@ -16,6 +21,8 @@ export interface IssuedSession {
   refreshToken: string;
   /** Access-token lifetime in seconds. */
   expiresIn: number;
+  /** The organization's currency: what gives its amounts their meaning. */
+  currency: string;
 }
 
 /**
@@ -33,6 +40,8 @@ export class SessionIssuer {
     private readonly tokenIssuer: TokenIssuerPort,
     @Inject(REFRESH_TOKEN_REPOSITORY_PORT)
     private readonly refreshTokens: RefreshTokenRepositoryPort,
+    @Inject(ORGANIZATION_REPOSITORY_PORT)
+    private readonly organizations: OrganizationRepositoryPort,
   ) {}
 
   async issueFor(
@@ -68,8 +77,11 @@ export class SessionIssuer {
       await this.refreshTokens.save(options.rotating.revoke(stored.id));
     }
 
+    const organization = await this.organizations.findById(user.organizationId);
+
     return {
       user,
+      currency: organization?.currency ?? DEFAULT_CURRENCY,
       accessToken: accessToken.token,
       refreshToken: refreshToken.token,
       expiresIn: accessToken.expiresIn,

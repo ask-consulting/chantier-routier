@@ -7,9 +7,15 @@ import {
   WorksiteStatus,
   clientDisplayName,
   equipmentCostOverPeriod,
+  toMinorUnits,
   withSinglePrimary,
   type EquipmentCostInput,
 } from '@chantia/shared';
+
+/** The figures below are written in dinars; what is stored is in millimes. */
+function minor(value: number | null | undefined): number | null {
+  return value === null || value === undefined ? null : toMinorUnits(value, 'TND');
+}
 
 /**
  * The demo data — what `seed-demo.ts` writes into its own test organization,
@@ -491,7 +497,14 @@ export function buildDemoData(organizationId: string, today: string): DemoData {
     to: number,
     notes: string | null = null,
   ): DemoAssignment => {
-    const { buyoutValue: _notPricing, ...pricing } = machineRow.pricing;
+    const { buyoutValue: _notPricing, ...inDinars } = machineRow.pricing;
+    const pricing = {
+      ...inDinars,
+      purchasePrice: minor(inDinars.purchasePrice),
+      residualValue: minor(inDinars.residualValue),
+      monthlyPayment: minor(inDinars.monthlyPayment),
+      dailyRate: minor(inDinars.dailyRate),
+    };
     const startDate = day(from);
     const endDate = day(to);
     return {

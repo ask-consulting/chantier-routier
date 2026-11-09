@@ -146,6 +146,20 @@ L'index n'est pas optionnel : **chaque** requête métier filtre dessus. Et la p
 cette colonne fait basculer la table dans le champ du filtre automatique — voir
 `09-multi-tenant.md`.
 
+## 5 bis. Les montants
+
+**Un montant est un nombre entier de la plus petite unité de la devise**, dans une colonne
+`BigInt` : des millimes pour le dinar, des centimes pour l'euro.
+
+- **Pas `Int`** : il s'arrête à 2 147 483 dinars en millimes, moins que le budget d'une route.
+- **Pas de décimales** : les additions restent exactes, sur le serveur comme sur le mobile.
+- **La devise de l'organisation donne son sens au nombre** : `1000` vaut 1 dinar ou 10 euros. Elle
+  ne doit plus changer dès qu'il y a des données, et aucune route ne le permet.
+- **Conversion à un seul endroit** : `money.ts` dans `@chantia/shared`. L'API échange des entiers,
+  le web convertit à la saisie et à l'affichage (`shared/lib/currency.ts`, `format.ts`).
+- **Ce qui n'est pas un montant reste décimal** : heures, quantités. Le total d'une ligne est
+  arrondi une seule fois, jamais en cours de calcul (`roundMinor`).
+
 ## 6. Ce qu'on ne reprend pas de cie-next
 
 | Convention cie-next | Ici | Pourquoi |
@@ -163,7 +177,7 @@ model BudgetLine {
   organizationId String   @map("organization_id") @db.Uuid
   worksiteId     String   @map("worksite_id") @db.Uuid
   label          String
-  plannedAmount  Decimal  @map("planned_amount") @db.Decimal(14, 2)
+  plannedAmount  BigInt   @map("planned_amount")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 

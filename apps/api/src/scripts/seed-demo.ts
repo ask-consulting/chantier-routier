@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { Locale, checkPasswordPolicy } from '@chantia/shared';
+import { Locale, checkPasswordPolicy, toMinorUnits } from '@chantia/shared';
 import { ScryptPasswordHasher } from '../identity/infrastructure/security/scrypt-password-hasher';
 import {
   DEMO_ORGANIZATION_ID,
@@ -65,8 +65,8 @@ function date(day: string): Date {
   return new Date(`${day}T00:00:00.000Z`);
 }
 
-function money(value: number | null | undefined): Prisma.Decimal | null {
-  return value === null || value === undefined ? null : new Prisma.Decimal(value.toFixed(3));
+function money(value: number | null | undefined): bigint | null {
+  return value === null || value === undefined ? null : BigInt(toMinorUnits(value, 'TND'));
 }
 
 /**
@@ -220,7 +220,8 @@ async function seed(prisma: PrismaClient, organizationId: string, data: DemoData
         startDate: date(assignment.startDate),
         endDate: date(assignment.endDate),
         pricing: assignment.pricing as unknown as Prisma.InputJsonObject,
-        cost: money(assignment.cost)!,
+        // Already in millimes: computed from the pricing, which is.
+        cost: BigInt(assignment.cost),
         notes: assignment.notes,
       };
       await tx.equipmentAssignment.upsert({

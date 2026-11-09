@@ -39,7 +39,7 @@ function toDomain(row: AssignmentRow): EquipmentAssignment {
       endDate: day(row.endDate),
       // Written by `save` from an `EquipmentCostInput`, and only there.
       pricing: row.pricing as unknown as EquipmentCostInput,
-      cost: row.cost.toNumber(),
+      cost: Number(row.cost),
       notes: row.notes,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

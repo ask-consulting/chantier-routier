@@ -1,4 +1,5 @@
 import { AcquisitionMethod } from '../enums/equipment.enums';
+import { roundMinor } from '../money/money';
 
 /**
  * What a machine costs per day, and over a period — pure functions, shared so
@@ -8,6 +9,9 @@ import { AcquisitionMethod } from '../enums/equipment.enums';
  * machine works or not; a machine assigned from the 1st to the 10th costs ten
  * days. That is the actual cost of keeping it, and it adds up to the
  * accounting depreciation exactly.
+ *
+ * **Amounts are whole numbers of the smallest unit** (see `money.ts`). A daily
+ * share of a price is not one, so it stays exact until the total is rounded.
  *
  * **Dates are `YYYY-MM-DD` strings**, compared and counted in UTC. A planned
  * day is a day, not an instant — the same reasoning as a worksite's dates.
@@ -113,6 +117,10 @@ function depreciationPerDay(equipment: EquipmentCostInput): number {
  * Nothing before it arrived, and nothing after it was disposed of.
  */
 export function equipmentDailyCost(equipment: EquipmentCostInput, day: string): number {
+  return roundMinor(exactDailyCost(equipment, day));
+}
+
+function exactDailyCost(equipment: EquipmentCostInput, day: string): number {
   if (toUtc(day) < toUtc(equipment.acquisitionDate)) {
     return 0;
   }
@@ -138,11 +146,6 @@ function withinContract(equipment: EquipmentCostInput, day: string): boolean {
   return !equipment.contractEndDate || toUtc(day) <= toUtc(equipment.contractEndDate);
 }
 
-/** Rounded to the millime — the smallest unit of the dinar. */
-function round(amount: number): number {
-  return Math.round(amount * 1000) / 1000;
-}
-
 /**
  * The cost of the machine from `from` to `to`, both included — what an
  * assignment to a worksite adds to that worksite's cost. Summed day by day,
@@ -156,9 +159,9 @@ export function equipmentCostOverPeriod(
 ): number {
   let total = 0;
   for (let day = from; toUtc(day) <= toUtc(to); day = nextDay(day)) {
-    total += equipmentDailyCost(equipment, day);
+    total += exactDailyCost(equipment, day);
   }
-  return round(total);
+  return roundMinor(total);
 }
 
 /**
@@ -177,7 +180,7 @@ export function netBookValue(equipment: EquipmentCostInput, day: string): number
   const last = toUtc(day) < toUtc(end) ? day : end;
   const elapsed = daysBetweenInclusive(equipment.acquisitionDate, last);
   const value = equipment.purchasePrice - depreciationPerDay(equipment) * elapsed;
-  return round(Math.max(equipment.residualValue ?? 0, value));
+  return roundMinor(Math.max(equipment.residualValue ?? 0, value));
 }
 
 /** Whether two periods share at least one day. Both ends included on both. */

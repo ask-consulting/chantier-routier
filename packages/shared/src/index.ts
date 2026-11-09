@@ -27,6 +27,9 @@ export * from './interfaces/auth.interface';
 export * from './interfaces/access-request.interface';
 export * from './interfaces/plan.interface';
 
+// Money: whole numbers of the smallest unit, formatted per currency
+export * from './money/money';
+
 // Pure business computations (reusable on server & offline on mobile)
 export * from './costs/worksite-costs';
 

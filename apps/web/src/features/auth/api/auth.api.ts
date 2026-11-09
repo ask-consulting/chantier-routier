@@ -18,6 +18,8 @@ export interface SessionResponse {
   accessToken: string;
   expiresIn: number;
   user: IUser;
+  /** Every amount of the organization is counted in this one. */
+  currency: string;
 }
 
 export function signIn(email: string, password: string): Promise<SessionResponse> {

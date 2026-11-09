@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 import { ICreateWorker } from '@chantia/shared';
+import { IsMoney } from '@shared/validation/is-money.decorator';
 
 export class CreateWorkerDto implements ICreateWorker {
   @ApiProperty({ example: 'Karim Benali' })
@@ -20,7 +21,7 @@ export class CreateWorkerDto implements ICreateWorker {
   })
   // Positive rather than merely a number: a rate of zero silently makes somebody
   // free, which is never true and would pass unnoticed in a cost report.
-  @IsNumber({ maxDecimalPlaces: 3 })
+  @IsMoney()
   @IsPositive()
   hourlyRate: number;
 

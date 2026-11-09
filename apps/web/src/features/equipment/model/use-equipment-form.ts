@@ -12,6 +12,7 @@ import {
   type IEquipmentCategory,
 } from '@chantia/shared';
 import { ApiError } from '@/shared/api/http-client';
+import { fromStoredAmount, toStoredAmount } from '@/shared/lib/currency';
 import { useCreateEquipment, useUpdateEquipment } from '../api/equipment.queries';
 import { findType } from './equipment-display';
 
@@ -108,12 +109,12 @@ function valuesOf(
     acquisitionMethod: equipment.acquisitionMethod,
     acquisitionDate: equipment.acquisitionDate,
     supplier: text(equipment.supplier),
-    purchasePrice: text(equipment.purchasePrice),
-    residualValue: text(equipment.residualValue),
+    purchasePrice: storedText(equipment.purchasePrice),
+    residualValue: storedText(equipment.residualValue),
     usefulLifeMonths: text(equipment.usefulLifeMonths),
-    monthlyPayment: text(equipment.monthlyPayment),
-    buyoutValue: text(equipment.buyoutValue),
-    dailyRate: text(equipment.dailyRate),
+    monthlyPayment: storedText(equipment.monthlyPayment),
+    buyoutValue: storedText(equipment.buyoutValue),
+    dailyRate: storedText(equipment.dailyRate),
     contractEndDate: text(equipment.contractEndDate),
     disposalDate: text(equipment.disposalDate),
     notes: text(equipment.notes),
@@ -124,6 +125,16 @@ function valuesOf(
 function amount(value: string): number | null {
   const trimmed = value.trim().replace(',', '.');
   return trimmed === '' ? null : Number(trimmed);
+}
+
+/** A box in the currency, as the API stores it. `null` and `NaN` go through. */
+function money(value: string): number | null {
+  const parsed = amount(value);
+  return parsed === null || Number.isNaN(parsed) ? parsed : toStoredAmount(parsed);
+}
+
+function storedText(value: number | null | undefined): string {
+  return value === null || value === undefined ? '' : String(fromStoredAmount(value));
 }
 
 function orNull(value: string): string | null {
@@ -200,12 +211,12 @@ export function useEquipmentForm(
   const retired = values.status === EquipmentStatus.RETIRED;
 
   const numbers = {
-    purchasePrice: amount(values.purchasePrice),
-    residualValue: amount(values.residualValue),
+    purchasePrice: money(values.purchasePrice),
+    residualValue: money(values.residualValue),
     usefulLifeMonths: amount(values.usefulLifeMonths),
-    monthlyPayment: amount(values.monthlyPayment),
-    buyoutValue: amount(values.buyoutValue),
-    dailyRate: amount(values.dailyRate),
+    monthlyPayment: money(values.monthlyPayment),
+    buyoutValue: money(values.buyoutValue),
+    dailyRate: money(values.dailyRate),
     manufactureYear: amount(values.manufactureYear),
   };
 

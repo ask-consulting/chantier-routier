@@ -31,6 +31,8 @@ export interface IAuthTokens {
 
 /** Response of register / login / refresh: tokens plus the authenticated profile. */
 export interface IAuthSession extends IAuthTokens {
+  /** The organization's currency: what gives its amounts their meaning. */
+  currency: string;
   user: IUser;
 }
 

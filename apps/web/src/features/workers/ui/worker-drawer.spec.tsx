@@ -19,7 +19,7 @@ const existing: IWorker = {
   organizationId: 'org-1',
   name: 'Karim Benali',
   qualification: 'Maçon',
-  hourlyRate: 18.5,
+  hourlyRate: 18500,
   active: true,
 };
 
@@ -95,7 +95,7 @@ describe('WorkerDrawer, creating', () => {
       expect(JSON.parse(request?.data as string)).toEqual({
         name: 'Amina Cherif',
         qualification: 'Conductrice d’engin',
-        hourlyRate: 16,
+        hourlyRate: 16000,
         active: true,
       });
     });
@@ -166,7 +166,7 @@ describe('WorkerDrawer, editing', () => {
     await waitFor(() => {
       const request = mock.history.patch[0];
       expect(request?.url).toMatch(/\/workers\/worker-1$/);
-      expect(JSON.parse(request?.data as string)).toMatchObject({ hourlyRate: 21 });
+      expect(JSON.parse(request?.data as string)).toMatchObject({ hourlyRate: 21000 });
     });
   });
 

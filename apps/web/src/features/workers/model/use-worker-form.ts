@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import type { IWorker } from '@chantia/shared';
 import { ApiError } from '@/shared/api/http-client';
+import { fromStoredAmount, toStoredAmount } from '@/shared/lib/currency';
 import { useCreateWorker, useUpdateWorker } from '../api/worker.queries';
 
 /**
@@ -26,7 +27,7 @@ function valuesOf(worker: IWorker | null): WorkerFormValues {
     ? {
         name: worker.name,
         qualification: worker.qualification ?? '',
-        hourlyRate: String(worker.hourlyRate),
+        hourlyRate: String(fromStoredAmount(worker.hourlyRate)),
         active: worker.active,
       }
     : { name: '', qualification: '', hourlyRate: '', active: true };
@@ -93,7 +94,7 @@ export function useWorkerForm(worker: IWorker | null = null) {
     const payload = {
       name: values.name.trim(),
       qualification: values.qualification.trim() || null,
-      hourlyRate: parsedRate,
+      hourlyRate: toStoredAmount(parsedRate),
       active: values.active,
     };
 

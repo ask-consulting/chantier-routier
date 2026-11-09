@@ -1,4 +1,5 @@
 import { intlLocale, type Locale } from '@/shared/i18n/config';
+import { fromStoredAmount, getCurrency } from './currency';
 
 /**
  * Money and dates, formatted for the reading language.
@@ -14,6 +15,7 @@ import { intlLocale, type Locale } from '@/shared/i18n/config';
  * a status, the sign of a variance — belongs to that feature's `model/` instead.
  */
 
+/** `value` is an amount as the API stores it, in the currency's smallest unit. */
 export function formatAmount(
   value: number | null | undefined,
   locale: Locale,
@@ -31,9 +33,9 @@ export function formatAmount(
   }
   return new Intl.NumberFormat(intlLocale(locale), {
     style: 'currency',
-    currency: 'TND',
+    currency: getCurrency(),
     maximumFractionDigits,
-  }).format(value);
+  }).format(fromStoredAmount(value));
 }
 
 export function formatDate(value: string | null | undefined, locale: Locale): string {

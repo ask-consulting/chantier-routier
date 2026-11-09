@@ -295,9 +295,9 @@ const tStatus = useTranslations('worksiteStatus');
           </THead>
           <tbody>
             {[
-              { code: 'RN7-2026', name: 'Réfection RN7 — section nord', status: WorksiteStatus.IN_PROGRESS, budget: 250000, variance: 42000 },
-              { code: 'A61-2025', name: 'Élargissement A61', status: WorksiteStatus.SUSPENDED, budget: 1800000, variance: -95000 },
-              { code: 'D12-2024', name: 'Voirie communale D12', status: WorksiteStatus.COMPLETED, budget: 74000, variance: 0 },
+              { code: 'RN7-2026', name: 'Réfection RN7 — section nord', status: WorksiteStatus.IN_PROGRESS, budget: 250000000, variance: 42000000 },
+              { code: 'A61-2025', name: 'Élargissement A61', status: WorksiteStatus.SUSPENDED, budget: 1800000000, variance: -95000000 },
+              { code: 'D12-2024', name: 'Voirie communale D12', status: WorksiteStatus.COMPLETED, budget: 74000000, variance: 0 },
             ].map((row) => (
               <TRow key={row.code}>
                 <TD className="font-mono text-xs text-fg-muted">{row.code}</TD>

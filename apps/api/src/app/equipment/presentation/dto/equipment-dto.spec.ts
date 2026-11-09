@@ -15,7 +15,7 @@ const valid = {
   designation: 'Bull D6',
   acquisitionMethod: AcquisitionMethod.CASH_PURCHASE,
   acquisitionDate: '2026-01-15',
-  purchasePrice: 1_250_000.5,
+  purchasePrice: 1_250_000_500,
 };
 
 describe('CreateEquipmentDto', () => {

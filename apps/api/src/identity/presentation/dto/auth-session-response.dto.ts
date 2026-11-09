@@ -20,6 +20,9 @@ export class AuthSessionResponseDto implements IAuthSession {
   @ApiProperty({ type: UserResponseDto })
   user: UserResponseDto;
 
+  @ApiProperty({ example: 'TND', description: 'The currency every amount is counted in' })
+  currency: string;
+
   static fromIssuedSession(session: IssuedSession): AuthSessionResponseDto {
     const dto = new AuthSessionResponseDto();
     dto.accessToken = session.accessToken;
@@ -27,6 +30,7 @@ export class AuthSessionResponseDto implements IAuthSession {
     dto.expiresIn = session.expiresIn;
     dto.tokenType = 'Bearer';
     dto.user = UserResponseDto.fromDomain(session.user);
+    dto.currency = session.currency;
     return dto;
   }
 }

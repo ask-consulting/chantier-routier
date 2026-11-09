@@ -125,10 +125,10 @@ export class WorksiteRepository implements WorksiteRepositoryPort {
     return {
       timesheets: timesheetRows.map((t) => ({
         hoursWorked: t.hoursWorked.toNumber(),
-        hourlyRate: t.worker.hourlyRate.toNumber(),
+        hourlyRate: Number(t.worker.hourlyRate),
       })),
-      expenses: expenseRows.map((e) => ({ amount: e.amount.toNumber() })),
-      equipment: assignmentRows.map((a) => ({ cost: a.cost.toNumber() })),
+      expenses: expenseRows.map((e) => ({ amount: Number(e.amount) })),
+      equipment: assignmentRows.map((a) => ({ cost: Number(a.cost) })),
     };
   }
 }

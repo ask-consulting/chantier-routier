@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { IUser } from '@chantia/shared';
 import { setAccessToken, setSessionRefresher } from '@/shared/api/http-client';
+import { setCurrency } from '@/shared/lib/currency';
 import * as authApi from '../api/auth.api';
 import type { SessionResponse } from '../api/auth.api';
 
@@ -39,6 +40,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const apply = useCallback((session: SessionResponse | null) => {
     setAccessToken(session?.accessToken ?? null);
+    setCurrency(session?.currency);
     setUser(session?.user ?? null);
   }, []);
 

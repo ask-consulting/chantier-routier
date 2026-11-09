@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatAmount, formatDate } from './format';
+import { setCurrency } from './currency';
 
 /**
  * Two functions, and one decision each that a reader of the code would not guess.
@@ -26,7 +27,7 @@ describe('formatAmount', () => {
   });
 
   it('formats in dinars, without millimes', () => {
-    const formatted = formatAmount(12500.4, 'fr');
+    const formatted = formatAmount(12500400, 'fr');
 
     expect(formatted).toMatch(/12\s?500/);
     expect(formatted).toMatch(/TND/);
@@ -34,7 +35,7 @@ describe('formatAmount', () => {
   });
 
   it('keeps Latin digits in Arabic', () => {
-    const formatted = formatAmount(12500, 'ar');
+    const formatted = formatAmount(12500000, 'ar');
 
     expect(formatted).toMatch(/12/);
     // Eastern Arabic numerals (٠-٩) must not appear.
@@ -59,5 +60,21 @@ describe('formatDate', () => {
 
     expect(formatted).toMatch(/2026/);
     expect(formatted).not.toMatch(/[٠-٩]/);
+  });
+
+  it('reads an amount in the organization’s currency', () => {
+    setCurrency('EUR');
+    try {
+      const formatted = formatAmount(1250, 'fr', 2);
+
+      expect(formatted).toMatch(/12,50/);
+      expect(formatted).toMatch(/€/);
+    } finally {
+      setCurrency(null);
+    }
+  });
+
+  it('shows the millimes of a rate when asked to', () => {
+    expect(formatAmount(6500, 'fr', 3)).toMatch(/6,500/);
   });
 });
