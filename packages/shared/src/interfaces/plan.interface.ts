@@ -15,6 +15,10 @@ export interface IPlanTemplateNode {
   code: string;
   level: PlanNodeLevel;
   isControl: boolean;
+  /** When it starts, in percent of its parent. Absent: shared evenly with its siblings. */
+  startPercent: number | null;
+  /** How long it lasts, in percent of its parent. */
+  durationPercent: number | null;
   labels: Translations;
   children: IPlanTemplateNode[];
 }
@@ -28,6 +32,8 @@ export interface IOrganizationPlanNode {
   level: PlanNodeLevel;
   label: string;
   isControl: boolean;
+  startPercent: number | null;
+  durationPercent: number | null;
   children: IOrganizationPlanNode[];
 }
 
@@ -48,6 +54,8 @@ export interface IOrganizationPlan extends IOrganizationPlanSummary {
 export interface IPlanNodeInput {
   label: string;
   isControl?: boolean;
+  startPercent?: number | null;
+  durationPercent?: number | null;
   children?: IPlanNodeInput[];
 }
 

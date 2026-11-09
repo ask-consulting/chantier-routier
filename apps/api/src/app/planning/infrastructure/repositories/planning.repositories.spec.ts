@@ -18,6 +18,8 @@ describe('PlanSourceRepository', () => {
     parentId,
     code: `code-${id}`,
     isControl: id === 'b',
+    startPercent: id === 'a' ? 10 : null,
+    durationPercent: id === 'a' ? 20 : null,
     translations,
   });
 
@@ -40,17 +42,33 @@ describe('PlanSourceRepository', () => {
     expect(plan?.nodes[0]?.label).toBe('الأساسات');
     expect(plan?.nodes[0]?.children[0]).toMatchObject({ label: 'Réception', isControl: true });
     expect(plan?.nodes[0]?.children[1]?.label).toBe('code-c');
-    expect(plan?.nodes[0]?.code).toBe('code-a');
+    expect(plan?.nodes[0]).toMatchObject({ code: 'code-a', startPercent: 10, durationPercent: 20 });
   });
 
   it('reads an organization’s plan, without reference codes', async () => {
     organizationPlan.findUnique.mockResolvedValue({
-      nodes: [{ id: 'p', parentId: null, label: 'Phase', isControl: false }],
+      nodes: [
+        {
+          id: 'p',
+          parentId: null,
+          label: 'Phase',
+          isControl: false,
+          startPercent: 0,
+          durationPercent: 50,
+        },
+      ],
     });
 
     const plan = await repository.findOrganizationPlan('plan-1');
 
-    expect(plan?.nodes[0]).toEqual({ label: 'Phase', isControl: false, code: null, children: [] });
+    expect(plan?.nodes[0]).toEqual({
+      label: 'Phase',
+      isControl: false,
+      code: null,
+      startPercent: 0,
+      durationPercent: 50,
+      children: [],
+    });
   });
 
   it('answers null for what does not exist', async () => {

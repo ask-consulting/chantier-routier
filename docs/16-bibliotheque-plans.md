@@ -41,8 +41,10 @@ Une ligne marquée **[contrôle]** est un point à valider avant de continuer. E
 - C'est la pratique courante de la construction. Aucun référentiel officiel tunisien n'a été
   trouvé : ni cahier des prescriptions du Ministère de l'Équipement, ni règles de pose SONEDE,
   ONAS ou STEG. Les règles des concessionnaires priment sur ces modèles.
-- Aucune durée ni dépendance : les sources n'en donnent pas de fiables, et les inventer fausserait
-  les plannings.
+- **Durées : des estimations à faire valider.** Chaque phase et chaque tâche dit quand elle commence
+  et combien de temps elle dure, en pourcentage de son parent (une phase du chantier, une tâche de
+  sa phase). Les sources ne donnent pas de chiffres fiables : ces valeurs sont des ordres de
+  grandeur. Les sous-tâches se partagent leur tâche à parts égales. Pas encore de dépendances.
 - Libellés en français (`fr`), en arabe (`ar`) et en tounsi, en lettres arabes (`aeb`) et latines
   (`aeb-Latn`), comme sur la vitrine : les mots techniques restent ceux du métier. **Traductions à
   faire relire par un professionnel tunisien.** Un libellé sans traduction s'affiche en français,

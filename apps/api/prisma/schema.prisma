@@ -717,14 +717,17 @@ model PlanTemplateTranslation {
 /// One line of a reference plan: a phase, a task or a subtask. `isControl`
 /// marks a check that must be passed before the work continues.
 model PlanTemplateNode {
-  id         String        @id(map: "pk_plan_template_nodes") @default(uuid()) @db.Uuid
+  id              String        @id(map: "pk_plan_template_nodes") @default(uuid()) @db.Uuid
   /// Readable and stable, built from the French labels: `villa.gros-oeuvre.etage.coulage-plancher`.
-  code       String        @unique(map: "uq_plan_template_nodes_code")
-  templateId String        @map("template_id") @db.Uuid
-  parentId   String?       @map("parent_id") @db.Uuid
-  level      PlanNodeLevel
-  sortOrder  Int           @map("sort_order")
-  isControl  Boolean       @default(false) @map("is_control")
+  code            String        @unique(map: "uq_plan_template_nodes_code")
+  templateId      String        @map("template_id") @db.Uuid
+  parentId        String?       @map("parent_id") @db.Uuid
+  level           PlanNodeLevel
+  sortOrder       Int           @map("sort_order")
+  isControl       Boolean       @default(false) @map("is_control")
+  /// In percent of its parent. Absent: shared evenly with its siblings.
+  startPercent    Int?          @map("start_percent")
+  durationPercent Int?          @map("duration_percent")
 
   template     PlanTemplate                  @relation(fields: [templateId], references: [id], onDelete: Cascade, map: "fk_plan_template_nodes_plan_templates")
   parent       PlanTemplateNode?             @relation("PlanTemplateTree", fields: [parentId], references: [id], onDelete: Cascade, map: "fk_plan_template_nodes_parent")
@@ -774,14 +777,16 @@ model OrganizationPlan {
 /// One line of an organization's plan. Carries `organizationId` itself so the
 /// tenant filter covers a query that starts from this table.
 model OrganizationPlanNode {
-  id             String        @id(map: "pk_organization_plan_nodes") @default(uuid()) @db.Uuid
-  organizationId String        @map("organization_id") @db.Uuid
-  planId         String        @map("plan_id") @db.Uuid
-  parentId       String?       @map("parent_id") @db.Uuid
-  level          PlanNodeLevel
-  label          String
-  sortOrder      Int           @map("sort_order")
-  isControl      Boolean       @default(false) @map("is_control")
+  id              String        @id(map: "pk_organization_plan_nodes") @default(uuid()) @db.Uuid
+  organizationId  String        @map("organization_id") @db.Uuid
+  planId          String        @map("plan_id") @db.Uuid
+  parentId        String?       @map("parent_id") @db.Uuid
+  level           PlanNodeLevel
+  label           String
+  sortOrder       Int           @map("sort_order")
+  isControl       Boolean       @default(false) @map("is_control")
+  startPercent    Int?          @map("start_percent")
+  durationPercent Int?          @map("duration_percent")
 
   plan     OrganizationPlan       @relation(fields: [planId], references: [id], onDelete: Cascade, map: "fk_organization_plan_nodes_organization_plans")
   parent   OrganizationPlanNode?  @relation("OrganizationPlanTree", fields: [parentId], references: [id], onDelete: Cascade, map: "fk_organization_plan_nodes_parent")

@@ -14,6 +14,8 @@ interface NodeRow {
   level: string;
   label: string;
   isControl: boolean;
+  startPercent: number | null;
+  durationPercent: number | null;
 }
 
 function treeOf(rows: readonly NodeRow[]): PlanNode[] {
@@ -27,6 +29,8 @@ function treeOf(rows: readonly NodeRow[]): PlanNode[] {
       level: row.level as PlanNodeLevel,
       label: row.label,
       isControl: row.isControl,
+      startPercent: row.startPercent,
+      durationPercent: row.durationPercent,
       children: childrenOf(row.id),
     }));
   return childrenOf(null);
@@ -45,6 +49,8 @@ function rowsOf(plan: OrganizationPlan): Prisma.OrganizationPlanNodeCreateManyIn
         label: node.label,
         sortOrder: index + 1,
         isControl: node.isControl,
+        startPercent: node.startPercent,
+        durationPercent: node.durationPercent,
       });
       visit(node.children, node.id);
     });

@@ -44,6 +44,8 @@ export class PlanSourceRepository implements PlanSourcePort {
             label: label(locale) ?? label(DEFAULT_LOCALE) ?? node.code,
             isControl: node.isControl,
             code: node.code,
+            startPercent: node.startPercent,
+            durationPercent: node.durationPercent,
             children,
           };
         },
@@ -68,6 +70,8 @@ export class PlanSourceRepository implements PlanSourcePort {
           label: node.label,
           isControl: node.isControl,
           code: null,
+          startPercent: node.startPercent,
+          durationPercent: node.durationPercent,
           children,
         }),
       ),

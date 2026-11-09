@@ -35,6 +35,8 @@ const node = (label: string, children: SourceNode[] = [], isControl = false): So
   label,
   isControl,
   code: `code-${label}`,
+  startPercent: null,
+  durationPercent: null,
   children,
 });
 const task = (

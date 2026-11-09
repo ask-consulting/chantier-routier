@@ -69,6 +69,65 @@ describe('proposeSchedule', () => {
   });
 });
 
+describe('proposeSchedule, with percentages', () => {
+  const line = (
+    startPercent: number | null,
+    durationPercent: number | null,
+    children: Line[] = [],
+  ): Line => ({ startPercent, durationPercent, children });
+  interface Line {
+    startPercent: number | null;
+    durationPercent: number | null;
+    children: Line[];
+  }
+
+  it('follows them, and lets lines overlap', () => {
+    const [a, b] = [line(0, 60), line(50, 50)];
+
+    const dated = proposeSchedule([a!, b!], '2026-01-01', '2026-01-10');
+
+    expect(dated.get(a!)).toEqual({ plannedStart: '2026-01-01', plannedEnd: '2026-01-06' });
+    expect(dated.get(b!)).toEqual({ plannedStart: '2026-01-06', plannedEnd: '2026-01-10' });
+  });
+
+  it('counts each level in percent of its parent', () => {
+    const task = line(50, 50);
+    const phase = line(50, 50, [task]);
+
+    const dated = proposeSchedule([phase], '2026-01-01', '2026-01-20');
+
+    expect(dated.get(task)).toEqual({ plannedStart: '2026-01-16', plannedEnd: '2026-01-20' });
+  });
+
+  it('shares a line evenly among children without percentages', () => {
+    const [x, y] = [line(null, null), line(null, null)];
+    const phase = line(0, 100, [x!, y!]);
+
+    const dated = proposeSchedule([phase], '2026-01-01', '2026-01-10');
+
+    expect(dated.get(y!)).toEqual({ plannedStart: '2026-01-06', plannedEnd: '2026-01-10' });
+  });
+
+  it('falls back to following one another when one sibling has none', () => {
+    const [a, b] = [line(50, 50), line(null, null)];
+
+    const dated = proposeSchedule([a!, b!], '2026-01-01', '2026-01-10');
+
+    expect(dated.get(a!)?.plannedStart).toBe('2026-01-01');
+  });
+
+  it('never leaves the period, nor gives less than a day', () => {
+    const [a, b] = [line(99, 40), line(100, 0)];
+
+    const dated = proposeSchedule([a!, b!], '2026-01-01', '2026-01-04');
+
+    for (const { plannedStart, plannedEnd } of dated.values()) {
+      expect(plannedStart <= plannedEnd).toBe(true);
+      expect(plannedEnd <= '2026-01-04').toBe(true);
+    }
+  });
+});
+
 describe('rollUpSchedule', () => {
   it('gives a parent the span of its children, at every level', () => {
     const [top] = rollUpSchedule([

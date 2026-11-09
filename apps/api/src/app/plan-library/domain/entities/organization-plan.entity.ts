@@ -11,6 +11,8 @@ export interface PlanNode {
   level: PlanNodeLevel;
   label: string;
   isControl: boolean;
+  startPercent: number | null;
+  durationPercent: number | null;
   children: PlanNode[];
 }
 
@@ -39,6 +41,8 @@ export function buildPlanNodes(inputs: readonly IPlanNodeInput[], depth = 0): Pl
     level,
     label: input.label.trim(),
     isControl: input.isControl ?? false,
+    startPercent: input.startPercent ?? null,
+    durationPercent: input.durationPercent ?? null,
     children: buildPlanNodes(input.children ?? [], depth + 1),
   }));
 }

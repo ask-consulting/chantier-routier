@@ -6,11 +6,14 @@ import {
   IsBoolean,
   IsEnum,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import {
@@ -42,6 +45,30 @@ export class PlanSubtaskDto implements IPlanNodeInput {
   @IsBoolean()
   @IsOptional()
   isControl?: boolean;
+
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
+    description: 'When it starts, in percent of its parent',
+  })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  startPercent?: number | null;
+
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
+    description: 'How long it lasts, in percent of its parent',
+  })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  durationPercent?: number | null;
 }
 
 export class PlanTaskDto extends PlanSubtaskDto {

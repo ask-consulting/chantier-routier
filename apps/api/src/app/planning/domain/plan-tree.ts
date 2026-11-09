@@ -5,6 +5,8 @@ export interface SourceNode {
   label: string;
   isControl: boolean;
   code: string | null;
+  startPercent: number | null;
+  durationPercent: number | null;
   children: SourceNode[];
 }
 

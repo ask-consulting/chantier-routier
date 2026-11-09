@@ -19,32 +19,68 @@ export function planDays(from: string, to: string): number {
   return Math.round((toUtc(to) - toUtc(from)) / DAY_MS) + 1;
 }
 
-function leavesOf<T extends { children: T[] }>(nodes: readonly T[]): T[] {
-  return nodes.flatMap((node) => (node.children.length === 0 ? [node] : leavesOf(node.children)));
+function leafCount(node: { children: readonly unknown[] }): number {
+  const children = node.children as readonly { children: readonly unknown[] }[];
+  return children.length === 0 ? 1 : children.reduce((total, child) => total + leafCount(child), 0);
+}
+
+export interface PlannableNode<T> {
+  children: T[];
+  /** When it starts, in percent of its parent. */
+  startPercent?: number | null;
+  /** How long it lasts, in percent of its parent. */
+  durationPercent?: number | null;
 }
 
 /**
- * Proposes dates: the lowest lines one after the other, sharing the period
- * evenly. The library has no durations, so this is a starting point to adjust,
- * never a forecast. Lines share a day when there are more lines than days.
+ * Proposes dates for the lowest lines; a line with children takes theirs.
+ *
+ * Each group of siblings shares its parent's days. When all of them say when
+ * they start and how long they last, in percent of the parent, they follow
+ * that and may overlap. Otherwise they run one after the other, in proportion
+ * to the lines under each. Never outside the period, and never less than a day.
  */
-export function proposeSchedule<T extends { children: T[] }>(
+export function proposeSchedule<T extends PlannableNode<T>>(
   nodes: readonly T[],
   start: string,
   end: string,
 ): Map<T, { plannedStart: string; plannedEnd: string }> {
-  const leaves = leavesOf(nodes);
-  const days = Math.max(1, planDays(start, end));
   const first = toUtc(start);
   const dated = new Map<T, { plannedStart: string; plannedEnd: string }>();
-  leaves.forEach((leaf, index) => {
-    const from = Math.floor((index * days) / leaves.length);
-    const to = Math.max(from, Math.floor(((index + 1) * days) / leaves.length) - 1);
-    dated.set(leaf, {
+
+  const place = (node: T, from: number, days: number): void => {
+    if (node.children.length > 0) {
+      share(node.children, from, days);
+      return;
+    }
+    dated.set(node, {
       plannedStart: fromUtc(first + from * DAY_MS),
-      plannedEnd: fromUtc(first + to * DAY_MS),
+      plannedEnd: fromUtc(first + (from + days - 1) * DAY_MS),
     });
-  });
+  };
+
+  const share = (siblings: readonly T[], from: number, days: number): void => {
+    if (siblings.every((node) => node.startPercent != null && node.durationPercent != null)) {
+      for (const node of siblings) {
+        const offset = Math.min(Math.floor((days * (node.startPercent as number)) / 100), days - 1);
+        const length = Math.max(1, Math.round((days * (node.durationPercent as number)) / 100));
+        place(node, from + offset, Math.min(length, days - offset));
+      }
+      return;
+    }
+    const total = siblings.reduce((sum, node) => sum + leafCount(node), 0);
+    let done = 0;
+    for (const node of siblings) {
+      const offset = Math.floor((done * days) / total);
+      done += leafCount(node);
+      const next = Math.floor((done * days) / total);
+      place(node, from + Math.min(offset, days - 1), Math.max(1, next - offset));
+    }
+  };
+
+  if (nodes.length > 0) {
+    share(nodes, 0, Math.max(1, planDays(start, end)));
+  }
   return dated;
 }
 
