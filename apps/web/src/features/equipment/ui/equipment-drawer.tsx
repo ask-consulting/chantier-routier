@@ -296,7 +296,7 @@ function EquipmentForm({
           {form.preview && (
             <p className="rounded-control bg-surface-muted px-3 py-2 text-sm text-fg-muted">
               {t('dailyCostPreview', {
-                amount: formatAmount(form.preview.dailyCost, locale, 2),
+                amount: formatAmount(form.preview.dailyCost, locale, 3),
               })}
               {form.preview.depreciationEndDate &&
                 ` ${t('depreciationEndPreview', {

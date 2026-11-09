@@ -118,7 +118,7 @@ function EquipmentTable({ equipment, onEdit, onPlan }: RowsProps) {
                 {tStatus(machine.status)}
               </Badge>
             </TD>
-            {showsMoney && <TD numeric>{formatAmount(machine.dailyCost, locale, 2)}</TD>}
+            {showsMoney && <TD numeric>{formatAmount(machine.dailyCost, locale, 3)}</TD>}
             {showsMoney && (
               <TD className="text-fg-muted">{formatDate(machine.depreciationEndDate, locale)}</TD>
             )}
@@ -167,7 +167,7 @@ function EquipmentCards({ equipment, onEdit, onPlan }: RowsProps) {
 
               {showsMoney && (
                 <p className="text-xs text-fg-muted">
-                  {t('dailyCostValue', { amount: formatAmount(machine.dailyCost, locale, 2) })}
+                  {t('dailyCostValue', { amount: formatAmount(machine.dailyCost, locale, 3) })}
                 </p>
               )}
 

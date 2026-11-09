@@ -177,7 +177,7 @@ export function WorksiteDrawer({
             type="number"
             inputMode="decimal"
             min="0"
-            step="0.01"
+            step="0.001"
             hint={t('budgetHint')}
             value={form.values.totalBudget}
             onChange={(event) => form.setValue('totalBudget', event.target.value)}

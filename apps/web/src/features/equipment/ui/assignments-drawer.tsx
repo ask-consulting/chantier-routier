@@ -191,7 +191,7 @@ function AssignmentRow({
             </p>
             {assignment.cost !== undefined && (
               <p className="text-fg-muted">
-                {t('assignmentCost', { amount: formatAmount(assignment.cost, locale, 2) })}
+                {t('assignmentCost', { amount: formatAmount(assignment.cost, locale, 3) })}
               </p>
             )}
             {assignment.notes && <p className="text-xs text-fg-muted">{assignment.notes}</p>}
@@ -339,7 +339,7 @@ function AssignmentForm({
 
       {form.previewCost !== null && (
         <p className="rounded-control bg-surface-muted px-3 py-2 text-sm text-fg-muted">
-          {t('assignmentPreview', { amount: formatAmount(form.previewCost, locale, 2) })}
+          {t('assignmentPreview', { amount: formatAmount(form.previewCost, locale, 3) })}
         </p>
       )}
 

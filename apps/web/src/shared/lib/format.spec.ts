@@ -4,7 +4,7 @@ import { formatAmount, formatDate } from './format';
 /**
  * Two functions, and one decision each that a reader of the code would not guess.
  *
- * Both are about *absence*: a missing amount is an em dash and never `0 €`,
+ * Both are about *absence*: a missing amount is an em dash and never `0 DT`,
  * because zero is a real figure — a chantier with no budget entered and one
  * budgeted at nothing are not the same thing, and a table that shows them alike
  * hides the first.
@@ -25,11 +25,11 @@ describe('formatAmount', () => {
     expect(formatAmount(0, 'fr')).toMatch(/0/);
   });
 
-  it('formats in euros, without centimes', () => {
+  it('formats in dinars, without millimes', () => {
     const formatted = formatAmount(12500.4, 'fr');
 
     expect(formatted).toMatch(/12\s?500/);
-    expect(formatted).toMatch(/€/);
+    expect(formatted).toMatch(/TND/);
     expect(formatted).not.toMatch(/,4|\.4/);
   });
 

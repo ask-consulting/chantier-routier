@@ -26,7 +26,7 @@ export class UpdateWorkerDto implements IUpdateWorker {
   @ApiPropertyOptional({
     description: 'Applies to hours recorded from now on; past timesheets keep their own value.',
   })
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber({ maxDecimalPlaces: 3 })
   @IsPositive()
   @IsOptional()
   hourlyRate?: number;

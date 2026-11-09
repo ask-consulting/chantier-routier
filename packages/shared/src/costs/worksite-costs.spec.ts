@@ -66,7 +66,7 @@ describe('calculateActualCost', () => {
 
 describe('the equipment in a worksite’s cost', () => {
   it('sums the costs stored on the assignments — never recomputed', () => {
-    expect(calculateEquipmentCost([{ cost: 10_000 }, { cost: 900.005 }])).toBe(10_900.01);
+    expect(calculateEquipmentCost([{ cost: 10_000 }, { cost: 900.005 }])).toBe(10_900.005);
   });
 
   it('adds up with labour and expenses, against the budget', () => {

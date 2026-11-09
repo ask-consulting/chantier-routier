@@ -74,7 +74,7 @@ export class UpdateWorksiteDto implements IUpdateWorksite {
   status?: WorksiteStatus;
 
   @ApiPropertyOptional({ nullable: true, example: 250000 })
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber({ maxDecimalPlaces: 3 })
   @Min(0)
   @IsOptional()
   totalBudget?: number | null;

@@ -67,7 +67,7 @@ export function WorksiteEquipment({ worksiteId }: { worksiteId: string }) {
                   </Badge>
                   {assignment.cost !== undefined && (
                     <span className="text-xs tabular-nums text-fg-muted">
-                      {formatAmount(assignment.cost, locale, 2)}
+                      {formatAmount(assignment.cost, locale, 3)}
                     </span>
                   )}
                 </div>

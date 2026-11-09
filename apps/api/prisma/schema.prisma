@@ -62,7 +62,7 @@ enum UserRole {
 model Organization {
   id        String   @id(map: "pk_organizations") @default(uuid()) @db.Uuid
   name      String
-  currency  String   @default("EUR")
+  currency  String   @default("TND")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -214,7 +214,7 @@ model Worksite {
   plannedStartDate DateTime?      @map("planned_start_date")
   plannedEndDate   DateTime?      @map("planned_end_date")
   status           WorksiteStatus @default(upcoming)
-  totalBudget      Decimal?       @map("total_budget") @db.Decimal(14, 2)
+  totalBudget      Decimal?       @map("total_budget") @db.Decimal(14, 3)
   /// Set instead of a real delete: `timesheets` and `expenses` cascade from
   /// this row, and an actual `DELETE` would erase hours somebody was paid for.
   /// `null` means current; every query that lists or looks up a worksite
@@ -246,7 +246,7 @@ model Worker {
   organizationId String    @map("organization_id") @db.Uuid
   name           String
   qualification  String?
-  hourlyRate     Decimal   @map("hourly_rate") @db.Decimal(10, 2)
+  hourlyRate     Decimal   @map("hourly_rate") @db.Decimal(10, 3)
   /// Still on the payroll — a reversible, voluntary state the admin sets by
   /// hand (on leave, seasonal). Distinct from `deletedAt`: that one is not
   /// reversible from the interface and is not something the admin "sets".
@@ -292,7 +292,7 @@ model Expense {
   worksiteId String      @map("worksite_id") @db.Uuid
   type       ExpenseType @default(other)
   label      String
-  amount     Decimal     @db.Decimal(14, 2)
+  amount     Decimal     @db.Decimal(14, 3)
   date       DateTime    @db.Date
   supplier   String?
   createdAt  DateTime    @default(now()) @map("created_at")
