@@ -1,7 +1,7 @@
 export class GetPlanTemplatesQuery {}
 
 export class GetPlanTemplateQuery {
-  constructor(public readonly code: string) {}
+  constructor(public readonly id: string) {}
 }
 
 export class GetOrganizationPlansQuery {}

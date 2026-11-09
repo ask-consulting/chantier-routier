@@ -1,23 +1,23 @@
-import { PlanNodeLevel, WorksiteKind } from "../enums/plan.enums";
-import { Translations } from "./equipment.interface";
+import { PlanNodeLevel, WorksiteKind } from '../enums/plan.enums';
+import { Translations } from './equipment.interface';
 
 /** A reference plan as listed: enough to choose one without loading its tree. */
 export interface IPlanTemplateSummary {
-  code: string;
+  id: string;
   kind: WorksiteKind;
   labels: Translations;
   nodeCount: number;
 }
 
 export interface IPlanTemplateNode {
-  code: string;
+  id: string;
   level: PlanNodeLevel;
   isControl: boolean;
   labels: Translations;
   children: IPlanTemplateNode[];
 }
 
-export interface IPlanTemplate extends Omit<IPlanTemplateSummary, "nodeCount"> {
+export interface IPlanTemplate extends Omit<IPlanTemplateSummary, 'nodeCount'> {
   nodes: IPlanTemplateNode[];
 }
 
@@ -31,7 +31,7 @@ export interface IOrganizationPlanNode {
 
 export interface IOrganizationPlanSummary {
   id: string;
-  sourceTemplateCode: string | null;
+  sourceTemplateId: string | null;
   name: string;
   kind: WorksiteKind;
   createdAt: string;
@@ -51,7 +51,7 @@ export interface IPlanNodeInput {
 
 export interface ICreateOrganizationPlan {
   /** Copy this reference plan. Without it, the plan starts empty. */
-  sourceTemplateCode?: string;
+  sourceTemplateId?: string;
   name?: string;
   kind?: WorksiteKind;
   /** The language to copy the reference labels in. French by default. */

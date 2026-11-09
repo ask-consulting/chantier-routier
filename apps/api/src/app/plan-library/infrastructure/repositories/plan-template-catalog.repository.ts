@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 import {
   IPlanTemplate,
   IPlanTemplateNode,
@@ -6,16 +6,13 @@ import {
   PlanNodeLevel,
   Translations,
   WorksiteKind,
-} from "@chantia/shared";
-import {
-  TENANT_PRISMA,
-  TenantPrismaClient,
-} from "@shared/prisma/tenant-prisma.client";
-import { PlanTemplateCatalogPort } from "../../domain/ports/plan-template-catalog.port";
+} from '@chantia/shared';
+import { TENANT_PRISMA, TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
+import { PlanTemplateCatalogPort } from '../../domain/ports/plan-template-catalog.port';
 
 interface NodeRow {
-  code: string;
-  parentCode: string | null;
+  id: string;
+  parentId: string | null;
   level: string;
   isControl: boolean;
   translations: readonly { locale: string; label: string }[];
@@ -23,27 +20,22 @@ interface NodeRow {
 
 const TRANSLATIONS = { select: { locale: true, label: true } } as const;
 
-function labelsOf(
-  rows: readonly { locale: string; label: string }[],
-): Translations {
+function labelsOf(rows: readonly { locale: string; label: string }[]): Translations {
   return Object.fromEntries(rows.map((row) => [row.locale, row.label]));
 }
 
 function treeOf(rows: readonly NodeRow[]): IPlanTemplateNode[] {
   const byParent = new Map<string | null, NodeRow[]>();
   for (const row of rows) {
-    byParent.set(row.parentCode, [
-      ...(byParent.get(row.parentCode) ?? []),
-      row,
-    ]);
+    byParent.set(row.parentId, [...(byParent.get(row.parentId) ?? []), row]);
   }
   const childrenOf = (parent: string | null): IPlanTemplateNode[] =>
     (byParent.get(parent) ?? []).map((row) => ({
-      code: row.code,
+      id: row.id,
       level: row.level as PlanNodeLevel,
       isControl: row.isControl,
       labels: labelsOf(row.translations),
-      children: childrenOf(row.code),
+      children: childrenOf(row.id),
     }));
   return childrenOf(null);
 }
@@ -54,33 +46,31 @@ function treeOf(rows: readonly NodeRow[]): IPlanTemplateNode[] {
  */
 @Injectable()
 export class PlanTemplateCatalogRepository implements PlanTemplateCatalogPort {
-  constructor(
-    @Inject(TENANT_PRISMA) private readonly prisma: TenantPrismaClient,
-  ) {}
+  constructor(@Inject(TENANT_PRISMA) private readonly prisma: TenantPrismaClient) {}
 
   async list(): Promise<IPlanTemplateSummary[]> {
     const rows = await this.prisma.planTemplate.findMany({
-      orderBy: { sortOrder: "asc" },
+      orderBy: { sortOrder: 'asc' },
       include: {
         translations: TRANSLATIONS,
         _count: { select: { nodes: true } },
       },
     });
     return rows.map((row) => ({
-      code: row.code,
+      id: row.id,
       kind: row.kind as WorksiteKind,
       labels: labelsOf(row.translations),
       nodeCount: row._count.nodes,
     }));
   }
 
-  async findByCode(code: string): Promise<IPlanTemplate | null> {
+  async findById(id: string): Promise<IPlanTemplate | null> {
     const row = await this.prisma.planTemplate.findUnique({
-      where: { code },
+      where: { id },
       include: {
         translations: TRANSLATIONS,
         nodes: {
-          orderBy: { sortOrder: "asc" },
+          orderBy: { sortOrder: 'asc' },
           include: { translations: TRANSLATIONS },
         },
       },
@@ -89,7 +79,7 @@ export class PlanTemplateCatalogRepository implements PlanTemplateCatalogPort {
       return null;
     }
     return {
-      code: row.code,
+      id: row.id,
       kind: row.kind as WorksiteKind,
       labels: labelsOf(row.translations),
       nodes: treeOf(row.nodes),

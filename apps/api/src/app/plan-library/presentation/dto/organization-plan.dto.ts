@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -9,15 +9,16 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   ValidateNested,
-} from "class-validator";
+} from 'class-validator';
 import {
   ICreateOrganizationPlan,
   IPlanNodeInput,
   IUpdateOrganizationPlan,
   WorksiteKind,
-} from "@chantia/shared";
+} from '@chantia/shared';
 
 const MAX_LABEL = 200;
 const MAX_NAME = 120;
@@ -28,14 +29,14 @@ const MAX_CHILDREN = 200;
  * server accepts is then fixed by these types, before any of it is walked.
  */
 export class PlanSubtaskDto implements IPlanNodeInput {
-  @ApiProperty({ example: "Contrôle du ferraillage avant coulage" })
+  @ApiProperty({ example: 'Contrôle du ferraillage avant coulage' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(MAX_LABEL)
   label!: string;
 
   @ApiPropertyOptional({
-    description: "A check to pass before the work continues",
+    description: 'A check to pass before the work continues',
   })
   @IsBoolean()
   @IsOptional()
@@ -64,16 +65,15 @@ export class PlanPhaseDto extends PlanSubtaskDto {
 
 export class CreateOrganizationPlanDto implements ICreateOrganizationPlan {
   @ApiPropertyOptional({
-    example: "villa",
-    description: "Reference plan to copy",
+    format: 'uuid',
+    description: 'Reference plan to copy',
   })
-  @IsString()
-  @MaxLength(60)
+  @IsUUID()
   @IsOptional()
-  sourceTemplateCode?: string;
+  sourceTemplateId?: string;
 
   @ApiPropertyOptional({
-    description: "Required when no reference plan is copied",
+    description: 'Required when no reference plan is copied',
   })
   @IsString()
   @IsNotEmpty()
@@ -87,10 +87,10 @@ export class CreateOrganizationPlanDto implements ICreateOrganizationPlan {
   kind?: WorksiteKind;
 
   @ApiPropertyOptional({
-    enum: ["fr", "ar"],
-    description: "Language of the copied labels",
+    enum: ['fr', 'ar'],
+    description: 'Language of the copied labels',
   })
-  @IsIn(["fr", "ar"])
+  @IsIn(['fr', 'ar'])
   @IsOptional()
   locale?: string;
 }
@@ -110,7 +110,7 @@ export class UpdateOrganizationPlanDto implements IUpdateOrganizationPlan {
 
   @ApiPropertyOptional({
     type: [PlanPhaseDto],
-    description: "The whole tree: what is sent replaces what was there",
+    description: 'The whole tree: what is sent replaces what was there',
   })
   @IsArray()
   @ArrayMaxSize(MAX_CHILDREN)

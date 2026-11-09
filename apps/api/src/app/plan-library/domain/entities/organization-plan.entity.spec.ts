@@ -1,53 +1,53 @@
-import { describe, expect, it } from "vitest";
-import { PlanNodeLevel, WorksiteKind } from "@chantia/shared";
+import { describe, expect, it } from 'vitest';
+import { PlanNodeLevel, WorksiteKind } from '@chantia/shared';
 import {
   buildPlanNodes,
   countPlanNodes,
   MAX_PLAN_NODES,
   OrganizationPlan,
   PlanNode,
-} from "./organization-plan.entity";
+} from './organization-plan.entity';
 
 const aPlan = (nodes: PlanNode[] = []): OrganizationPlan =>
   OrganizationPlan.create({
-    organizationId: "org-1",
-    sourceTemplateCode: null,
-    name: " Villa maison ",
+    organizationId: 'org-1',
+    sourceTemplateId: null,
+    name: ' Villa maison ',
     kind: WorksiteKind.BUILDING,
     nodes,
   });
 
-describe("buildPlanNodes", () => {
-  it("takes each level from the depth, and trims the labels", () => {
+describe('buildPlanNodes', () => {
+  it('takes each level from the depth, and trims the labels', () => {
     const [phase] = buildPlanNodes([
       {
-        label: " Fondations ",
+        label: ' Fondations ',
         children: [
           {
-            label: "Semelles",
-            children: [{ label: "Coulage", isControl: true }],
+            label: 'Semelles',
+            children: [{ label: 'Coulage', isControl: true }],
           },
         ],
       },
     ]);
 
     expect(phase.level).toBe(PlanNodeLevel.PHASE);
-    expect(phase.label).toBe("Fondations");
+    expect(phase.label).toBe('Fondations');
     expect(phase.isControl).toBe(false);
     expect(phase.children[0].level).toBe(PlanNodeLevel.TASK);
     expect(phase.children[0].children[0].level).toBe(PlanNodeLevel.SUBTASK);
     expect(phase.children[0].children[0].isControl).toBe(true);
   });
 
-  it("refuses a fourth level", () => {
+  it('refuses a fourth level', () => {
     expect(() =>
       buildPlanNodes([
         {
-          label: "a",
+          label: 'a',
           children: [
             {
-              label: "b",
-              children: [{ label: "c", children: [{ label: "d" }] }],
+              label: 'b',
+              children: [{ label: 'c', children: [{ label: 'd' }] }],
             },
           ],
         },
@@ -56,49 +56,45 @@ describe("buildPlanNodes", () => {
   });
 });
 
-describe("OrganizationPlan", () => {
-  it("trims its name and refuses an empty one", () => {
-    expect(aPlan().name).toBe("Villa maison");
+describe('OrganizationPlan', () => {
+  it('trims its name and refuses an empty one', () => {
+    expect(aPlan().name).toBe('Villa maison');
     expect(() =>
       OrganizationPlan.create({
-        organizationId: "org-1",
-        sourceTemplateCode: null,
-        name: "  ",
+        organizationId: 'org-1',
+        sourceTemplateId: null,
+        name: '  ',
         kind: WorksiteKind.OTHER,
         nodes: [],
       }),
     ).toThrow(/name/);
   });
 
-  it("refuses more lines than a plan can hold", () => {
+  it('refuses more lines than a plan can hold', () => {
     const line: PlanNode = {
-      id: "n",
+      id: 'n',
       level: PlanNodeLevel.PHASE,
-      label: "x",
+      label: 'x',
       isControl: false,
       children: [],
     };
-    expect(() =>
-      aPlan(Array.from({ length: MAX_PLAN_NODES + 1 }, () => line)),
-    ).toThrow(/more than/);
+    expect(() => aPlan(Array.from({ length: MAX_PLAN_NODES + 1 }, () => line))).toThrow(
+      /more than/,
+    );
   });
 
-  it("counts the lines of every level", () => {
+  it('counts the lines of every level', () => {
     expect(
-      countPlanNodes(
-        buildPlanNodes([
-          { label: "a", children: [{ label: "b" }, { label: "c" }] },
-        ]),
-      ),
+      countPlanNodes(buildPlanNodes([{ label: 'a', children: [{ label: 'b' }, { label: 'c' }] }])),
     ).toBe(3);
   });
 
-  it("keeps what a revision does not name, and its identity", () => {
-    const plan = aPlan(buildPlanNodes([{ label: "a" }]));
-    const revised = plan.revise({ name: "Autre" });
+  it('keeps what a revision does not name, and its identity', () => {
+    const plan = aPlan(buildPlanNodes([{ label: 'a' }]));
+    const revised = plan.revise({ name: 'Autre' });
 
     expect(revised.id).toBe(plan.id);
-    expect(revised.name).toBe("Autre");
+    expect(revised.name).toBe('Autre');
     expect(revised.kind).toBe(WorksiteKind.BUILDING);
     expect(revised.nodes).toEqual(plan.nodes);
     expect(revised.createdAt).toEqual(plan.createdAt);

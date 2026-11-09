@@ -11,7 +11,7 @@ page blanche.
 |---|---|---|
 | Tables | `plan_templates`, `plan_template_nodes` et leurs traductions | `organization_plans`, `organization_plan_nodes` |
 | Visible par | Toutes les entreprises | Cette entreprise seulement |
-| Modifié par | Une migration, jamais par l'API | Admin et conducteur de travaux (`plan:manage`) |
+| Modifié par | Une migration pour l'instant, l'application d'administration ensuite ; jamais par l'API des entreprises | Admin et conducteur de travaux (`plan:manage`) |
 | Isolation | Pas d'`organizationId` | `organizationId` sur les deux tables, filtre de [`09-multi-tenant.md`](09-multi-tenant.md) |
 
 Une entreprise **copie** un plan de référence, puis modifie sa copie. Une copie et non un lien :
@@ -20,7 +20,7 @@ sa version ne bouge pas si la référence évolue, et la référence reste la m�
 | Route | Rôle |
 |---|---|
 | `GET /plan-templates` | Liste des plans de référence |
-| `GET /plan-templates/:code` | Un plan de référence complet |
+| `GET /plan-templates/:id` | Un plan de référence complet |
 | `GET /organization-plans` | Les plans de l'entreprise |
 | `GET /organization-plans/:id` | Un plan complet |
 | `POST /organization-plans` | Copier une référence, ou créer un plan vide |
@@ -40,7 +40,8 @@ Une ligne marquée **[contrôle]** est un point à valider avant de continuer. E
   les plannings.
 - Libellés en français seulement. Un libellé sans traduction s'affiche en français ; l'arabe
   s'ajoutera par des lignes de traduction, sans changer le schéma.
-- Corriger la référence demande une nouvelle migration.
+- Corriger la référence demande une nouvelle migration, tant que l'application d'administration
+  n'existe pas.
 
 ## 3. Sources
 
@@ -55,20 +56,20 @@ Elles ont servi à établir l'ordre des travaux, le texte est rédigé pour Chan
 
 ## 4. Les modèles
 
-| Type | Modèle | Code | Lignes | Contrôles |
-|---|---|---|---|---|
-| Bâtiment | Maison individuelle ou villa | `villa` | 106 | 11 |
-| Bâtiment | Immeuble collectif | `immeuble` | 93 | 14 |
-| Bâtiment | Rénovation ou réhabilitation | `renovation` | 61 | 9 |
-| Bâtiment | Hangar ou bâtiment industriel | `hangar` | 65 | 10 |
-| Routes | Route neuve | `route-neuve` | 75 | 13 |
-| Routes | Renforcement ou réhabilitation de chaussée | `renforcement-chaussee` | 53 | 9 |
-| Routes | Piste rurale | `piste-rurale` | 45 | 7 |
-| Réseaux | Réseau d'eau potable | `eau-potable` | 65 | 9 |
-| Réseaux | Réseau d'assainissement | `assainissement` | 60 | 10 |
-| Réseaux | Réseaux électriques et télécom enterrés | `reseaux-secs` | 52 | 9 |
-| Terrassement et VRD | Terrassement général et plateforme | `terrassement` | 53 | 10 |
-| Terrassement et VRD | Lotissement et VRD | `lotissement-vrd` | 63 | 10 |
+| Type | Modèle | Lignes | Contrôles |
+|---|---|---|---|
+| Bâtiment | Maison individuelle ou villa | 106 | 11 |
+| Bâtiment | Immeuble collectif | 93 | 14 |
+| Bâtiment | Rénovation ou réhabilitation | 61 | 9 |
+| Bâtiment | Hangar ou bâtiment industriel | 65 | 10 |
+| Routes | Route neuve | 75 | 13 |
+| Routes | Renforcement ou réhabilitation de chaussée | 53 | 9 |
+| Routes | Piste rurale | 45 | 7 |
+| Réseaux | Réseau d'eau potable | 65 | 9 |
+| Réseaux | Réseau d'assainissement | 60 | 10 |
+| Réseaux | Réseaux électriques et télécom enterrés | 52 | 9 |
+| Terrassement et VRD | Terrassement général et plateforme | 53 | 10 |
+| Terrassement et VRD | Lotissement et VRD | 63 | 10 |
 
 
 ### Maison individuelle ou villa

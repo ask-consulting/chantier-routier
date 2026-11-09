@@ -1,36 +1,33 @@
-import { randomUUID } from "node:crypto";
-import { BadRequestException, Inject } from "@nestjs/common";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { IPlanTemplateNode, Translations, WorksiteKind } from "@chantia/shared";
-import { ResourceNotFoundException } from "@shared/domain/exceptions/not-found.exception";
+import { randomUUID } from 'node:crypto';
+import { BadRequestException, Inject } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { IPlanTemplateNode, Translations, WorksiteKind } from '@chantia/shared';
+import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import {
   buildPlanNodes,
   OrganizationPlan,
   PlanNode,
-} from "../../domain/entities/organization-plan.entity";
+} from '../../domain/entities/organization-plan.entity';
 import {
   ORGANIZATION_PLAN_REPOSITORY_PORT,
   OrganizationPlanRepositoryPort,
-} from "../../domain/ports/organization-plan-repository.port";
+} from '../../domain/ports/organization-plan-repository.port';
 import {
   PLAN_TEMPLATE_CATALOG_PORT,
   PlanTemplateCatalogPort,
-} from "../../domain/ports/plan-template-catalog.port";
+} from '../../domain/ports/plan-template-catalog.port';
 import {
   CreateOrganizationPlanCommand,
   DeleteOrganizationPlanCommand,
   UpdateOrganizationPlanCommand,
-} from "./plan-library.commands";
+} from './plan-library.commands';
 
-const DEFAULT_LOCALE = "fr";
+const DEFAULT_LOCALE = 'fr';
 
 const labelIn = (labels: Translations, locale: string): string =>
-  labels[locale] ?? labels[DEFAULT_LOCALE] ?? "";
+  labels[locale] ?? labels[DEFAULT_LOCALE] ?? '';
 
-function copyNodes(
-  nodes: readonly IPlanTemplateNode[],
-  locale: string,
-): PlanNode[] {
+function copyNodes(nodes: readonly IPlanTemplateNode[], locale: string): PlanNode[] {
   return nodes.map((node) => ({
     id: randomUUID(),
     level: node.level,
@@ -58,24 +55,20 @@ export class CreateOrganizationPlanHandler implements ICommandHandler<CreateOrga
     data,
   }: CreateOrganizationPlanCommand): Promise<OrganizationPlan> {
     const locale = data.locale ?? DEFAULT_LOCALE;
-    const template = data.sourceTemplateCode
-      ? await this.catalog.findByCode(data.sourceTemplateCode)
+    const template = data.sourceTemplateId
+      ? await this.catalog.findById(data.sourceTemplateId)
       : null;
-    if (data.sourceTemplateCode && !template) {
-      throw new ResourceNotFoundException(
-        "PlanTemplate",
-        data.sourceTemplateCode,
-      );
+    if (data.sourceTemplateId && !template) {
+      throw new ResourceNotFoundException('PlanTemplate', data.sourceTemplateId);
     }
 
-    const name =
-      data.name ?? (template ? labelIn(template.labels, locale) : "");
-    if (name.trim() === "") {
-      throw new BadRequestException("A plan needs a name.");
+    const name = data.name ?? (template ? labelIn(template.labels, locale) : '');
+    if (name.trim() === '') {
+      throw new BadRequestException('A plan needs a name.');
     }
     const plan = OrganizationPlan.create({
       organizationId,
-      sourceTemplateCode: template?.code ?? null,
+      sourceTemplateId: template?.id ?? null,
       name,
       kind: data.kind ?? template?.kind ?? WorksiteKind.OTHER,
       nodes: template ? copyNodes(template.nodes, locale) : [],
@@ -92,13 +85,10 @@ export class UpdateOrganizationPlanHandler implements ICommandHandler<UpdateOrga
     private readonly repository: OrganizationPlanRepositoryPort,
   ) {}
 
-  async execute({
-    id,
-    data,
-  }: UpdateOrganizationPlanCommand): Promise<OrganizationPlan> {
+  async execute({ id, data }: UpdateOrganizationPlanCommand): Promise<OrganizationPlan> {
     const plan = await this.repository.findById(id);
     if (!plan) {
-      throw new ResourceNotFoundException("OrganizationPlan", id);
+      throw new ResourceNotFoundException('OrganizationPlan', id);
     }
     const revised = plan.revise({
       name: data.name,
@@ -119,7 +109,7 @@ export class DeleteOrganizationPlanHandler implements ICommandHandler<DeleteOrga
 
   async execute({ id }: DeleteOrganizationPlanCommand): Promise<void> {
     if (!(await this.repository.delete(id))) {
-      throw new ResourceNotFoundException("OrganizationPlan", id);
+      throw new ResourceNotFoundException('OrganizationPlan', id);
     }
   }
 }

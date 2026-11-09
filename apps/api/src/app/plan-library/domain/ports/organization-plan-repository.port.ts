@@ -1,8 +1,6 @@
-import { OrganizationPlan } from "../entities/organization-plan.entity";
+import { OrganizationPlan } from '../entities/organization-plan.entity';
 
-export const ORGANIZATION_PLAN_REPOSITORY_PORT = Symbol(
-  "ORGANIZATION_PLAN_REPOSITORY_PORT",
-);
+export const ORGANIZATION_PLAN_REPOSITORY_PORT = Symbol('ORGANIZATION_PLAN_REPOSITORY_PORT');
 
 /** No tenant in any signature: the Prisma layer scopes these to the caller. */
 export interface OrganizationPlanRepositoryPort {

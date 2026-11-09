@@ -677,11 +677,11 @@ enum PlanNodeLevel {
 }
 
 /// A reference project plan. Global — no `organizationId`, so the tenant filter
-/// leaves it alone — and written only by migrations: every organization reads
-/// the same list, and none can change it. To adapt one, an organization copies
-/// it into `OrganizationPlan`.
+/// leaves it alone. Every organization reads the same list and none can change
+/// it: to adapt one, an organization copies it into `OrganizationPlan`. Written
+/// by migrations for now, and by the administration app once it exists.
 model PlanTemplate {
-  code      String       @id(map: "pk_plan_templates")
+  id        String       @id(map: "pk_plan_templates") @default(uuid()) @db.Uuid
   kind      WorksiteKind
   sortOrder Int          @map("sort_order")
 
@@ -695,13 +695,13 @@ model PlanTemplate {
 
 /// A template's label in one language; a missing language falls back to French.
 model PlanTemplateTranslation {
-  templateCode String @map("template_code")
-  locale       String
-  label        String
+  templateId String @map("template_id") @db.Uuid
+  locale     String
+  label      String
 
-  template PlanTemplate @relation(fields: [templateCode], references: [code], onDelete: Cascade, map: "fk_plan_template_translations_plan_templates")
+  template PlanTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade, map: "fk_plan_template_translations_plan_templates")
 
-  @@id([templateCode, locale], map: "pk_plan_template_translations")
+  @@id([templateId, locale], map: "pk_plan_template_translations")
   @@map("plan_template_translations")
   @@schema("public")
 }
@@ -709,33 +709,33 @@ model PlanTemplateTranslation {
 /// One line of a reference plan: a phase, a task or a subtask. `isControl`
 /// marks a check that must be passed before the work continues.
 model PlanTemplateNode {
-  code         String        @id(map: "pk_plan_template_nodes")
-  templateCode String        @map("template_code")
-  parentCode   String?       @map("parent_code")
-  level        PlanNodeLevel
-  sortOrder    Int           @map("sort_order")
-  isControl    Boolean       @default(false) @map("is_control")
+  id         String        @id(map: "pk_plan_template_nodes") @default(uuid()) @db.Uuid
+  templateId String        @map("template_id") @db.Uuid
+  parentId   String?       @map("parent_id") @db.Uuid
+  level      PlanNodeLevel
+  sortOrder  Int           @map("sort_order")
+  isControl  Boolean       @default(false) @map("is_control")
 
-  template     PlanTemplate                  @relation(fields: [templateCode], references: [code], onDelete: Cascade, map: "fk_plan_template_nodes_plan_templates")
-  parent       PlanTemplateNode?             @relation("PlanTemplateTree", fields: [parentCode], references: [code], onDelete: Cascade, map: "fk_plan_template_nodes_parent")
+  template     PlanTemplate                  @relation(fields: [templateId], references: [id], onDelete: Cascade, map: "fk_plan_template_nodes_plan_templates")
+  parent       PlanTemplateNode?             @relation("PlanTemplateTree", fields: [parentId], references: [id], onDelete: Cascade, map: "fk_plan_template_nodes_parent")
   children     PlanTemplateNode[]            @relation("PlanTemplateTree")
   translations PlanTemplateNodeTranslation[]
 
-  @@index([templateCode], map: "ix_plan_template_nodes_template_code")
-  @@index([parentCode], map: "ix_plan_template_nodes_parent_code")
+  @@index([templateId], map: "ix_plan_template_nodes_template_id")
+  @@index([parentId], map: "ix_plan_template_nodes_parent_id")
   @@map("plan_template_nodes")
   @@schema("public")
 }
 
 /// A node's label in one language — see `PlanTemplateTranslation`.
 model PlanTemplateNodeTranslation {
-  nodeCode String @map("node_code")
-  locale   String
-  label    String
+  nodeId String @map("node_id") @db.Uuid
+  locale String
+  label  String
 
-  node PlanTemplateNode @relation(fields: [nodeCode], references: [code], onDelete: Cascade, map: "fk_plan_template_node_translations_plan_template_nodes")
+  node PlanTemplateNode @relation(fields: [nodeId], references: [id], onDelete: Cascade, map: "fk_plan_template_node_translations_plan_template_nodes")
 
-  @@id([nodeCode, locale], map: "pk_plan_template_node_translations")
+  @@id([nodeId, locale], map: "pk_plan_template_node_translations")
   @@map("plan_template_node_translations")
   @@schema("public")
 }
@@ -745,15 +745,15 @@ model PlanTemplateNodeTranslation {
 /// it never touches the reference, and a later change to the reference never
 /// rewrites it.
 model OrganizationPlan {
-  id                 String       @id(map: "pk_organization_plans") @default(uuid()) @db.Uuid
-  organizationId     String       @map("organization_id") @db.Uuid
-  sourceTemplateCode String?      @map("source_template_code")
-  name               String
-  kind               WorksiteKind
-  createdAt          DateTime     @default(now()) @map("created_at")
-  updatedAt          DateTime     @updatedAt @map("updated_at")
+  id               String       @id(map: "pk_organization_plans") @default(uuid()) @db.Uuid
+  organizationId   String       @map("organization_id") @db.Uuid
+  sourceTemplateId String?      @map("source_template_id") @db.Uuid
+  name             String
+  kind             WorksiteKind
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
 
-  sourceTemplate PlanTemplate?          @relation(fields: [sourceTemplateCode], references: [code], onDelete: SetNull, map: "fk_organization_plans_plan_templates")
+  sourceTemplate PlanTemplate?          @relation(fields: [sourceTemplateId], references: [id], onDelete: SetNull, map: "fk_organization_plans_plan_templates")
   nodes          OrganizationPlanNode[]
 
   @@index([organizationId], map: "ix_organization_plans_organization_id")

@@ -1,15 +1,9 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { PlanNodeLevel, WorksiteKind } from "@chantia/shared";
-import { Prisma } from "@prisma/client";
-import {
-  TENANT_PRISMA,
-  TenantPrismaClient,
-} from "@shared/prisma/tenant-prisma.client";
-import {
-  OrganizationPlan,
-  PlanNode,
-} from "../../domain/entities/organization-plan.entity";
-import { OrganizationPlanRepositoryPort } from "../../domain/ports/organization-plan-repository.port";
+import { Inject, Injectable } from '@nestjs/common';
+import { PlanNodeLevel, WorksiteKind } from '@chantia/shared';
+import { Prisma } from '@prisma/client';
+import { TENANT_PRISMA, TenantPrismaClient } from '@shared/prisma/tenant-prisma.client';
+import { OrganizationPlan, PlanNode } from '../../domain/entities/organization-plan.entity';
+import { OrganizationPlanRepositoryPort } from '../../domain/ports/organization-plan-repository.port';
 
 /** Far above what a firm keeps; only here so that a list stays bounded. */
 const MAX_LISTED = 500;
@@ -38,9 +32,7 @@ function treeOf(rows: readonly NodeRow[]): PlanNode[] {
   return childrenOf(null);
 }
 
-function rowsOf(
-  plan: OrganizationPlan,
-): Prisma.OrganizationPlanNodeCreateManyInput[] {
+function rowsOf(plan: OrganizationPlan): Prisma.OrganizationPlanNodeCreateManyInput[] {
   const rows: Prisma.OrganizationPlanNodeCreateManyInput[] = [];
   const visit = (nodes: readonly PlanNode[], parentId: string | null): void => {
     nodes.forEach((node, index) => {
@@ -65,7 +57,7 @@ function toDomain(
   row: {
     id: string;
     organizationId: string;
-    sourceTemplateCode: string | null;
+    sourceTemplateId: string | null;
     name: string;
     kind: string;
     createdAt: Date;
@@ -83,13 +75,11 @@ function toDomain(
 /** The tenant filter sits on both tables: nothing here names an organization. */
 @Injectable()
 export class OrganizationPlanRepository implements OrganizationPlanRepositoryPort {
-  constructor(
-    @Inject(TENANT_PRISMA) private readonly prisma: TenantPrismaClient,
-  ) {}
+  constructor(@Inject(TENANT_PRISMA) private readonly prisma: TenantPrismaClient) {}
 
   async findAll(): Promise<OrganizationPlan[]> {
     const rows = await this.prisma.organizationPlan.findMany({
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
       take: MAX_LISTED,
     });
     return rows.map((row) => toDomain(row, []));
@@ -98,7 +88,7 @@ export class OrganizationPlanRepository implements OrganizationPlanRepositoryPor
   async findById(id: string): Promise<OrganizationPlan | null> {
     const row = await this.prisma.organizationPlan.findUnique({
       where: { id },
-      include: { nodes: { orderBy: { sortOrder: "asc" } } },
+      include: { nodes: { orderBy: { sortOrder: 'asc' } } },
     });
     return row ? toDomain(row, treeOf(row.nodes)) : null;
   }
@@ -130,13 +120,11 @@ export class OrganizationPlanRepository implements OrganizationPlanRepositoryPor
     return count > 0;
   }
 
-  private planRow(
-    plan: OrganizationPlan,
-  ): Prisma.OrganizationPlanUncheckedCreateInput {
+  private planRow(plan: OrganizationPlan): Prisma.OrganizationPlanUncheckedCreateInput {
     return {
       id: plan.id,
       organizationId: plan.organizationId,
-      sourceTemplateCode: plan.sourceTemplateCode,
+      sourceTemplateId: plan.sourceTemplateId,
       name: plan.name,
       kind: plan.kind,
     };

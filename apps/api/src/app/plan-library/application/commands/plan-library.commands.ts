@@ -1,7 +1,4 @@
-import {
-  ICreateOrganizationPlan,
-  IUpdateOrganizationPlan,
-} from "@chantia/shared";
+import { ICreateOrganizationPlan, IUpdateOrganizationPlan } from '@chantia/shared';
 
 export class CreateOrganizationPlanCommand {
   constructor(
