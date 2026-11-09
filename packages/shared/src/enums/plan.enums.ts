@@ -13,3 +13,6 @@ export enum PlanNodeLevel {
   TASK = 'task',
   SUBTASK = 'subtask',
 }
+
+/** French, Arabic, and Tunisian in Arabic (`aeb`) and in Latin letters. */
+export const PLAN_LABEL_LOCALES = ['fr', 'ar', 'aeb', 'aeb-Latn'];

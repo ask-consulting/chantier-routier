@@ -17,11 +17,10 @@ import {
   ICreateOrganizationPlan,
   IPlanNodeInput,
   IUpdateOrganizationPlan,
+  PLAN_LABEL_LOCALES,
   WorksiteKind,
 } from '@chantia/shared';
 
-/** French, Arabic, and Tunisian in Arabic (`aeb`) and in Latin letters. */
-const PLAN_LABEL_LOCALES = ['fr', 'ar', 'aeb', 'aeb-Latn'];
 const MAX_LABEL = 200;
 const MAX_NAME = 120;
 const MAX_CHILDREN = 200;

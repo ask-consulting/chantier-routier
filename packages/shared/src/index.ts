@@ -26,9 +26,13 @@ export * from './interfaces/invitation.interface';
 export * from './interfaces/auth.interface';
 export * from './interfaces/access-request.interface';
 export * from './interfaces/plan.interface';
+export * from './interfaces/worksite-plan.interface';
 
 // Money: whole numbers of the smallest unit, formatted per currency
 export * from './money/money';
+
+// Planning dates: proposed from a period, rolled up the tree
+export * from './planning/schedule';
 
 // Pure business computations (reusable on server & offline on mobile)
 export * from './costs/worksite-costs';

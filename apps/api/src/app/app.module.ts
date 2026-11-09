@@ -11,6 +11,7 @@ import { TenantContextMiddleware, TenantModule } from '@shared/tenant';
 import { ThrottlingModule } from '@shared/throttling';
 import { AccessRequestModule } from './access-request/access-request.module';
 import { PlanLibraryModule } from './plan-library/plan-library.module';
+import { PlanningModule } from './planning/planning.module';
 import { ClientModule } from './client/client.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { HealthModule } from './health/health.module';
@@ -45,6 +46,7 @@ const ENV = process.env.NODE_ENV;
     WorksiteModule,
     AccessRequestModule,
     PlanLibraryModule,
+    PlanningModule,
   ],
 })
 export class AppModule implements NestModule {

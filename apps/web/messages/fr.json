@@ -485,6 +485,34 @@
     "notFoundTitle": "Chantier introuvable",
     "notFoundDescription": "Ce chantier n’existe pas, ou plus.",
     "loadError": "Impossible de charger le chantier : {reason}",
-    "unknownError": "erreur inconnue"
+    "unknownError": "erreur inconnue",
+    "planning": "Planning"
+  },
+  "planning": {
+    "planLabel": "Modèle de planning",
+    "choosePlan": "Choisir un modèle…",
+    "ownPlan": "Mon plan : {name}",
+    "startHint": "Choisissez un modèle : les phases et tâches sont copiées dans ce chantier, avec des dates proposées sur sa période.",
+    "start": "Créer le planning",
+    "empty": "Le planning de ce chantier n'est pas encore créé.",
+    "loadError": "Impossible de charger le planning.",
+    "proposedHint": "Dates proposées à partir de la période du chantier : ajustez-les en cliquant sur une ligne.",
+    "noDates": "Aucune ligne n'est datée pour l'instant.",
+    "toggle": "Plier ou déplier {label}",
+    "control": "Point de contrôle",
+    "editDates": "Modifier les dates de {label}",
+    "startDate": "Début prévu",
+    "endDate": "Fin prévue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "restart": "Recommencer le planning",
+    "restartTitle": "Recommencer le planning ?",
+    "restartDescription": "Toutes les lignes de ce planning seront supprimées. Vous pourrez repartir d'un autre modèle.",
+    "restartConfirm": "Supprimer le planning",
+    "errorPeriod": "Renseignez d'abord les dates de début et de fin prévues du chantier.",
+    "errorExists": "Ce chantier a déjà un planning.",
+    "errorDates": "La fin ne peut pas précéder le début.",
+    "errorUnknown": "L'opération a échoué. Réessayez."
   }
 }

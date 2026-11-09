@@ -229,6 +229,7 @@ model Worksite {
   timesheets           Timesheet[]
   expenses             Expense[]
   equipmentAssignments EquipmentAssignment[]
+  worksiteTasks        WorksiteTask[]
 
   /// Partial in the database — `WHERE deleted_at IS NULL`, see migration
   /// `20260925120000_worksite_soft_delete` — so a deleted worksite frees its
@@ -790,5 +791,35 @@ model OrganizationPlanNode {
   @@index([planId], map: "ix_organization_plan_nodes_plan_id")
   @@index([parentId], map: "ix_organization_plan_nodes_parent_id")
   @@map("organization_plan_nodes")
+  @@schema("public")
+}
+
+/// One line of a worksite's planning. Starts as a copy of a plan of the library
+/// and then belongs to the worksite: the library can change without touching it.
+/// Only the lowest lines hold dates; a phase runs from its first task to its last.
+model WorksiteTask {
+  id             String        @id(map: "pk_worksite_tasks") @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  worksiteId     String        @map("worksite_id") @db.Uuid
+  parentId       String?       @map("parent_id") @db.Uuid
+  level          PlanNodeLevel
+  label          String
+  sortOrder      Int           @map("sort_order")
+  isControl      Boolean       @default(false) @map("is_control")
+  /// The code of the reference line it came from, when it did.
+  sourceCode     String?       @map("source_code")
+  plannedStart   DateTime?     @map("planned_start") @db.Date
+  plannedEnd     DateTime?     @map("planned_end") @db.Date
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  worksite Worksite       @relation(fields: [worksiteId], references: [id], onDelete: Cascade, map: "fk_worksite_tasks_worksites")
+  parent   WorksiteTask?  @relation("WorksiteTaskTree", fields: [parentId], references: [id], onDelete: Cascade, map: "fk_worksite_tasks_parent")
+  children WorksiteTask[] @relation("WorksiteTaskTree")
+
+  @@index([organizationId], map: "ix_worksite_tasks_organization_id")
+  @@index([worksiteId], map: "ix_worksite_tasks_worksite_id")
+  @@index([parentId], map: "ix_worksite_tasks_parent_id")
+  @@map("worksite_tasks")
   @@schema("public")
 }

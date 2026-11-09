@@ -33,6 +33,8 @@ import { WorksiteDrawer, type ClientPicker } from './worksite-drawer';
  * Declared here, by the consumer; each feature satisfies it structurally.
  */
 export interface WorksitePanels {
+  /** The worksite's planning, from the plan library to the Gantt chart. */
+  Planning?: ComponentType<{ worksiteId: string }>;
   /** The machines booked on this worksite. */
   Equipment?: ComponentType<{ worksiteId: string }>;
   /** The people to call at its client. */
@@ -55,6 +57,7 @@ function today(): string {
 export function WorksitePage({
   id,
   ClientPicker,
+  Planning,
   Equipment,
   ClientContacts,
 }: { id: string; ClientPicker?: ClientPicker } & WorksitePanels) {
@@ -131,6 +134,17 @@ export function WorksitePage({
           onClose={() => setEditing(false)}
           ClientPicker={ClientPicker}
         />
+      )}
+
+      {Planning && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('planning')}</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <Planning worksiteId={worksite.id} />
+          </CardBody>
+        </Card>
       )}
 
       <div className="grid items-start gap-stack lg:grid-cols-3">
