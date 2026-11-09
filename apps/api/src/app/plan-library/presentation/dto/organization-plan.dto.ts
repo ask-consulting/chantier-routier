@@ -6,22 +6,24 @@ import {
   IsBoolean,
   IsEnum,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import {
   ICreateOrganizationPlan,
   IPlanNodeInput,
   IUpdateOrganizationPlan,
+  PLAN_LABEL_LOCALES,
   WorksiteKind,
 } from '@chantia/shared';
 
-/** French, Arabic, and Tunisian in Arabic (`aeb`) and in Latin letters. */
-const PLAN_LABEL_LOCALES = ['fr', 'ar', 'aeb', 'aeb-Latn'];
 const MAX_LABEL = 200;
 const MAX_NAME = 120;
 const MAX_CHILDREN = 200;
@@ -43,6 +45,30 @@ export class PlanSubtaskDto implements IPlanNodeInput {
   @IsBoolean()
   @IsOptional()
   isControl?: boolean;
+
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
+    description: 'When it starts, in percent of its parent',
+  })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  startPercent?: number | null;
+
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
+    description: 'How long it lasts, in percent of its parent',
+  })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  durationPercent?: number | null;
 }
 
 export class PlanTaskDto extends PlanSubtaskDto {

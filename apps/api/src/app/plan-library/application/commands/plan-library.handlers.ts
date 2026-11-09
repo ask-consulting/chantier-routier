@@ -33,6 +33,8 @@ function copyNodes(nodes: readonly IPlanTemplateNode[], locale: string): PlanNod
     level: node.level,
     label: labelIn(node.labels, locale),
     isControl: node.isControl,
+    startPercent: node.startPercent,
+    durationPercent: node.durationPercent,
     children: copyNodes(node.children, locale),
   }));
 }

@@ -16,6 +16,8 @@ interface NodeRow {
   parentId: string | null;
   level: string;
   isControl: boolean;
+  startPercent: number | null;
+  durationPercent: number | null;
   translations: readonly { locale: string; label: string }[];
 }
 
@@ -36,6 +38,8 @@ function treeOf(rows: readonly NodeRow[]): IPlanTemplateNode[] {
       code: row.code,
       level: row.level as PlanNodeLevel,
       isControl: row.isControl,
+      startPercent: row.startPercent,
+      durationPercent: row.durationPercent,
       labels: labelsOf(row.translations),
       children: childrenOf(row.id),
     }));

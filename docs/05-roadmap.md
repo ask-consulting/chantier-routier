@@ -10,6 +10,18 @@
 mesure. Le lot 1 donnera une première vitesse réelle ; les durées des lots suivants en
 découleront. La taille indiquée (S, M, L, XL) compare les lots entre eux.
 
+## Ordre de travail actuel
+
+Décidé le 9 novembre 2026 : **le but immédiat est d'initialiser complètement un projet.** Le reste
+du L0 (préproduction, suivi des erreurs, stockage des fichiers) passe après, ou juste avant le lot
+qui en a besoin.
+
+1. Créer le planning d'un chantier depuis la bibliothèque, l'afficher en Gantt. *(en cours)*
+2. Suivre l'avancement.
+3. Affecter le personnel et le matériel aux tâches.
+4. Gérer les achats de matières premières.
+5. Prendre des notes sur le projet, les phases, les tâches et le personnel.
+
 ## 1. Vue d'ensemble
 
 ```
