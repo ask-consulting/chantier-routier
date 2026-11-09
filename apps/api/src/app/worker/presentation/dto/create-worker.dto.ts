@@ -20,7 +20,7 @@ export class CreateWorkerDto implements ICreateWorker {
   })
   // Positive rather than merely a number: a rate of zero silently makes somebody
   // free, which is never true and would pass unnoticed in a cost report.
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber({ maxDecimalPlaces: 3 })
   @IsPositive()
   hourlyRate: number;
 

@@ -18,7 +18,7 @@ export class Organization {
     return new Organization(
       props.id,
       props.name.trim(),
-      props.currency ?? 'EUR',
+      props.currency ?? 'TND',
       props.createdAt,
       props.updatedAt,
     );

@@ -100,7 +100,7 @@ export function WorkerDrawer({
           type="number"
           inputMode="decimal"
           min="0"
-          step="0.01"
+          step="0.001"
           required
           hint={t('hourlyRateHint')}
           value={form.values.hourlyRate}

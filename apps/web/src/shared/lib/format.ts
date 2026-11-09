@@ -8,7 +8,7 @@ import { intlLocale, type Locale } from '@/shared/i18n/config';
  * uses, and a French-speaking site manager reading the same table would lose it
  * entirely. See `shared/i18n/config.ts`.
  *
- * These live in `shared` rather than in a feature because a euro is a euro
+ * These live in `shared` rather than in a feature because a dinar is a dinar
  * whatever the screen: a worksite budget, an expense and an hourly rate all
  * read the same way. Anything that formats *a particular domain* — the colour of
  * a status, the sign of a variance — belongs to that feature's `model/` instead.
@@ -19,19 +19,19 @@ export function formatAmount(
   locale: Locale,
   /**
    * Zero by default — a worksite budget in the tens of thousands does not
-   * want cents. An hourly rate does: 18,50 € rounded to 19 € is not a display
-   * choice, it is 50 centimes lost on every hour the person works, silently
-   * compounding across a payroll. Pass 2 for anything paid by the hour.
+   * want millimes. An hourly rate does: 6,500 DT rounded to 7 DT is not a
+   * display choice, it is 500 millimes lost on every hour the person works,
+   * silently compounding across a payroll. Pass 3 for anything paid by the hour.
    */
   maximumFractionDigits = 0,
 ): string {
-  // An em dash for a missing amount — never `0 €`, which is a real figure.
+  // An em dash for a missing amount — never `0 DT`, which is a real figure.
   if (value === null || value === undefined) {
     return '—';
   }
   return new Intl.NumberFormat(intlLocale(locale), {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'TND',
     maximumFractionDigits,
   }).format(value);
 }

@@ -77,7 +77,7 @@ export function calculateActualCost(input: CalculateActualCostInput): IWorksiteC
   };
 }
 
-/** Monetary rounding to 2 decimals, resilient to floating-point drift. */
+/** Monetary rounding to the millime, resilient to floating-point drift. */
 function round(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+  return Math.round((value + Number.EPSILON) * 1000) / 1000;
 }

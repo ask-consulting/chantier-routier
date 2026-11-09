@@ -60,7 +60,7 @@ export class CreateWorksiteDto implements ICreateWorksite {
   status?: WorksiteStatus;
 
   @ApiPropertyOptional({ nullable: true, example: 250000 })
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 3 })
   @IsOptional()
   totalBudget?: number | null;
 }

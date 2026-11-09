@@ -62,7 +62,7 @@ function WorkerTable({
           <TRow key={worker.id}>
             <TD className="font-medium">{worker.name}</TD>
             <TD className="text-fg-muted">{worker.qualification ?? '—'}</TD>
-            <TD numeric>{formatAmount(worker.hourlyRate, locale, 2)}</TD>
+            <TD numeric>{formatAmount(worker.hourlyRate, locale, 3)}</TD>
             <TD>
               <Badge tone={workerStatusTone(worker.active)} dot>
                 {t(worker.active ? 'active' : 'inactive')}
@@ -107,7 +107,7 @@ function WorkerCards({
               </div>
 
               <p className="text-xs text-fg-muted">
-                {t('hourlyRateValue', { amount: formatAmount(worker.hourlyRate, locale, 2) })}
+                {t('hourlyRateValue', { amount: formatAmount(worker.hourlyRate, locale, 3) })}
               </p>
 
               <WorkerActions worker={worker} onEdit={() => onEdit(worker)} compact />

@@ -38,20 +38,20 @@ export function WorksiteCosts({ worksiteId }: { worksiteId: string }) {
       {lines.map(([label, amount]) => (
         <div key={label} className="contents">
           <dt className="text-fg-muted">{label}</dt>
-          <dd className="text-end tabular-nums">{formatAmount(amount, locale, 2)}</dd>
+          <dd className="text-end tabular-nums">{formatAmount(amount, locale, 3)}</dd>
         </div>
       ))}
       <dt className="border-t border-border pt-1 font-medium">{t('actualCost')}</dt>
       <dd className="border-t border-border pt-1 text-end font-medium tabular-nums">
-        {formatAmount(data.actualCost, locale, 2)}
+        {formatAmount(data.actualCost, locale, 3)}
       </dd>
       <dt className="text-fg-muted">{t('budget')}</dt>
-      <dd className="text-end tabular-nums">{formatAmount(data.totalBudget, locale, 2)}</dd>
+      <dd className="text-end tabular-nums">{formatAmount(data.totalBudget, locale, 3)}</dd>
       {data.variance !== null && (
         <>
           <dt className="text-fg-muted">{t('variance')}</dt>
           <dd className="text-end">
-            <Badge tone={varianceTone(data.variance)}>{formatAmount(data.variance, locale, 2)}</Badge>
+            <Badge tone={varianceTone(data.variance)}>{formatAmount(data.variance, locale, 3)}</Badge>
           </dd>
         </>
       )}
