@@ -170,20 +170,31 @@ describe('WorksitePlanRepository', () => {
 
   it('knows whether a line has lines under it', async () => {
     worksiteTask.findFirst
-      .mockResolvedValueOnce({ _count: { children: 2 } })
-      .mockResolvedValueOnce({ _count: { children: 0 } })
+      .mockResolvedValueOnce({ worksiteId: 'ws', _count: { children: 2 } })
+      .mockResolvedValueOnce({ worksiteId: 'ws', _count: { children: 0 } })
       .mockResolvedValueOnce(null);
 
-    await expect(repository.findTaskShape('a')).resolves.toEqual({ hasChildren: true });
-    await expect(repository.findTaskShape('b')).resolves.toEqual({ hasChildren: false });
+    await expect(repository.findTaskShape('a')).resolves.toEqual({
+      hasChildren: true,
+      worksiteId: 'ws',
+    });
+    await expect(repository.findTaskShape('b')).resolves.toEqual({
+      hasChildren: false,
+      worksiteId: 'ws',
+    });
     await expect(repository.findTaskShape('c')).resolves.toBeNull();
   });
 
   it('deletes and moves by what the caller can see', async () => {
     await repository.deleteAll('ws');
     await repository.updateDates('t', '2026-01-01', '2026-01-02');
+    await repository.updateProgress('t', 60);
 
     expect(worksiteTask.deleteMany).toHaveBeenCalledWith({ where: { worksiteId: 'ws' } });
     expect(worksiteTask.updateMany.mock.calls[0]?.[0].where).toEqual({ id: 't' });
+    expect(worksiteTask.updateMany.mock.calls[1]?.[0]).toEqual({
+      where: { id: 't' },
+      data: { progress: 60 },
+    });
   });
 });

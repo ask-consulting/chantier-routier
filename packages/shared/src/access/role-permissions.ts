@@ -29,6 +29,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.EQUIPMENT_MANAGE,
     Permission.PLAN_READ,
     Permission.PLAN_MANAGE,
+    Permission.PROGRESS_RECORD,
     Permission.WORKER_READ,
     Permission.WORKER_MANAGE,
     Permission.TIMESHEET_READ,
@@ -53,6 +54,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     // Which machines exist — not what they cost: money stays behind budget:read.
     Permission.EQUIPMENT_READ,
     Permission.PLAN_READ,
+    Permission.PROGRESS_RECORD,
     Permission.WORKER_READ,
     Permission.TIMESHEET_READ,
     Permission.TIMESHEET_RECORD,

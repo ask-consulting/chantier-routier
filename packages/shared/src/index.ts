@@ -34,6 +34,7 @@ export * from './money/money';
 // Planning dates: proposed from a period, rolled up the tree
 export * from './planning/schedule';
 export * from './planning/progress';
+export * from './planning/summary';
 
 // Pure business computations (reusable on server & offline on mobile)
 export * from './costs/worksite-costs';

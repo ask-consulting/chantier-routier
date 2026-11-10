@@ -49,3 +49,23 @@ export class TaskDatesFromChildrenException extends DomainException {
     super(message, [{ field: 'plannedStart', code: 'form.errors.taskDatesFromChildren', message }]);
   }
 }
+
+/** A phase or a task with subtasks takes its progress from them. */
+export class TaskProgressFromChildrenException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'This line takes its progress from the lines under it';
+    super(message, [{ field: 'progress', code: 'form.errors.taskProgressFromChildren', message }]);
+  }
+}
+
+/** Every member must be an active account of the organization. */
+export class InvalidWorksiteMembersException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'Every member must be an active account of the organization';
+    super(message, [{ field: 'userIds', code: 'form.errors.unknownMember', message }]);
+  }
+}

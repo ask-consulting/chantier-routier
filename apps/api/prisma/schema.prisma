@@ -230,6 +230,7 @@ model Worksite {
   expenses             Expense[]
   equipmentAssignments EquipmentAssignment[]
   worksiteTasks        WorksiteTask[]
+  members              WorksiteMember[]
 
   /// Partial in the database — `WHERE deleted_at IS NULL`, see migration
   /// `20260925120000_worksite_soft_delete` — so a deleted worksite frees its
@@ -811,6 +812,8 @@ model WorksiteTask {
   label          String
   sortOrder      Int           @map("sort_order")
   isControl      Boolean       @default(false) @map("is_control")
+  /// Entered on the lowest lines, 0 to 100. A line with children takes its own from them.
+  progress       Int           @default(0)
   /// The code of the reference line it came from, when it did.
   sourceCode     String?       @map("source_code")
   plannedStart   DateTime?     @map("planned_start") @db.Date
@@ -826,5 +829,24 @@ model WorksiteTask {
   @@index([worksiteId], map: "ix_worksite_tasks_worksite_id")
   @@index([parentId], map: "ix_worksite_tasks_parent_id")
   @@map("worksite_tasks")
+  @@schema("public")
+}
+
+/// Who works on a worksite: what « mes chantiers » shows to everybody but an
+/// admin. `userId` refers to `identity.app_users` with no foreign key, like
+/// every reference across contexts (docs/10).
+model WorksiteMember {
+  id             String   @id(map: "pk_worksite_members") @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  worksiteId     String   @map("worksite_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  worksite Worksite @relation(fields: [worksiteId], references: [id], onDelete: Cascade, map: "fk_worksite_members_worksites")
+
+  @@unique([worksiteId, userId], map: "uq_worksite_members_worksite_id_user_id")
+  @@index([organizationId], map: "ix_worksite_members_organization_id")
+  @@index([userId], map: "ix_worksite_members_user_id")
+  @@map("worksite_members")
   @@schema("public")
 }

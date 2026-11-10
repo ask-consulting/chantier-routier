@@ -1,44 +1,39 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
-import { Alert, Badge, Button, ButtonLink, Card, CardBody, EmptyState } from '@/shared/ui';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Permission, type IMyWorksite, type IWorksiteTask } from '@chantia/shared';
+import { ApiError } from '@/shared/api/http-client';
+import {
+  Alert,
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  CardBody,
+  Checkbox,
+  Dialog,
+  EmptyState,
+  Select,
+  Skeleton,
+} from '@/shared/ui';
+import { BackIcon, CalendarIcon, ChecklistIcon, RollerIcon, WorkerIcon } from '@/shared/lib/icons';
+import { formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/cn';
+import type { Locale } from '@/shared/i18n/config';
+import { usePermission } from '@/features/auth';
 import {
-  BackIcon,
-  ChecklistIcon,
-  NoteIcon,
-  PurchaseIcon,
-  RollerIcon,
-  WorkerIcon,
-} from '@/shared/lib/icons';
-import { useSession } from '@/features/auth';
-import {
-  currentPhaseIndex,
-  HEALTH_TONE,
-  isVisibleTo,
-  loadMyWorksites,
-  phaseProgress,
-  taskProgress,
-  TODO_TONE,
-  withSubtaskProgress,
-  worksiteProgress,
-  type ListLine,
-  type MyWorksite,
-} from '../model/my-worksites';
+  useAccounts,
+  useAssignments,
+  useMembers,
+  useMyWorksite,
+  usePlan,
+  useSetMembers,
+  useUpdateProgress,
+} from '../api/my-worksites.queries';
+import { currentPhaseIndex, entryLines, HEALTH_TONE, span } from '../model/my-worksites';
 
-const TABS = [
-  'overview',
-  'planning',
-  'progress',
-  'team',
-  'equipment',
-  'purchases',
-  'notes',
-] as const;
-type Tab = (typeof TABS)[number];
-
-const round = (value: number): string => `${Math.round(value)} %`;
+type Tab = 'overview' | 'progress' | 'team' | 'equipment';
 
 function Stat({
   label,
@@ -63,136 +58,346 @@ function Stat({
         >
           {value}
         </p>
-        <p className="text-xs text-fg-muted">{sub}</p>
+        <p className="truncate text-xs text-fg-muted">{sub}</p>
       </CardBody>
     </Card>
   );
 }
 
-function PlanningChart({ worksite }: { worksite: MyWorksite }) {
+function Phases({ worksite }: { worksite: IMyWorksite }) {
+  const t = useTranslations('myWorksites');
   const current = currentPhaseIndex(worksite);
+  if (worksite.phases.length === 0) {
+    return <p className="text-sm text-fg-muted">{t('noPlan')}</p>;
+  }
+  const window = {
+    start: worksite.plannedStartDate ?? worksite.phases[0]?.plannedStart ?? null,
+    end: worksite.plannedEndDate ?? worksite.phases.at(-1)?.plannedEnd ?? null,
+  };
   return (
-    <div className="flex flex-col gap-1.5" dir="ltr">
-      {worksite.phases.map((phase, index) => (
-        <div
-          key={phase.label}
-          className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2.5 sm:grid-cols-[12rem_minmax(0,1fr)]"
-        >
-          <span dir="auto" title={phase.label} className="truncate text-sm">
-            {phase.label}
-          </span>
-          <div className="relative h-[22px] rounded bg-surface-muted">
-            <span
-              className={cn(
-                'absolute inset-y-[5px] rounded-sm',
-                phaseProgress(phase) >= 100 && 'bg-primary',
-                phaseProgress(phase) < 100 && index !== current && 'bg-fg-subtle',
-                phaseProgress(phase) < 100 &&
-                  index === current &&
-                  (worksite.status === 'late' ? 'bg-danger' : 'bg-primary'),
+    <ul className="flex flex-col gap-1.5" dir="ltr">
+      {worksite.phases.map((phase, index) => {
+        const bar = span(phase.plannedStart, phase.plannedEnd, window);
+        return (
+          <li
+            key={`${phase.label}-${index}`}
+            className="grid grid-cols-[7rem_minmax(0,1fr)_2.5rem] items-center gap-2.5 sm:grid-cols-[12rem_minmax(0,1fr)_3rem]"
+          >
+            <span dir="auto" title={phase.label} className="truncate text-sm">
+              {phase.label}
+            </span>
+            <div className="relative h-[22px] rounded bg-surface-muted">
+              {bar && (
+                <span
+                  className={cn(
+                    'absolute inset-y-[5px] rounded-sm',
+                    phase.progress >= 100
+                      ? 'bg-primary'
+                      : index === current
+                        ? worksite.health === 'late'
+                          ? 'bg-danger'
+                          : 'bg-primary'
+                        : 'bg-fg-subtle',
+                  )}
+                  style={{ left: `${bar.left}%`, width: `${Math.max(bar.width, 0.5)}%` }}
+                />
               )}
-              style={{ left: `${phase.startPercent}%`, width: `${phase.durationPercent}%` }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
+            </div>
+            <span className="text-end text-xs tabular-nums text-fg-muted">{phase.progress} %</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-function Lines({ lines, empty }: { lines: ListLine[]; empty: string }) {
-  if (lines.length === 0) {
-    return <p className="text-sm text-fg-muted">{empty}</p>;
+function NextSteps({ worksite }: { worksite: IMyWorksite }) {
+  const t = useTranslations('myWorksites');
+  const locale = useLocale() as Locale;
+  if (worksite.nextSteps.length === 0) {
+    return <p className="text-sm text-fg-muted">{t('nothingNext')}</p>;
   }
   return (
     <ul>
-      {lines.map((line) => (
+      {worksite.nextSteps.map((step) => (
         <li
-          key={line.title}
-          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border py-3 first:border-t-0"
+          key={`${step.label}-${step.plannedStart}`}
+          className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
         >
           <div className="min-w-0">
-            <p className="text-sm font-medium">{line.title}</p>
-            <p className="text-sm text-fg-muted">{line.detail}</p>
+            <p className="text-sm font-medium">{step.label}</p>
+            <p className="text-sm text-fg-muted">{formatDate(step.plannedStart, locale)}</p>
           </div>
-          <p className="text-xs text-fg-muted">{line.meta}</p>
+          {step.isControl && <Badge tone="signal">{t('control')}</Badge>}
         </li>
       ))}
     </ul>
   );
 }
 
-function ProgressEntry({
-  worksite,
-  onChange,
-}: {
-  worksite: MyWorksite;
-  onChange: (subtaskId: string, progress: number) => void;
-}) {
+function ProgressEntry({ worksite }: { worksite: IMyWorksite }) {
   const t = useTranslations('myWorksites');
-  const phase = worksite.phases[currentPhaseIndex(worksite)];
+  const canRecord = usePermission(Permission.PROGRESS_RECORD);
+  const plan = usePlan(worksite.id);
+  const update = useUpdateProgress();
+  const [phaseIndex, setPhaseIndex] = useState(() => currentPhaseIndex(worksite));
+  const [draft, setDraft] = useState<Record<string, number>>({});
+
+  if (plan.isPending) {
+    return <Skeleton className="h-40 w-full" />;
+  }
+  const phases = plan.data?.tasks ?? [];
+  if (phases.length === 0) {
+    return (
+      <EmptyState
+        title={t('noPlanTitle')}
+        description={t('noPlanDescription')}
+        action={<ButtonLink href={`/worksites/${worksite.id}`}>{t('openPlanning')}</ButtonLink>}
+      />
+    );
+  }
+  const phase: IWorksiteTask | undefined = phases[Math.min(phaseIndex, phases.length - 1)];
+  const save = (line: IWorksiteTask) => {
+    const value = draft[line.id];
+    if (value !== undefined && value !== line.progress) {
+      update.mutate({ taskId: line.id, progress: value });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-section">
-      <p className="text-sm text-fg-muted">{t('progressHint')}</p>
-      {phase?.tasks.map((task) => (
-        <div key={task.label} className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-semibold">{task.label}</h3>
-            <span className="text-lg font-semibold tabular-nums">{round(taskProgress(task))}</span>
-          </div>
-          {task.subtasks.map((subtask) => (
-            <div key={subtask.id} className="flex flex-col gap-1 border-t border-border pt-3">
-              <div className="flex justify-between gap-3 text-sm">
-                <label htmlFor={subtask.id} className="font-medium">
-                  {subtask.label}
-                </label>
-                <span className="tabular-nums">{subtask.progress} %</span>
-              </div>
-              <input
-                id={subtask.id}
-                type="range"
-                min={0}
-                max={100}
-                step={5}
-                value={subtask.progress}
-                onChange={(event) => onChange(subtask.id, Number(event.target.value))}
-                className="h-6 w-full accent-primary"
-              />
-            </div>
-          ))}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-60 flex-1 sm:max-w-sm">
+          <Select
+            label={t('phase')}
+            options={phases.map((p, index) => ({
+              value: String(index),
+              label: `${p.label} · ${p.progress} %`,
+            }))}
+            value={String(phaseIndex)}
+            onChange={(event) => setPhaseIndex(Number(event.target.value))}
+          />
         </div>
-      ))}
+        <p className="text-sm text-fg-muted">{t('progressHint')}</p>
+      </div>
+      {update.isError && (
+        <Alert tone="danger">
+          {update.error instanceof ApiError && update.error.status === 404
+            ? t('progressForbidden')
+            : t('saveError')}
+        </Alert>
+      )}
+      {phase &&
+        entryLines(phase).map(({ task, lines }) => (
+          <div key={task.id} className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold">{task.label}</h3>
+              <span className="text-lg font-semibold tabular-nums">{task.progress} %</span>
+            </div>
+            {lines.map((line) => {
+              const value = draft[line.id] ?? line.progress;
+              return (
+                <div key={line.id} className="flex flex-col gap-1 border-t border-border pt-3">
+                  <div className="flex justify-between gap-3 text-sm">
+                    <label htmlFor={`progress-${line.id}`} className="font-medium">
+                      {line.label}
+                      {line.isControl && (
+                        <Badge tone="signal" className="ms-2">
+                          {t('control')}
+                        </Badge>
+                      )}
+                    </label>
+                    <span className="tabular-nums">{value} %</span>
+                  </div>
+                  <input
+                    id={`progress-${line.id}`}
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={value}
+                    disabled={!canRecord}
+                    onChange={(event) =>
+                      setDraft((current) => ({ ...current, [line.id]: Number(event.target.value) }))
+                    }
+                    onPointerUp={() => save(line)}
+                    onKeyUp={() => save(line)}
+                    onBlur={() => save(line)}
+                    className="h-6 w-full accent-primary disabled:opacity-60"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ))}
     </div>
   );
 }
 
-/** One worksite: where it stands, what to do now, and its sections. */
+function TeamEditor({
+  worksiteId,
+  current,
+  onClose,
+}: {
+  worksiteId: string;
+  current: string[];
+  onClose: () => void;
+}) {
+  const t = useTranslations('myWorksites');
+  const tRole = useTranslations('userRole');
+  const accounts = useAccounts(true);
+  const save = useSetMembers(worksiteId);
+  const [chosen, setChosen] = useState(() => new Set(current));
+  const toggle = (id: string) =>
+    setChosen((set) => {
+      const next = new Set(set);
+      if (!next.delete(id)) {
+        next.add(id);
+      }
+      return next;
+    });
+
+  return (
+    <Dialog
+      open
+      title={t('editTeam')}
+      closeLabel={t('close')}
+      busy={save.isPending}
+      onClose={onClose}
+      footer={
+        <>
+          <Button onClick={onClose}>{t('cancel')}</Button>
+          <Button
+            variant="primary"
+            disabled={save.isPending || !accounts.data}
+            onClick={() => save.mutate([...chosen], { onSuccess: onClose })}
+          >
+            {t('save')}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-fg-muted">{t('teamHint')}</p>
+        {accounts.isPending && <Skeleton className="h-24 w-full" />}
+        {accounts.isError && <Alert tone="danger">{t('loadError')}</Alert>}
+        {accounts.data?.map((account) => (
+          <Checkbox
+            key={account.id}
+            label={`${account.firstName} ${account.lastName}`}
+            hint={tRole(account.role)}
+            checked={chosen.has(account.id)}
+            onChange={() => toggle(account.id)}
+          />
+        ))}
+        {save.isError && <Alert tone="danger">{t('saveError')}</Alert>}
+      </div>
+    </Dialog>
+  );
+}
+
+function Team({ worksiteId }: { worksiteId: string }) {
+  const t = useTranslations('myWorksites');
+  const tRole = useTranslations('userRole');
+  const canManage = usePermission(Permission.WORKSITE_MANAGE);
+  const members = useMembers(worksiteId);
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-3">
+      {canManage && (
+        <div className="flex justify-end">
+          <Button onClick={() => setEditing(true)}>
+            <WorkerIcon className="size-4 shrink-0" aria-hidden />
+            {t('editTeam')}
+          </Button>
+        </div>
+      )}
+      {members.isPending && <Skeleton className="h-24 w-full" />}
+      {members.data?.length === 0 && <p className="text-sm text-fg-muted">{t('noMembers')}</p>}
+      <ul>
+        {members.data?.map((member) => (
+          <li
+            key={member.userId}
+            className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
+          >
+            <span className="text-sm font-medium">
+              {member.firstName} {member.lastName}
+            </span>
+            <span className="text-xs text-fg-muted">{tRole(member.role)}</span>
+          </li>
+        ))}
+      </ul>
+      {editing && members.data && (
+        <TeamEditor
+          worksiteId={worksiteId}
+          current={members.data.map((member) => member.userId)}
+          onClose={() => setEditing(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function Equipment({ worksiteId }: { worksiteId: string }) {
+  const t = useTranslations('myWorksites');
+  const locale = useLocale() as Locale;
+  const assignments = useAssignments(worksiteId, true);
+  if (assignments.isPending) {
+    return <Skeleton className="h-24 w-full" />;
+  }
+  if (!assignments.data || assignments.data.length === 0) {
+    return <p className="text-sm text-fg-muted">{t('noEquipment')}</p>;
+  }
+  return (
+    <ul>
+      {assignments.data.map((assignment) => (
+        <li
+          key={assignment.id}
+          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border py-3 first:border-t-0"
+        >
+          <span className="text-sm font-medium">{assignment.equipment.designation}</span>
+          <span className="text-xs text-fg-muted">
+            {formatDate(assignment.startDate, locale)} → {formatDate(assignment.endDate, locale)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** One worksite: where it stands, what to do next, its progress and its team. */
 export function MyWorksitePage({ id }: { id: string }) {
   const t = useTranslations('myWorksites');
-  const { user } = useSession();
-  const found = loadMyWorksites().find(
-    (candidate) => candidate.id === id && user && isVisibleTo(candidate, user),
-  );
-  const [worksite, setWorksite] = useState(found);
+  const locale = useLocale() as Locale;
+  const query = useMyWorksite(id);
+  const canRecord = usePermission(Permission.PROGRESS_RECORD);
+  const seesEquipment = usePermission(Permission.EQUIPMENT_READ);
   const [tab, setTab] = useState<Tab>('overview');
+  const tabs = useMemo<Tab[]>(
+    () => ['overview', 'progress', 'team', ...(seesEquipment ? (['equipment'] as Tab[]) : [])],
+    [seesEquipment],
+  );
 
+  if (query.isPending) {
+    return <Skeleton className="h-64 w-full" />;
+  }
+  const worksite = query.data;
   if (!worksite) {
-    return (
+    const missing = query.error instanceof ApiError && query.error.status === 404;
+    return missing ? (
       <EmptyState
         title={t('notFoundTitle')}
         description={t('notFoundDescription')}
-        action={<ButtonLink href="/my-worksites">{t('back')}</ButtonLink>}
+        action={<ButtonLink href="/">{t('back')}</ButtonLink>}
       />
+    ) : (
+      <Alert tone="danger">{t('loadError')}</Alert>
     );
   }
 
-  const shortcuts = [
-    { key: 'notes', Icon: NoteIcon },
-    { key: 'team', Icon: WorkerIcon },
-    { key: 'equipment', Icon: RollerIcon },
-    { key: 'purchases', Icon: PurchaseIcon },
-  ] as const;
-  const seizeProgress = (
+  const next = worksite.nextSteps[0];
+  const enterProgress = (
     <Button variant="primary" className="w-full sm:w-auto" onClick={() => setTab('progress')}>
       <ChecklistIcon className="size-4 shrink-0" aria-hidden />
       {t('enterProgress')}
@@ -202,7 +407,7 @@ export function MyWorksitePage({ id }: { id: string }) {
   return (
     <section className="flex flex-col gap-5">
       <div>
-        <ButtonLink href="/my-worksites" variant="ghost" size="sm" className="-ms-3">
+        <ButtonLink href="/" variant="ghost" size="sm" className="-ms-3">
           <BackIcon className="size-4 shrink-0 rtl:rotate-180" aria-hidden />
           {t('back')}
         </ButtonLink>
@@ -212,51 +417,40 @@ export function MyWorksitePage({ id }: { id: string }) {
         <div className="min-w-0 flex-1 basis-72">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-sm text-fg-muted">{worksite.code}</span>
-            <Badge tone={HEALTH_TONE[worksite.status]} dot>
-              {t(`health.${worksite.status}`)}
+            <Badge tone={HEALTH_TONE[worksite.health]} dot>
+              {t(`health.${worksite.health}`)}
             </Badge>
           </div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{worksite.name}</h1>
-          <p className="text-fg-muted">{worksite.client}</p>
+          <p className="text-fg-muted">{worksite.client ?? t('noClient')}</p>
         </div>
-        <div className="hidden sm:block">{seizeProgress}</div>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href={`/worksites/${worksite.id}`}>
+            <CalendarIcon className="size-4 shrink-0" aria-hidden />
+            {t('openPlanning')}
+          </ButtonLink>
+          {canRecord && <div className="hidden sm:block">{enterProgress}</div>}
+        </div>
       </header>
-
-      <Alert tone="info">{t('exampleData')}</Alert>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
           label={t('statProgress')}
-          value={round(worksiteProgress(worksite))}
+          value={`${worksite.progress} %`}
           sub={t('statPlanned', { percent: worksite.plannedProgress })}
         />
         <Stat
           label={t('statDelay')}
-          value={
-            worksite.delayDays === null ? t('noDelay') : t('days', { count: worksite.delayDays })
-          }
-          sub={worksite.phases[currentPhaseIndex(worksite)]?.label}
-          danger={worksite.delayDays !== null}
+          value={worksite.delayDays > 0 ? t('days', { count: worksite.delayDays }) : t('noDelay')}
+          sub={worksite.phases[currentPhaseIndex(worksite)]?.label ?? '—'}
+          danger={worksite.delayDays > 0}
         />
         <Stat
-          label={t('statBudget')}
-          value={`${worksite.spendPercent} %`}
-          sub={t('statBudgetSub')}
+          label={t('statNext')}
+          value={next ? formatDate(next.plannedStart, locale) : '—'}
+          sub={next?.label ?? t('nothingNext')}
         />
-        <Stat
-          label={t('statSite')}
-          value={worksite.teamCount}
-          sub={t('statSiteSub', { gear: worksite.gearCount })}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {shortcuts.map(({ key, Icon }) => (
-          <Button key={key} onClick={() => setTab(key)}>
-            <Icon className="size-4 shrink-0" aria-hidden />
-            {t(`shortcut.${key}`)}
-          </Button>
-        ))}
+        <Stat label={t('statTeam')} value={worksite.memberCount} sub={t('statTeamSub')} />
       </div>
 
       <div
@@ -264,7 +458,7 @@ export function MyWorksitePage({ id }: { id: string }) {
         aria-label={t('sections')}
         className="flex gap-1 overflow-x-auto border-b border-border"
       >
-        {TABS.map((key) => (
+        {tabs.map((key) => (
           <button
             key={key}
             type="button"
@@ -272,12 +466,14 @@ export function MyWorksitePage({ id }: { id: string }) {
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={cn(
-              'h-11 shrink-0 border-b-2 px-3 text-sm font-medium',
+              'flex h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-medium',
               tab === key
                 ? 'border-primary text-primary-on-subtle'
                 : 'border-transparent text-fg-muted hover:text-fg',
             )}
           >
+            {key === 'team' && <WorkerIcon className="size-4" aria-hidden />}
+            {key === 'equipment' && <RollerIcon className="size-4" aria-hidden />}
             {t(`tab.${key}`)}
           </button>
         ))}
@@ -287,66 +483,32 @@ export function MyWorksitePage({ id }: { id: string }) {
         <div className="grid items-start gap-stack xl:grid-cols-5">
           <Card className="xl:col-span-3">
             <CardBody className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold">{t('tab.planning')}</h2>
-                <button
-                  type="button"
-                  className="text-sm font-medium text-primary hover:underline"
-                  onClick={() => setTab('planning')}
-                >
-                  {t('seeAll')}
-                </button>
-              </div>
-              <PlanningChart worksite={worksite} />
+              <h2 className="font-semibold">{t('phases')}</h2>
+              <Phases worksite={worksite} />
             </CardBody>
           </Card>
           <Card className="xl:col-span-2">
             <CardBody>
               <h2 className="mb-1 font-semibold">{t('todoTitle')}</h2>
-              {worksite.todo.length === 0 ? (
-                <p className="text-sm text-fg-muted">{t('todoEmpty')}</p>
-              ) : (
-                <ul>
-                  {worksite.todo.map((line) => (
-                    <li
-                      key={line.label}
-                      className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{line.label}</p>
-                        <p className="text-sm text-fg-muted">{line.detail}</p>
-                      </div>
-                      <Badge tone={TODO_TONE[line.kind]}>{t(`todoKind.${line.kind}`)}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <NextSteps worksite={worksite} />
             </CardBody>
           </Card>
         </div>
       ) : (
         <Card>
           <CardBody>
-            {tab === 'planning' && <PlanningChart worksite={worksite} />}
-            {tab === 'progress' && (
-              <ProgressEntry
-                worksite={worksite}
-                onChange={(subtaskId, progress) =>
-                  setWorksite(withSubtaskProgress(worksite, subtaskId, progress))
-                }
-              />
-            )}
-            {tab === 'team' && <Lines lines={worksite.team} empty={t('listEmpty')} />}
-            {tab === 'equipment' && <Lines lines={worksite.equipment} empty={t('listEmpty')} />}
-            {tab === 'purchases' && <Lines lines={worksite.purchases} empty={t('listEmpty')} />}
-            {tab === 'notes' && <Lines lines={worksite.notes} empty={t('listEmpty')} />}
+            {tab === 'progress' && <ProgressEntry worksite={worksite} />}
+            {tab === 'team' && <Team worksiteId={worksite.id} />}
+            {tab === 'equipment' && <Equipment worksiteId={worksite.id} />}
           </CardBody>
         </Card>
       )}
 
-      <div className="sticky bottom-0 -mx-gutter border-t border-border bg-surface-raised p-3 sm:hidden">
-        {seizeProgress}
-      </div>
+      {canRecord && (
+        <div className="sticky bottom-0 -mx-gutter border-t border-border bg-surface-raised p-3 sm:hidden">
+          {enterProgress}
+        </div>
+      )}
     </section>
   );
 }

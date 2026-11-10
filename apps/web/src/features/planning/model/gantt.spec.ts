@@ -9,6 +9,7 @@ const line = (id: string, level: PlanNodeLevel, children: IWorksiteTask[] = []):
   isControl: false,
   plannedStart: '2026-01-01',
   plannedEnd: '2026-01-02',
+  progress: 0,
   children,
 });
 const WINDOW = { start: '2026-01-01', end: '2026-01-10' };

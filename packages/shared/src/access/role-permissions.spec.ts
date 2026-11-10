@@ -103,4 +103,10 @@ describe('roleHasEveryPermission', () => {
     expect(roleHasPermission(UserRole.FOREMAN, Permission.PLAN_MANAGE)).toBe(false);
     expect(roleHasPermission(UserRole.WORKER, Permission.PLAN_READ)).toBe(false);
   });
+
+  it('lets the field enter progress, but not a worker', () => {
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.PROGRESS_RECORD)).toBe(true);
+    expect(roleHasPermission(UserRole.SITE_MANAGER, Permission.PROGRESS_RECORD)).toBe(true);
+    expect(roleHasPermission(UserRole.WORKER, Permission.PROGRESS_RECORD)).toBe(false);
+  });
 });
