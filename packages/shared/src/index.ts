@@ -35,6 +35,7 @@ export * from './money/money';
 export * from './planning/schedule';
 export * from './planning/progress';
 export * from './planning/summary';
+export * from './planning/pay';
 
 // The public demonstration
 export * from './demo/demo';

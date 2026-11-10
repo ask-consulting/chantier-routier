@@ -555,6 +555,7 @@
     "tab": {
       "overview": "نظرة عامة",
       "progress": "التقدم",
+      "tasks": "المهام",
       "team": "الفريق",
       "equipment": "المعدات"
     },
@@ -570,6 +571,35 @@
     "noEquipment": "لا توجد معدات مخصصة لهذا الورش.",
     "save": "حفظ",
     "cancel": "إلغاء",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "assign": "تخصيص",
+    "assignFor": "تخصيص لـ {label}",
+    "assignTitle": "تخصيص لـ «{label}»",
+    "addWorker": "إضافة العامل",
+    "addMachine": "إضافة المعدة",
+    "worker": "العامل",
+    "chooseWorker": "اختر عاملًا…",
+    "machine": "معدة محجوزة في الورش",
+    "chooseMachine": "اختر معدة…",
+    "payMode": "طريقة الأجر",
+    "pay": {
+      "task": "بالمهمة",
+      "day": "باليوم",
+      "hour": "بالساعة"
+    },
+    "rateLabel": {
+      "task": "مبلغ المهمة",
+      "day": "الأجر اليومي",
+      "hour": "الأجر بالساعة"
+    },
+    "rateRequiredHint": "إلزامي: يُحدد المبلغ الجزافي لكل مهمة.",
+    "rateDefaultHint": "فارغ: أجر العامل.",
+    "removeFrom": "إزالة {name} من {label}",
+    "tasksHint": "يمكن أن يُدفع للعامل نفسه بطرق مختلفة حسب المهمة.",
+    "teamErrors": {
+      "already": "مخصص بالفعل لهذه المهمة.",
+      "rateRequired": "أدخل مبلغ المهمة.",
+      "notOnWorksite": "هذه المعدة غير محجوزة في هذا الورش."
+    }
   }
 }

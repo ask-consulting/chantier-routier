@@ -1,4 +1,4 @@
-import { PlanNodeLevel } from '../enums/plan.enums';
+import { PayMode, PlanNodeLevel } from '../enums/plan.enums';
 
 /** One line of a worksite's planning. A line with children takes their dates. */
 export interface IWorksiteTask {
@@ -80,4 +80,43 @@ export interface IWorksiteMember {
 
 export interface IUpdateWorksiteMembers {
   userIds: string[];
+}
+
+/** A worker on a task. `rate` is withheld from whoever cannot read budgets. */
+export interface ITaskWorker {
+  id: string;
+  taskId: string;
+  workerId: string;
+  workerName: string;
+  qualification: string | null;
+  payMode: PayMode;
+  /** In the currency's smallest unit: per hour, per day, or for the whole task. */
+  rate?: number;
+}
+
+/** A machine booked on the worksite, put on one of its tasks. */
+export interface ITaskEquipment {
+  id: string;
+  taskId: string;
+  equipmentAssignmentId: string;
+  designation: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** Everybody and everything on the tasks of one worksite. */
+export interface ITaskTeam {
+  workers: ITaskWorker[];
+  equipment: ITaskEquipment[];
+}
+
+export interface IAssignTaskWorker {
+  workerId: string;
+  payMode: PayMode;
+  /** Required by the task; by the hour or the day, the worker's rate by default. */
+  rate?: number;
+}
+
+export interface ILinkTaskEquipment {
+  equipmentAssignmentId: string;
 }

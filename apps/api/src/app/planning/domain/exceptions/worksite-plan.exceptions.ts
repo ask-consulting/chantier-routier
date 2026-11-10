@@ -69,3 +69,52 @@ export class InvalidWorksiteMembersException extends DomainException {
     super(message, [{ field: 'userIds', code: 'form.errors.unknownMember', message }]);
   }
 }
+
+/** People and machines go on tasks and subtasks: a phase is only their sum. */
+export class TaskNotAssignableException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'People and machines go on tasks, not on a phase';
+    super(message, [{ field: 'taskId', code: 'form.errors.taskNotAssignable', message }]);
+  }
+}
+
+export class WorkerNotAvailableException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'This worker is unknown or no longer active';
+    super(message, [{ field: 'workerId', code: 'form.errors.workerNotAvailable', message }]);
+  }
+}
+
+export class AlreadyOnTaskException extends DomainException {
+  readonly kind: DomainErrorKind = 'conflict';
+
+  constructor(field: 'workerId' | 'equipmentAssignmentId') {
+    const message = 'Already on this task';
+    super(message, [{ field, code: 'form.errors.alreadyOnTask', message }]);
+  }
+}
+
+/** A lump sum has no default: it is agreed for each task. */
+export class TaskRateRequiredException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'Paid by the task: the amount for the task is required';
+    super(message, [{ field: 'rate', code: 'form.errors.taskRateRequired', message }]);
+  }
+}
+
+export class EquipmentNotOnWorksiteException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'This machine is not booked on the worksite of the task';
+    super(message, [
+      { field: 'equipmentAssignmentId', code: 'form.errors.equipmentNotOnWorksite', message },
+    ]);
+  }
+}
