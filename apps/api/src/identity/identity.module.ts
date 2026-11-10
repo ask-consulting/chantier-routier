@@ -9,6 +9,7 @@ import { ResendInvitationHandler } from './application/commands/resend-invitatio
 import { CancelInvitationHandler } from './application/commands/cancel-invitation.handler';
 import { UpdatePreferencesHandler } from './application/commands/update-preferences.handler';
 import { DeleteUserHandler } from './application/commands/delete-user.handler';
+import { DemoLoginHandler } from './application/commands/demo-login.handler';
 import { LoginHandler } from './application/commands/login.handler';
 import { LogoutHandler } from './application/commands/logout.handler';
 import { RefreshSessionHandler } from './application/commands/refresh-session.handler';
@@ -43,6 +44,7 @@ import { UserController } from './presentation/controllers/user.controller';
 const CommandHandlers = [
   RegisterHandler,
   LoginHandler,
+  DemoLoginHandler,
   RefreshSessionHandler,
   LogoutHandler,
   ChangePasswordHandler,

@@ -104,6 +104,15 @@ export class RegistrationClosedException extends DomainException {
   }
 }
 
+/** The demonstration is off, or not written yet: the route answers as if absent. */
+export class DemoUnavailableException extends DomainException {
+  readonly kind: DomainErrorKind = 'not-found';
+
+  constructor() {
+    super('Cannot POST /auth/demo');
+  }
+}
+
 const PASSWORD_RULE_MESSAGES: Record<PasswordRule, (minLength: number) => string> = {
   [PasswordRule.MIN_LENGTH]: (min) => `Password must be at least ${min} characters long`,
   [PasswordRule.UPPERCASE]: () => 'Password must contain an uppercase letter',

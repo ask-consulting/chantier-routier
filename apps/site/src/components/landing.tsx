@@ -113,6 +113,12 @@ export function Landing() {
               <a className="btn btn-yellow" href="#signup">
                 {t.signup}
               </a>
+              {/* Shown once the application has an address: the demo lives there. */}
+              {config.appUrl && (
+                <a className="btn btn-ghost" href={`${config.appUrl}/demo`}>
+                  {t.tryDemo}
+                </a>
+              )}
               <a className="btn btn-ghost" href="#mobile">
                 {t.getApp}
               </a>

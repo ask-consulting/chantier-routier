@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   AcquisitionMethod,
+  DEMO_ACCOUNT_EMAIL,
   ClientType,
   EquipmentStatus,
   UserRole,
@@ -36,7 +37,7 @@ function minor(value: number | null | undefined): number | null {
  */
 
 /** The test organization's id — fixed, so every run finds the same one. */
-export const DEMO_ORGANIZATION_ID = '0de00000-0000-4000-8000-000000000001';
+export { DEMO_ORGANIZATION_ID } from '@chantia/shared';
 export const DEMO_ORGANIZATION_NAME = 'Chantia Démo';
 
 export interface DemoAccount {
@@ -133,6 +134,54 @@ export interface DemoAssignment {
   notes: string | null;
 }
 
+/**
+ * How far along a planned worksite is meant to look. `late` leaves recent lines
+ * unfinished, `control` puts an unfinished check within two days, `ok` keeps
+ * everything on schedule.
+ */
+export type DemoPace = 'late' | 'control' | 'ok';
+
+/** A worksite whose planning the seed builds from a reference plan. */
+export interface DemoPlan {
+  worksiteId: string;
+  /** The `code` of a reference plan of the library. */
+  templateCode: string;
+  pace: DemoPace;
+  /** The accounts that work on it: what « mes chantiers » shows them. */
+  memberIds: string[];
+}
+
+/** Lines that ended within this many days stay unfinished on a late worksite. */
+const LATE_WINDOW_DAYS = 14;
+
+const dayNumber = (day: string): number => Date.parse(`${day}T00:00:00.000Z`) / 86_400_000;
+
+/**
+ * The progress a lowest line shows on `today`: done when it should be, under
+ * way in proportion to its days, not started before its start. On a late
+ * worksite, what should have ended lately has not, and what is under way lags.
+ */
+export function demoProgress(
+  plannedStart: string,
+  plannedEnd: string,
+  today: string,
+  pace: DemoPace,
+): number {
+  if (plannedEnd < today) {
+    return pace === 'late' && dayNumber(today) - dayNumber(plannedEnd) <= LATE_WINDOW_DAYS
+      ? 40
+      : 100;
+  }
+  if (plannedStart > today) {
+    return 0;
+  }
+  const elapsed =
+    (dayNumber(today) - dayNumber(plannedStart) + 1) /
+    (dayNumber(plannedEnd) - dayNumber(plannedStart) + 1);
+  const value = elapsed * (pace === 'late' ? 50 : 100);
+  return Math.min(100, Math.round(value / 5) * 5);
+}
+
 export interface DemoData {
   accounts: DemoAccount[];
   clients: DemoClient[];
@@ -140,6 +189,7 @@ export interface DemoData {
   workers: DemoWorker[];
   equipment: DemoEquipment[];
   assignments: DemoAssignment[];
+  plans: DemoPlan[];
 }
 
 export function buildDemoData(organizationId: string, today: string): DemoData {
@@ -268,7 +318,169 @@ export function buildDemoData(organizationId: string, today: string): DemoData {
     ...props,
   });
 
+  // The worksites of « mes chantiers »: one of each kind of trade.
+  const oliviers = client(
+    'oliviers',
+    {
+      type: ClientType.LEGAL_ENTITY,
+      firstName: null,
+      lastName: null,
+      legalName: 'SCI Les Oliviers',
+      billingLine1: 'Boulevard du 14 Janvier',
+      billingPostalCode: '4051',
+      billingCity: 'Sahloul',
+    },
+    [
+      {
+        firstName: 'Hela',
+        lastName: 'Ben Romdhane',
+        position: 'Gérante',
+        mobilePhone: '+216 98 000 301',
+        landlinePhone: null,
+        email: 'hela.benromdhane@demo.chantia.tn',
+      },
+    ],
+  );
+  const transSahel = client(
+    'trans-sahel',
+    {
+      type: ClientType.LEGAL_ENTITY,
+      firstName: null,
+      lastName: null,
+      legalName: 'Trans Sahel Logistique',
+      billingLine1: 'Zone logistique',
+      billingPostalCode: '4030',
+      billingCity: 'Enfidha',
+    },
+    [
+      {
+        firstName: 'Karim',
+        lastName: 'Jaziri',
+        position: 'Directeur des opérations',
+        mobilePhone: '+216 98 000 302',
+        landlinePhone: null,
+        email: 'karim.jaziri@demo.chantia.tn',
+      },
+    ],
+  );
+  const benSalah = client(
+    'ben-salah',
+    {
+      type: ClientType.INDIVIDUAL,
+      firstName: 'Mourad',
+      lastName: 'Ben Salah',
+      legalName: null,
+      billingLine1: 'Rue des Jasmins',
+      billingPostalCode: '4011',
+      billingCity: 'Hammam Sousse',
+    },
+    [
+      {
+        firstName: 'Mourad',
+        lastName: 'Ben Salah',
+        position: null,
+        mobilePhone: '+216 98 000 303',
+        landlinePhone: null,
+        email: null,
+      },
+    ],
+  );
+  const sonede = client(
+    'sonede',
+    {
+      type: ClientType.LEGAL_ENTITY,
+      firstName: null,
+      lastName: null,
+      legalName: 'SONEDE, district de Sousse',
+      billingLine1: 'Avenue de la République',
+      billingPostalCode: '4000',
+      billingCity: 'Sousse',
+    },
+    [
+      {
+        firstName: 'Nabil',
+        lastName: 'Khelifi',
+        position: 'Chef de projet',
+        mobilePhone: '+216 98 000 304',
+        landlinePhone: '+216 73 000 304',
+        email: 'nabil.khelifi@demo.chantia.tn',
+      },
+    ],
+  );
+  const conseil = client(
+    'conseil-regional',
+    {
+      type: ClientType.LEGAL_ENTITY,
+      firstName: null,
+      lastName: null,
+      legalName: 'Conseil régional de Monastir',
+      billingLine1: 'Avenue de l’Environnement',
+      billingPostalCode: '5000',
+      billingCity: 'Monastir',
+    },
+    [
+      {
+        firstName: 'Rim',
+        lastName: 'Haddad',
+        position: 'Service des routes',
+        mobilePhone: null,
+        landlinePhone: '+216 73 000 305',
+        email: 'rim.haddad@demo.chantia.tn',
+      },
+    ],
+  );
+
   const worksites = [
+    worksite('oliviers', {
+      code: 'IMM-03',
+      name: 'Immeuble Les Oliviers, Sahloul',
+      clientId: oliviers.id,
+      address: 'Rue Ibn Khaldoun, Sahloul',
+      plannedStartDate: day(-150),
+      plannedEndDate: day(90),
+      status: WorksiteStatus.IN_PROGRESS,
+      totalBudget: 2_600_000,
+    }),
+    worksite('hangar', {
+      code: 'HAN-01',
+      name: 'Hangar logistique, Enfidha',
+      clientId: transSahel.id,
+      address: 'Zone logistique, lot 12',
+      plannedStartDate: day(-40),
+      plannedEndDate: day(80),
+      status: WorksiteStatus.IN_PROGRESS,
+      totalBudget: 980_000,
+    }),
+    worksite('villa', {
+      code: 'VIL-07',
+      name: 'Villa R+1, Hammam Sousse',
+      clientId: benSalah.id,
+      address: 'Rue des Jasmins, Hammam Sousse',
+      plannedStartDate: day(-50),
+      plannedEndDate: day(130),
+      status: WorksiteStatus.IN_PROGRESS,
+      totalBudget: 420_000,
+    }),
+    worksite('eau-potable', {
+      code: 'EP-12',
+      name: 'Réseau d’eau potable, Msaken',
+      clientId: sonede.id,
+      address: 'Quartier El Borj, Msaken',
+      plannedStartDate: day(-35),
+      plannedEndDate: day(60),
+      status: WorksiteStatus.IN_PROGRESS,
+      totalBudget: 610_000,
+    }),
+    worksite('bembla', {
+      code: 'PIS-02',
+      name: 'Piste rurale de Bembla',
+      clientId: conseil.id,
+      address: 'Délégation de Bembla',
+      plannedStartDate: day(-20),
+      plannedEndDate: day(100),
+      status: WorksiteStatus.IN_PROGRESS,
+      totalBudget: 540_000,
+    }),
     worksite('rn1', {
       code: 'RN1-01',
       name: 'Réfection de la RN1 — section Sousse nord',
@@ -561,14 +773,72 @@ export function buildDemoData(organizationId: string, today: string): DemoData {
       role: UserRole.FOREMAN,
       workerId: workers[0]!.id,
     },
+    {
+      // The showcase's « Essayer la démo » opens a session on this one: an
+      // office account that sees everything, and cannot hand out accounts.
+      id: id('account:demo'),
+      email: DEMO_ACCOUNT_EMAIL,
+      firstName: 'Visiteur',
+      lastName: 'Démo',
+      role: UserRole.SITE_MANAGER,
+      workerId: null,
+    },
+  ];
+
+  // --- Plannings and teams --------------------------------------------------
+  // Each from a reference plan of the library, built by the seed itself: the
+  // library lives in the database. Who works where mirrors « mes chantiers ».
+  const siteManager = id('account:site-manager');
+  const foreman = id('account:foreman');
+  // The visitor's account works on every planned worksite: they all show.
+  const visitor = id('account:demo');
+  const byCode = (code: string) => worksites.find((worksite) => worksite.code === code)!.id;
+  const plans: DemoPlan[] = [
+    {
+      worksiteId: byCode('RN1-01'),
+      templateCode: 'route-neuve',
+      pace: 'late',
+      memberIds: [siteManager, foreman, visitor],
+    },
+    {
+      worksiteId: byCode('IMM-03'),
+      templateCode: 'immeuble',
+      pace: 'late',
+      memberIds: [siteManager, visitor],
+    },
+    {
+      worksiteId: byCode('HAN-01'),
+      templateCode: 'hangar',
+      pace: 'control',
+      memberIds: [siteManager, foreman, visitor],
+    },
+    {
+      worksiteId: byCode('VIL-07'),
+      templateCode: 'villa',
+      pace: 'control',
+      memberIds: [foreman, visitor],
+    },
+    {
+      worksiteId: byCode('EP-12'),
+      templateCode: 'eau-potable',
+      pace: 'ok',
+      memberIds: [siteManager, visitor],
+    },
+    {
+      worksiteId: byCode('PIS-02'),
+      templateCode: 'piste-rurale',
+      pace: 'ok',
+      memberIds: [foreman, visitor],
+    },
   ];
 
   return {
     accounts,
-    clients: [sousse, smt, ministry, individual],
+    clients: [sousse, smt, ministry, individual, oliviers, transSahel, benSalah, sonede, conseil],
     worksites,
     workers,
     equipment,
     assignments,
+    plans,
   };
 }

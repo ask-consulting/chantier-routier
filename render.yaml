@@ -39,6 +39,10 @@ services:
       # boot without it, and the value lives here rather than in the dashboard so
       # the next environment cannot forget it silently.
       # Where a request sent from the showcase is announced.
+      # The public demonstration: « Chantia Démo », written again every day, and
+      # POST /auth/demo for the showcase's « Essayer la démo ». See app/demo.
+      - key: DEMO_ENABLED
+        value: "true"
       - key: ACCESS_REQUEST_NOTIFY_EMAIL
         value: contact@chantia.tn
       - key: WEB_APP_URL

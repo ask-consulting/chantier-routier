@@ -4,6 +4,7 @@ import appConfig from '@config/app.config';
 import authConfig from '@config/auth.config';
 import multiTenantConfig from '@config/multi-tenant.config';
 import throttlingConfig from '@config/throttling.config';
+import demoConfig from '@config/demo.config';
 import { IdentityModule } from '@identity/identity.module';
 import { AccessControlModule } from '@shared/auth';
 import { PrismaModule } from '@shared/prisma/prisma.module';
@@ -12,6 +13,7 @@ import { ThrottlingModule } from '@shared/throttling';
 import { AccessRequestModule } from './access-request/access-request.module';
 import { PlanLibraryModule } from './plan-library/plan-library.module';
 import { PlanningModule } from './planning/planning.module';
+import { DemoModule } from './demo/demo.module';
 import { ClientModule } from './client/client.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { HealthModule } from './health/health.module';
@@ -26,7 +28,7 @@ const ENV = process.env.NODE_ENV;
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV}`,
-      load: [appConfig, authConfig, multiTenantConfig, throttlingConfig],
+      load: [appConfig, authConfig, multiTenantConfig, throttlingConfig, demoConfig],
     }),
     // Must precede PrismaModule: the tenant-filtered client is built from it.
     TenantModule,
@@ -47,6 +49,7 @@ const ENV = process.env.NODE_ENV;
     AccessRequestModule,
     PlanLibraryModule,
     PlanningModule,
+    DemoModule,
   ],
 })
 export class AppModule implements NestModule {
