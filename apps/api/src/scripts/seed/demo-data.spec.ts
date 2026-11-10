@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  WorksiteStatus,
-  equipmentAvailability,
-  periodsOverlap,
-} from '@chantia/shared';
-import { UserRole } from '@chantia/shared';
-import { DEMO_ORGANIZATION_ID, buildDemoData, seedId, shift } from './demo-data';
+import { WorksiteStatus, equipmentAvailability, periodsOverlap } from '@chantia/shared';
+import { DEMO_ACCOUNT_EMAIL, UserRole } from '@chantia/shared';
+import { DEMO_ORGANIZATION_ID, buildDemoData, demoProgress, seedId, shift } from './demo-data';
 
 /**
  * The demo data must hold together as the application's own rules would have
@@ -50,10 +46,15 @@ describe('the demo data', () => {
       UserRole.ADMIN,
       UserRole.SITE_MANAGER,
       UserRole.FOREMAN,
+      UserRole.SITE_MANAGER,
     ]);
     const foreman = data.accounts.find((a) => a.role === UserRole.FOREMAN)!;
     expect(data.workers.some((w) => w.id === foreman.workerId)).toBe(true);
-    expect(data.accounts.every((a) => a.email.endsWith('@chantia-demo.test'))).toBe(true);
+    expect(
+      data.accounts
+        .filter((a) => a.email !== DEMO_ACCOUNT_EMAIL)
+        .every((a) => a.email.endsWith('@chantia-demo.test')),
+    ).toBe(true);
   });
 
   it('keeps worksite codes and fleet numbers unique, as the database requires', () => {
@@ -67,7 +68,9 @@ describe('the demo data', () => {
     const statuses = new Set(data.worksites.map((w) => w.status));
     expect(statuses).toEqual(new Set(Object.values(WorksiteStatus)));
     expect(
-      data.worksites.some((w) => w.status === WorksiteStatus.IN_PROGRESS && w.plannedEndDate < TODAY),
+      data.worksites.some(
+        (w) => w.status === WorksiteStatus.IN_PROGRESS && w.plannedEndDate < TODAY,
+      ),
     ).toBe(true);
   });
 
@@ -93,6 +96,48 @@ describe('the demo data', () => {
 
   it('prices each booking from its own pricing, with a primary contact per client', () => {
     expect(data.assignments.every((a) => a.cost > 0)).toBe(true);
-    expect(data.clients.every((c) => c.contacts.filter((x) => x.isPrimary).length === 1)).toBe(true);
+    expect(data.clients.every((c) => c.contacts.filter((x) => x.isPrimary).length === 1)).toBe(
+      true,
+    );
+  });
+});
+
+describe('the plannings of « mes chantiers »', () => {
+  const data = buildDemoData('org-1', '2026-11-10');
+
+  it('plans six worksites in progress, one of each pace at least', () => {
+    expect(data.plans).toHaveLength(6);
+    for (const plan of data.plans) {
+      expect(data.worksites.find((w) => w.id === plan.worksiteId)?.status).toBe(
+        WorksiteStatus.IN_PROGRESS,
+      );
+      expect(plan.memberIds.length).toBeGreaterThan(0);
+    }
+    expect(new Set(data.plans.map((plan) => plan.pace))).toEqual(
+      new Set(['late', 'control', 'ok']),
+    );
+  });
+
+  it('lets the visitor of the showcase see every planned worksite, without managing accounts', () => {
+    const visitor = data.accounts.find((a) => a.email === DEMO_ACCOUNT_EMAIL)!;
+    expect(visitor.role).toBe(UserRole.SITE_MANAGER);
+    expect(data.plans.every((plan) => plan.memberIds.includes(visitor.id))).toBe(true);
+  });
+
+  it('puts only demo accounts on a team', () => {
+    const accounts = new Set(data.accounts.map((account) => account.id));
+    expect(data.plans.flatMap((plan) => plan.memberIds).every((id) => accounts.has(id))).toBe(true);
+  });
+
+  it('shows progress as of today', () => {
+    expect(demoProgress('2026-11-01', '2026-11-05', '2026-11-10', 'ok')).toBe(100);
+    expect(demoProgress('2026-11-20', '2026-11-25', '2026-11-10', 'ok')).toBe(0);
+    expect(demoProgress('2026-11-06', '2026-11-15', '2026-11-10', 'ok')).toBe(50);
+  });
+
+  it('leaves recent lines unfinished on a late worksite, and slows the current ones', () => {
+    expect(demoProgress('2026-11-01', '2026-11-05', '2026-11-10', 'late')).toBe(40);
+    expect(demoProgress('2026-09-01', '2026-09-05', '2026-11-10', 'late')).toBe(100);
+    expect(demoProgress('2026-11-06', '2026-11-15', '2026-11-10', 'late')).toBe(25);
   });
 });

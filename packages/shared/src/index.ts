@@ -36,6 +36,9 @@ export * from './planning/schedule';
 export * from './planning/progress';
 export * from './planning/summary';
 
+// The public demonstration
+export * from './demo/demo';
+
 // Pure business computations (reusable on server & offline on mobile)
 export * from './costs/worksite-costs';
 

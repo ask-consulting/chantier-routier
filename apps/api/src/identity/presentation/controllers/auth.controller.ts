@@ -12,13 +12,14 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard, minutes } from '@nestjs/throttler';
 import { AuthenticatedUser, CurrentUser, Public } from '@shared/auth';
-import { SkipRateLimit } from '@shared/throttling';
+import { IP_THROTTLER, SkipRateLimit } from '@shared/throttling';
 import { AcceptInvitationCommand } from '../../application/commands/accept-invitation.command';
 import { ChangePasswordCommand } from '../../application/commands/change-password.command';
 import { UpdatePreferencesCommand } from '../../application/commands/update-preferences.command';
 import { GetInvitationQuery } from '../../application/queries/get-invitation.query';
+import { DemoLoginCommand } from '../../application/commands/demo-login.command';
 import { LoginCommand } from '../../application/commands/login.command';
 import { LogoutCommand } from '../../application/commands/logout.command';
 import { RefreshSessionCommand } from '../../application/commands/refresh-session.command';
@@ -73,6 +74,25 @@ export class AuthController {
   ): Promise<AuthSessionResponseDto> {
     const session = await this.commandBus.execute<RegisterCommand, IssuedSession>(
       new RegisterCommand(dto, userAgent ?? null),
+    );
+    return AuthSessionResponseDto.fromIssuedSession(session);
+  }
+
+  @Public()
+  @Post('demo')
+  @HttpCode(HttpStatus.OK)
+  // Every visitor of the showcase shares this account: no per-account limit
+  // (there is no email in the body), a roomier per-address one.
+  @Throttle({ [IP_THROTTLER]: { limit: 60, ttl: minutes(1) } })
+  @ApiOperation({
+    summary: 'Open a session on the public demonstration’s account',
+    description: 'No credentials. Answers 404 unless DEMO_ENABLED=true and the demo exists.',
+  })
+  @ApiResponse({ status: 200, type: AuthSessionResponseDto })
+  @ApiResponse({ status: 404, description: 'No demonstration here' })
+  async demo(@Headers('user-agent') userAgent?: string): Promise<AuthSessionResponseDto> {
+    const session = await this.commandBus.execute<DemoLoginCommand, IssuedSession>(
+      new DemoLoginCommand(userAgent ?? null),
     );
     return AuthSessionResponseDto.fromIssuedSession(session);
   }
@@ -179,10 +199,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'End the given session, or all of them when no token is sent' })
   @ApiResponse({ status: 204, description: 'Logged out' })
-  async logout(
-    @CurrentUser('id') userId: string,
-    @Body() dto: LogoutDto,
-  ): Promise<void> {
+  async logout(@CurrentUser('id') userId: string, @Body() dto: LogoutDto): Promise<void> {
     await this.commandBus.execute(new LogoutCommand(userId, dto.refreshToken ?? null));
   }
 

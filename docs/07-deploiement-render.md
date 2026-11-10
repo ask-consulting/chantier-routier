@@ -142,3 +142,20 @@ npx turbo-ignore @chantia/web
 - **Cold start** : pour l'éviter, un cron externe (ex. GitHub Actions) peut
   pinger `/health` régulièrement, ou passer au plan Starter (~7 $/mois).
 - Voir le plan global dans [`04-deploiement-gratuit.md`](04-deploiement-gratuit.md).
+
+## La démo publique
+
+`DEMO_ENABLED=true` (dans `render.yaml`) maintient l'organisation « Chantia Démo », séparée des
+vraies données par le cloisonnement multi-tenant :
+
+- **Remise à zéro :** l'API la réécrit au démarrage, puis la vérifie toutes les heures, et la
+  réécrit si elle a plus de 20 heures. Les modifications des visiteurs durent donc un jour au plus.
+  Une migration ne conviendrait pas : elle ne s'exécute qu'une fois, et les dates de la démo
+  suivent le jour courant.
+- **Accès :** « Essayer la démo » sur la vitrine ouvre `https://<application>/demo`, qui appelle
+  `POST /auth/demo` et ouvre une session sur `demo@chantia.tn`, sans mot de passe. Le compte est
+  conducteur de travaux : il voit tout, mais ne peut ni inviter ni gérer des comptes, donc aucun
+  email ne part depuis la démo.
+- **Désactiver :** retirer la variable, ou la mettre à `false`. La route répond alors 404, et la
+  démo existante n'est plus rafraîchie. Pour la supprimer : `pnpm --filter @chantia/api seed:demo -- --reset`.
+- **Le bouton de la vitrine** n'apparaît que si `NEXT_PUBLIC_APP_URL` est défini sur le projet Vercel `site`.
