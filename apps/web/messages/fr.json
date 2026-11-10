@@ -555,6 +555,7 @@
     "tab": {
       "overview": "Vue d'ensemble",
       "progress": "Avancement",
+      "tasks": "Tâches",
       "team": "Équipe",
       "equipment": "Matériel"
     },
@@ -570,6 +571,35 @@
     "noEquipment": "Aucun engin n'est affecté à ce chantier.",
     "save": "Enregistrer",
     "cancel": "Annuler",
-    "close": "Fermer"
+    "close": "Fermer",
+    "assign": "Affecter",
+    "assignFor": "Affecter à {label}",
+    "assignTitle": "Affecter à « {label} »",
+    "addWorker": "Ajouter l'ouvrier",
+    "addMachine": "Ajouter l'engin",
+    "worker": "Ouvrier",
+    "chooseWorker": "Choisir un ouvrier…",
+    "machine": "Engin réservé sur le chantier",
+    "chooseMachine": "Choisir un engin…",
+    "payMode": "Mode de paie",
+    "pay": {
+      "task": "À la tâche",
+      "day": "Au jour",
+      "hour": "À l'heure"
+    },
+    "rateLabel": {
+      "task": "Montant pour la tâche",
+      "day": "Tarif journalier",
+      "hour": "Tarif horaire"
+    },
+    "rateRequiredHint": "Obligatoire : un forfait se fixe pour chaque tâche.",
+    "rateDefaultHint": "Vide : le tarif de l'ouvrier.",
+    "removeFrom": "Retirer {name} de {label}",
+    "tasksHint": "Le même ouvrier peut être payé différemment selon la tâche.",
+    "teamErrors": {
+      "already": "Déjà affecté à cette tâche.",
+      "rateRequired": "Indiquez le montant de la tâche.",
+      "notOnWorksite": "Cet engin n'est pas réservé sur ce chantier."
+    }
   }
 }

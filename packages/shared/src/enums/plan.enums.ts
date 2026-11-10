@@ -16,3 +16,10 @@ export enum PlanNodeLevel {
 
 /** French, Arabic, and Tunisian in Arabic (`aeb`) and in Latin letters. */
 export const PLAN_LABEL_LOCALES = ['fr', 'ar', 'aeb', 'aeb-Latn'];
+
+/** How a worker is paid on one task: for the whole task, by the day or by the hour. */
+export enum PayMode {
+  TASK = 'task',
+  DAY = 'day',
+  HOUR = 'hour',
+}

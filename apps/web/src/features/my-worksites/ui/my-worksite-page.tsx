@@ -32,8 +32,9 @@ import {
   useUpdateProgress,
 } from '../api/my-worksites.queries';
 import { currentPhaseIndex, entryLines, HEALTH_TONE, span } from '../model/my-worksites';
+import { TaskTeam } from './task-team';
 
-type Tab = 'overview' | 'progress' | 'team' | 'equipment';
+type Tab = 'overview' | 'progress' | 'tasks' | 'team' | 'equipment';
 
 function Stat({
   label,
@@ -375,7 +376,13 @@ export function MyWorksitePage({ id }: { id: string }) {
   const seesEquipment = usePermission(Permission.EQUIPMENT_READ);
   const [tab, setTab] = useState<Tab>('overview');
   const tabs = useMemo<Tab[]>(
-    () => ['overview', 'progress', 'team', ...(seesEquipment ? (['equipment'] as Tab[]) : [])],
+    () => [
+      'overview',
+      'progress',
+      'tasks',
+      'team',
+      ...(seesEquipment ? (['equipment'] as Tab[]) : []),
+    ],
     [seesEquipment],
   );
 
@@ -498,6 +505,7 @@ export function MyWorksitePage({ id }: { id: string }) {
         <Card>
           <CardBody>
             {tab === 'progress' && <ProgressEntry worksite={worksite} />}
+            {tab === 'tasks' && <TaskTeam worksite={worksite} />}
             {tab === 'team' && <Team worksiteId={worksite.id} />}
             {tab === 'equipment' && <Equipment worksiteId={worksite.id} />}
           </CardBody>

@@ -1,7 +1,14 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { IAssignTaskWorker } from '@chantia/shared';
 import {
+  assignTaskWorker,
+  fetchActiveWorkers,
+  fetchTaskTeam,
+  linkTaskEquipment,
+  removeTaskWorker,
+  unlinkTaskEquipment,
   fetchAccounts,
   fetchAssignments,
   fetchMembers,
@@ -58,4 +65,34 @@ export function useSetMembers(worksiteId: string) {
     mutationFn: (userIds: string[]) => setMembers(worksiteId, userIds),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ROOT }),
   });
+}
+
+export const useTaskTeam = (worksiteId: string) =>
+  useQuery({
+    queryKey: [...ROOT, worksiteId, 'task-team'],
+    queryFn: () => fetchTaskTeam(worksiteId),
+  });
+
+export const useActiveWorkers = (enabled: boolean) =>
+  useQuery({ queryKey: [...ROOT, 'workers'], queryFn: fetchActiveWorkers, enabled });
+
+/** Every change to who works on a task: they all refresh the same list. */
+export function useTaskTeamChanges(worksiteId: string) {
+  const queryClient = useQueryClient();
+  const onSuccess = () =>
+    queryClient.invalidateQueries({ queryKey: [...ROOT, worksiteId, 'task-team'] });
+  return {
+    assignWorker: useMutation({
+      mutationFn: ({ taskId, data }: { taskId: string; data: IAssignTaskWorker }) =>
+        assignTaskWorker(taskId, data),
+      onSuccess,
+    }),
+    removeWorker: useMutation({ mutationFn: removeTaskWorker, onSuccess }),
+    linkEquipment: useMutation({
+      mutationFn: ({ taskId, bookingId }: { taskId: string; bookingId: string }) =>
+        linkTaskEquipment(taskId, bookingId),
+      onSuccess,
+    }),
+    unlinkEquipment: useMutation({ mutationFn: unlinkTaskEquipment, onSuccess }),
+  };
 }
