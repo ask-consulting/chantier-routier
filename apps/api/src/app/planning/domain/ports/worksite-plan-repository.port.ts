@@ -18,6 +18,7 @@ export interface WorksitePlanRepositoryPort {
   createIfEmpty(organizationId: string, worksiteId: string, tasks: NewTask[]): Promise<boolean>;
   deleteAll(worksiteId: string): Promise<void>;
   /** `null` when the line does not exist for the caller. */
-  findTaskShape(id: string): Promise<{ hasChildren: boolean } | null>;
+  findTaskShape(id: string): Promise<{ hasChildren: boolean; worksiteId: string } | null>;
   updateDates(id: string, plannedStart: string, plannedEnd: string): Promise<void>;
+  updateProgress(id: string, progress: number): Promise<void>;
 }

@@ -16,6 +16,7 @@ const subtask: IWorksiteTask = {
   isControl: false,
   plannedStart: '2026-01-05',
   plannedEnd: '2026-01-06',
+  progress: 0,
   children: [],
 };
 const control: IWorksiteTask = {

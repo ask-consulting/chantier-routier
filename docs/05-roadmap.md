@@ -16,8 +16,10 @@ Décidé le 9 novembre 2026 : **le but immédiat est d'initialiser complètement
 du L0 (préproduction, suivi des erreurs, stockage des fichiers) passe après, ou juste avant le lot
 qui en a besoin.
 
-1. Créer le planning d'un chantier depuis la bibliothèque, l'afficher en Gantt. *(en cours)*
-2. Suivre l'avancement.
+1. Créer le planning d'un chantier depuis la bibliothèque, l'afficher en Gantt. *(fait)*
+2. Suivre l'avancement : saisi sur les sous-tâches, calculé au-dessus, pondéré par la durée.
+   « Mes chantiers » en page d'accueil : l'admin voit tout, les autres les chantiers dont ils
+   sont membres. *(en cours)*
 3. Affecter le personnel et le matériel aux tâches.
 4. Gérer les achats de matières premières.
 5. Prendre des notes sur le projet, les phases, les tâches et le personnel.

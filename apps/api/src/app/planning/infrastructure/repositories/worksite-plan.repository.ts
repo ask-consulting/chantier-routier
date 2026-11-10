@@ -39,6 +39,7 @@ export class WorksitePlanRepository implements WorksitePlanRepositoryPort {
         isControl: row.isControl,
         plannedStart: day(row.plannedStart),
         plannedEnd: day(row.plannedEnd),
+        progress: row.progress,
         children,
       }),
     );
@@ -73,12 +74,12 @@ export class WorksitePlanRepository implements WorksitePlanRepositoryPort {
     await this.prisma.worksiteTask.deleteMany({ where: { worksiteId } });
   }
 
-  async findTaskShape(id: string): Promise<{ hasChildren: boolean } | null> {
+  async findTaskShape(id: string): Promise<{ hasChildren: boolean; worksiteId: string } | null> {
     const row = await this.prisma.worksiteTask.findFirst({
       where: { id },
-      select: { _count: { select: { children: true } } },
+      select: { worksiteId: true, _count: { select: { children: true } } },
     });
-    return row ? { hasChildren: row._count.children > 0 } : null;
+    return row ? { hasChildren: row._count.children > 0, worksiteId: row.worksiteId } : null;
   }
 
   async updateDates(id: string, plannedStart: string, plannedEnd: string): Promise<void> {
@@ -86,5 +87,9 @@ export class WorksitePlanRepository implements WorksitePlanRepositoryPort {
       where: { id },
       data: { plannedStart: date(plannedStart), plannedEnd: date(plannedEnd) },
     });
+  }
+
+  async updateProgress(id: string, progress: number): Promise<void> {
+    await this.prisma.worksiteTask.updateMany({ where: { id }, data: { progress } });
   }
 }

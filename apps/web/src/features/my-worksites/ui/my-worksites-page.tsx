@@ -1,42 +1,36 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { Alert, Badge, Card, CardBody, EmptyState, Field } from '@/shared/ui';
+import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import type { IMyWorksite, WorksiteHealth } from '@chantia/shared';
+import { Alert, Badge, Card, CardBody, EmptyState, Field, Skeleton } from '@/shared/ui';
 import { TimesheetIcon } from '@/shared/lib/icons';
+import { formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/cn';
-import { useSession } from '@/features/auth';
-import {
-  currentPhaseIndex,
-  HEALTH_TONE,
-  isVisibleTo,
-  loadMyWorksites,
-  phaseProgress,
-  worksiteProgress,
-  type MyWorksite,
-  type WorksiteHealth,
-} from '../model/my-worksites';
+import type { Locale } from '@/shared/i18n/config';
+import { useMyWorksites } from '../api/my-worksites.queries';
+import { currentPhaseIndex, HEALTH_TONE } from '../model/my-worksites';
 
 type Filter = 'all' | WorksiteHealth;
 const FILTERS: Filter[] = ['all', 'late', 'control', 'ok'];
 
-function PhaseStrip({ worksite }: { worksite: MyWorksite }) {
+export function PhaseStrip({ worksite }: { worksite: IMyWorksite }) {
   const current = currentPhaseIndex(worksite);
   return (
     <div className="flex gap-[3px]" aria-hidden>
       {worksite.phases.map((phase, index) => (
         <span
-          key={phase.label}
+          key={`${phase.label}-${index}`}
           className={cn(
             'h-1.5 flex-1 rounded-full',
-            phaseProgress(phase) >= 100 && 'bg-primary',
-            phaseProgress(phase) < 100 &&
-              (index === current
-                ? worksite.status === 'late'
+            phase.progress >= 100
+              ? 'bg-primary'
+              : index === current
+                ? worksite.health === 'late'
                   ? 'bg-danger'
                   : 'bg-primary'
-                : 'bg-surface-muted'),
+                : 'bg-surface-muted',
           )}
         />
       ))}
@@ -44,9 +38,11 @@ function PhaseStrip({ worksite }: { worksite: MyWorksite }) {
   );
 }
 
-function WorksiteCard({ worksite }: { worksite: MyWorksite }) {
+function WorksiteCard({ worksite }: { worksite: IMyWorksite }) {
   const t = useTranslations('myWorksites');
+  const locale = useLocale() as Locale;
   const current = currentPhaseIndex(worksite);
+  const next = worksite.nextSteps[0];
   return (
     <Link
       href={`/my-worksites/${worksite.id}`}
@@ -57,32 +53,35 @@ function WorksiteCard({ worksite }: { worksite: MyWorksite }) {
         <CardBody className="flex h-full flex-col gap-3.5">
           <div className="flex items-center justify-between gap-2">
             <span className="font-mono text-xs text-fg-muted">{worksite.code}</span>
-            <Badge tone={HEALTH_TONE[worksite.status]} dot>
-              {t(`health.${worksite.status}`)}
+            <Badge tone={HEALTH_TONE[worksite.health]} dot>
+              {t(`health.${worksite.health}`)}
             </Badge>
           </div>
           <div className="min-w-0">
             <p className="font-semibold group-hover:text-primary">{worksite.name}</p>
-            <p className="text-sm text-fg-muted">{worksite.client}</p>
+            <p className="text-sm text-fg-muted">{worksite.client ?? t('noClient')}</p>
           </div>
           <div className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-2xl font-semibold tabular-nums">
-                {Math.round(worksiteProgress(worksite))} %
-              </span>
+              <span className="text-2xl font-semibold tabular-nums">{worksite.progress} %</span>
               <span className="text-end text-xs text-fg-muted">
-                {t('phaseOf', { index: current + 1, total: worksite.phases.length })} ·{' '}
-                {worksite.phases[current]?.label}
+                {worksite.phases.length === 0
+                  ? t('noPlan')
+                  : `${t('phaseOf', { index: current + 1, total: worksite.phases.length })} · ${worksite.phases[current]?.label}`}
               </span>
             </div>
             <PhaseStrip worksite={worksite} />
           </div>
           <p className="mt-auto flex items-center gap-2 border-t border-border pt-3 text-sm">
             <TimesheetIcon className="size-3.5 shrink-0 text-fg-muted" aria-hidden />
-            <span>
-              <span className="font-medium">{worksite.next.when}</span>
-              <span className="text-fg-muted"> · {worksite.next.label}</span>
-            </span>
+            {next ? (
+              <span className="min-w-0">
+                <span className="font-medium">{formatDate(next.plannedStart, locale)}</span>
+                <span className="text-fg-muted"> · {next.label}</span>
+              </span>
+            ) : (
+              <span className="text-fg-muted">{t('nothingNext')}</span>
+            )}
           </p>
         </CardBody>
       </Card>
@@ -90,40 +89,47 @@ function WorksiteCard({ worksite }: { worksite: MyWorksite }) {
   );
 }
 
-/** The worksites the signed-in person works on, the ones at risk first. */
+/** The worksites in progress the signed-in person works on, the ones at risk first. */
 export function MyWorksitesPage() {
   const t = useTranslations('myWorksites');
-  const { user } = useSession();
+  const { data, isPending, isError } = useMyWorksites();
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
 
-  const mine = useMemo(
-    () => (user ? loadMyWorksites().filter((worksite) => isVisibleTo(worksite, user)) : []),
-    [user],
-  );
-  const count = (health: WorksiteHealth) =>
-    mine.filter((worksite) => worksite.status === health).length;
+  const mine = data ?? [];
+  const count = (health: WorksiteHealth) => mine.filter((w) => w.health === health).length;
   const needle = search.trim().toLowerCase();
   const shown = mine.filter(
-    (worksite) =>
-      (filter === 'all' || worksite.status === filter) &&
-      `${worksite.name} ${worksite.code} ${worksite.client}`.toLowerCase().includes(needle),
+    (w) =>
+      (filter === 'all' || w.health === filter) &&
+      `${w.name} ${w.code} ${w.client ?? ''}`.toLowerCase().includes(needle),
   );
 
   return (
     <section className="flex flex-col gap-section">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="text-sm text-fg-muted">
-          {t('summary', { late: count('late'), control: count('control') })}
-        </p>
+        {data && data.length > 0 && (
+          <p className="text-sm text-fg-muted">
+            {t('summary', { late: count('late'), control: count('control') })}
+          </p>
+        )}
       </header>
 
-      <Alert tone="info">{t('exampleData')}</Alert>
+      {isPending && (
+        <div className="grid gap-stack sm:grid-cols-2 xl:grid-cols-3" aria-busy>
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+        </div>
+      )}
+      {isError && <Alert tone="danger">{t('loadError')}</Alert>}
 
-      {mine.length === 0 ? (
+      {data && mine.length === 0 && (
         <EmptyState title={t('noneTitle')} description={t('noneDescription')} />
-      ) : (
+      )}
+
+      {mine.length > 0 && (
         <>
           <div className="flex flex-wrap items-end gap-3">
             <div className="min-w-60 flex-1">

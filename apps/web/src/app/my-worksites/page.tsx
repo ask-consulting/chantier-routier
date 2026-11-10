@@ -1,10 +1,6 @@
-import { RequireSession } from '@/features/auth';
-import { MyWorksitesPage } from '@/features/my-worksites';
+import { redirect } from 'next/navigation';
 
+/** « Mes chantiers » is the home page now: old links land there. */
 export default function Page() {
-  return (
-    <RequireSession>
-      <MyWorksitesPage />
-    </RequireSession>
-  );
+  redirect('/');
 }

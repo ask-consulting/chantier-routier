@@ -43,6 +43,9 @@ export enum Permission {
   /** Copy a reference plan, edit or delete the organization's own plans. */
   PLAN_MANAGE = 'plan:manage',
 
+  /** Enter the progress of a planning's lowest lines, on one's own worksites. */
+  PROGRESS_RECORD = 'progress:record',
+
   WORKER_READ = 'worker:read',
   WORKER_MANAGE = 'worker:manage',
 

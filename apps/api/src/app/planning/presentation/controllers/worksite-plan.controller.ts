@@ -13,14 +13,19 @@ import {
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IWorksitePlan, Permission } from '@chantia/shared';
-import { CurrentUser, RequirePermissions } from '@shared/auth';
+import { AuthenticatedUser, CurrentUser, RequirePermissions } from '@shared/auth';
 import {
   DeleteWorksitePlanCommand,
   GetWorksitePlanQuery,
   InitializeWorksitePlanCommand,
+  UpdateTaskProgressCommand,
   UpdateWorksiteTaskCommand,
 } from '../../application/worksite-plan.messages';
-import { InitializeWorksitePlanDto, UpdateWorksiteTaskDto } from '../dto/worksite-plan.dto';
+import {
+  InitializeWorksitePlanDto,
+  UpdateTaskProgressDto,
+  UpdateWorksiteTaskDto,
+} from '../dto/worksite-plan.dto';
 
 /** A worksite's planning: started from the plan library, then its own. */
 @ApiTags('Planning')
@@ -91,5 +96,23 @@ export class WorksiteTaskController {
     @Body() dto: UpdateWorksiteTaskDto,
   ): Promise<void> {
     await this.commandBus.execute(new UpdateWorksiteTaskCommand(id, dto));
+  }
+
+  @Patch(':id/progress')
+  @RequirePermissions(Permission.PROGRESS_RECORD)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Enter the progress of a lowest line, on one of the caller’s worksites',
+  })
+  @ApiResponse({ status: 400, description: 'A line that takes its progress from others' })
+  @ApiResponse({ status: 404, description: 'Unknown line, or not on the caller’s worksites' })
+  async updateProgress(
+    @CurrentUser() caller: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaskProgressDto,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new UpdateTaskProgressCommand({ id: caller.id, role: caller.role }, id, dto.progress),
+    );
   }
 }

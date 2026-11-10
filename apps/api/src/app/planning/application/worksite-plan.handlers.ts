@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler, IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { IWorksitePlan, PlanNodeLevel, proposeSchedule, rollUpSchedule } from '@chantia/shared';
+import {
+  IWorksitePlan,
+  PlanNodeLevel,
+  proposeSchedule,
+  rollUpProgress,
+  rollUpSchedule,
+} from '@chantia/shared';
 import { ResourceNotFoundException } from '@shared/domain/exceptions/not-found.exception';
 import {
   InvalidPlanSourceException,
@@ -37,7 +43,7 @@ export class GetWorksitePlanHandler implements IQueryHandler<GetWorksitePlanQuer
     if (!(await this.repository.findPeriod(worksiteId))) {
       throw new ResourceNotFoundException('Worksite', worksiteId);
     }
-    return { tasks: rollUpSchedule(await this.repository.findTree(worksiteId)) };
+    return { tasks: rollUpProgress(rollUpSchedule(await this.repository.findTree(worksiteId))) };
   }
 }
 
@@ -106,7 +112,7 @@ export class InitializeWorksitePlanHandler implements ICommandHandler<Initialize
     if (!created) {
       throw new WorksitePlanExistsException();
     }
-    return { tasks: rollUpSchedule(await this.repository.findTree(worksiteId)) };
+    return { tasks: rollUpProgress(rollUpSchedule(await this.repository.findTree(worksiteId))) };
   }
 
   private async findSource(

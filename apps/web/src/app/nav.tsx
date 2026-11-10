@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { Permission } from '@chantia/shared';
 import {
   AccountIcon,
-  ChecklistIcon,
   ClientIcon,
   HomeIcon,
   RollerIcon,
@@ -38,7 +37,6 @@ import { Can } from '@/features/auth';
 export const NAV = [
   // Exact match only: `/` would otherwise prefix every path — see `SidebarNavItem`.
   { href: '/', key: 'home', Icon: HomeIcon },
-  { href: '/my-worksites', key: 'myWorksites', Icon: ChecklistIcon },
   { href: '/worksites', key: 'worksites', Icon: WorksiteIcon },
   { href: '/clients', key: 'clients', Icon: ClientIcon, permission: Permission.CLIENT_READ },
   { href: '/workers', key: 'workers', Icon: WorkerIcon, permission: Permission.WORKER_READ },
