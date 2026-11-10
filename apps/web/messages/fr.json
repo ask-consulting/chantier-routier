@@ -5,6 +5,7 @@
   },
   "nav": {
     "home": "Accueil",
+    "myWorksites": "Mes chantiers",
     "worksites": "Chantiers",
     "clients": "Clients",
     "workers": "Ouvriers",
@@ -514,5 +515,62 @@
     "errorExists": "Ce chantier a déjà un planning.",
     "errorDates": "La fin ne peut pas précéder le début.",
     "errorUnknown": "L'opération a échoué. Réessayez."
+  },
+  "myWorksites": {
+    "title": "Mes chantiers en cours",
+    "summary": "{late} en retard et {control} à contrôler demandent votre attention.",
+    "exampleData": "Données d'exemple : ces chantiers viennent d'un fichier de démonstration et rien n'est enregistré.",
+    "search": "Rechercher",
+    "searchPlaceholder": "Rechercher un chantier",
+    "all": "Tous",
+    "health": {
+      "late": "En retard",
+      "control": "À contrôler",
+      "ok": "Dans les temps"
+    },
+    "open": "Ouvrir {name}",
+    "phaseOf": "Phase {index} sur {total}",
+    "noneTitle": "Aucun chantier ne vous est affecté",
+    "noneDescription": "Vos chantiers apparaîtront ici dès qu'un responsable vous y aura affecté.",
+    "noMatch": "Aucun chantier ne correspond à cette recherche.",
+    "back": "Mes chantiers",
+    "notFoundTitle": "Chantier introuvable",
+    "notFoundDescription": "Ce chantier n'existe pas ou ne vous est pas affecté.",
+    "enterProgress": "Saisir l'avancement",
+    "progressHint": "La tâche, la phase et le chantier se recalculent quand une sous-tâche avance.",
+    "statProgress": "Avancement réel",
+    "statPlanned": "Prévu à cette date : {percent} %",
+    "statDelay": "Retard",
+    "noDelay": "Aucun",
+    "days": "{count} j",
+    "statBudget": "Budget consommé",
+    "statBudgetSub": "Sur le budget total",
+    "statSite": "Sur le chantier",
+    "statSiteSub": "Personnes, {gear} engins",
+    "sections": "Sections du chantier",
+    "seeAll": "Tout voir",
+    "todoTitle": "À faire maintenant",
+    "todoEmpty": "Rien à traiter pour l'instant.",
+    "listEmpty": "Rien à afficher pour l'instant.",
+    "shortcut": {
+      "notes": "Note",
+      "team": "Personnel",
+      "equipment": "Matériel",
+      "purchases": "Achat"
+    },
+    "tab": {
+      "overview": "Vue d'ensemble",
+      "planning": "Planning",
+      "progress": "Avancement",
+      "team": "Personnel",
+      "equipment": "Matériel",
+      "purchases": "Achats",
+      "notes": "Notes"
+    },
+    "todoKind": {
+      "control": "Contrôle",
+      "purchase": "Achat",
+      "team": "Équipe"
+    }
   }
 }

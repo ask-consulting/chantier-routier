@@ -5,6 +5,7 @@
   },
   "nav": {
     "home": "الرئيسية",
+    "myWorksites": "أوراشي",
     "worksites": "الأوراش",
     "clients": "العملاء",
     "workers": "العمال",
@@ -514,5 +515,62 @@
     "errorExists": "لهذا الورش تخطيط بالفعل.",
     "errorDates": "لا يمكن أن تسبق النهاية البداية.",
     "errorUnknown": "فشلت العملية. أعد المحاولة."
+  },
+  "myWorksites": {
+    "title": "أوراشي الجارية",
+    "summary": "{late} متأخرة و{control} للمراقبة تتطلب انتباهك.",
+    "exampleData": "بيانات تجريبية: هذه الأوراش مصدرها ملف تجريبي ولا يُحفظ أي شيء.",
+    "search": "بحث",
+    "searchPlaceholder": "ابحث عن ورش",
+    "all": "الكل",
+    "health": {
+      "late": "متأخر",
+      "control": "للمراقبة",
+      "ok": "في الوقت المحدد"
+    },
+    "open": "فتح {name}",
+    "phaseOf": "المرحلة {index} من {total}",
+    "noneTitle": "لا يوجد ورش مخصص لك",
+    "noneDescription": "ستظهر أوراشك هنا بمجرد أن يخصصها لك مسؤول.",
+    "noMatch": "لا يوجد ورش يطابق هذا البحث.",
+    "back": "أوراشي",
+    "notFoundTitle": "الورش غير موجود",
+    "notFoundDescription": "هذا الورش غير موجود أو غير مخصص لك.",
+    "enterProgress": "إدخال التقدم",
+    "progressHint": "تُحسب المهمة والمرحلة والورش من جديد عند تقدم مهمة فرعية.",
+    "statProgress": "التقدم الفعلي",
+    "statPlanned": "المتوقع في هذا التاريخ: {percent} %",
+    "statDelay": "التأخير",
+    "noDelay": "لا يوجد",
+    "days": "{count} يوم",
+    "statBudget": "الميزانية المستهلكة",
+    "statBudgetSub": "من الميزانية الإجمالية",
+    "statSite": "في الورش",
+    "statSiteSub": "أشخاص، {gear} معدات",
+    "sections": "أقسام الورش",
+    "seeAll": "عرض الكل",
+    "todoTitle": "للإنجاز الآن",
+    "todoEmpty": "لا شيء للمعالجة حاليًا.",
+    "listEmpty": "لا شيء للعرض حاليًا.",
+    "shortcut": {
+      "notes": "ملاحظة",
+      "team": "العمال",
+      "equipment": "المعدات",
+      "purchases": "شراء"
+    },
+    "tab": {
+      "overview": "نظرة عامة",
+      "planning": "التخطيط",
+      "progress": "التقدم",
+      "team": "العمال",
+      "equipment": "المعدات",
+      "purchases": "المشتريات",
+      "notes": "الملاحظات"
+    },
+    "todoKind": {
+      "control": "مراقبة",
+      "purchase": "شراء",
+      "team": "فريق"
+    }
   }
 }

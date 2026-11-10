@@ -1,0 +1,1501 @@
+{
+  "worksites": [
+    {
+      "id": "rn1",
+      "code": "RN1-01",
+      "name": "Réfection de la RN1, Sousse nord",
+      "client": "Direction régionale de l’Équipement",
+      "status": "late",
+      "delayDays": 9,
+      "plannedProgress": 63,
+      "spendPercent": 58,
+      "teamCount": 14,
+      "gearCount": 5,
+      "next": {
+        "when": "Mardi",
+        "label": "Essai de densité et de portance"
+      },
+      "assignedEmails": [
+        "conducteur@chantia-demo.test",
+        "chef@chantia-demo.test"
+      ],
+      "phases": [
+        {
+          "label": "Préparation du chantier",
+          "startPercent": 0,
+          "durationPercent": 6,
+          "tasks": [
+            {
+              "label": "Préparation du chantier",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-0-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-0-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-0-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Dégagement des emprises",
+          "startPercent": 5,
+          "durationPercent": 8,
+          "tasks": [
+            {
+              "label": "Dégagement des emprises",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-1-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-1-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-1-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Ouvrages hydrauliques",
+          "startPercent": 12,
+          "durationPercent": 18,
+          "tasks": [
+            {
+              "label": "Ouvrages hydrauliques",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-2-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-2-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-2-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Terrassements",
+          "startPercent": 22,
+          "durationPercent": 24,
+          "tasks": [
+            {
+              "label": "Terrassements",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-3-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-3-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-3-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Corps de chaussée",
+          "startPercent": 44,
+          "durationPercent": 24,
+          "tasks": [
+            {
+              "label": "Couche de fondation",
+              "durationPercent": 55,
+              "subtasks": [
+                {
+                  "id": "rn1-4-0-0",
+                  "label": "Approvisionnement en grave",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-4-0-1",
+                  "label": "Contrôle du matériau",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-4-0-2",
+                  "label": "Mise en œuvre et compactage",
+                  "progress": 100
+                },
+                {
+                  "id": "rn1-4-0-3",
+                  "label": "Essai de densité et de portance",
+                  "progress": 60
+                }
+              ]
+            },
+            {
+              "label": "Couche de base",
+              "durationPercent": 40,
+              "subtasks": [
+                {
+                  "id": "rn1-4-1-0",
+                  "label": "Mise en œuvre de la grave",
+                  "progress": 30
+                },
+                {
+                  "id": "rn1-4-1-1",
+                  "label": "Essai de densité et contrôle des cotes",
+                  "progress": 0
+                }
+              ]
+            },
+            {
+              "label": "Accotements",
+              "durationPercent": 20,
+              "subtasks": [
+                {
+                  "id": "rn1-4-2-0",
+                  "label": "Épaulement en grave concassée",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-4-2-1",
+                  "label": "Revêtement des accotements",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Revêtement",
+          "startPercent": 66,
+          "durationPercent": 14,
+          "tasks": [
+            {
+              "label": "Revêtement",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-5-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-5-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-5-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Signalisation",
+          "startPercent": 78,
+          "durationPercent": 16,
+          "tasks": [
+            {
+              "label": "Signalisation",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-6-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-6-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-6-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Réception",
+          "startPercent": 94,
+          "durationPercent": 6,
+          "tasks": [
+            {
+              "label": "Réception",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "rn1-7-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-7-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "rn1-7-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "todo": [
+        {
+          "label": "Essai de densité et de portance",
+          "detail": "Point de contrôle · mardi",
+          "kind": "control"
+        },
+        {
+          "label": "Commander l’émulsion de bitume",
+          "detail": "18 t prévues, rien de commandé",
+          "kind": "purchase"
+        },
+        {
+          "label": "Remplacer un ouvrier absent",
+          "detail": "Couche de base · aujourd’hui",
+          "kind": "team"
+        }
+      ],
+      "team": [
+        {
+          "title": "Mohamed Ayari",
+          "detail": "Chef de chantier",
+          "meta": "Présent"
+        },
+        {
+          "title": "Slim Gharbi",
+          "detail": "Conducteur de niveleuse",
+          "meta": "Présent"
+        },
+        {
+          "title": "Anis Trabelsi",
+          "detail": "Ouvrier",
+          "meta": "Absent aujourd’hui"
+        }
+      ],
+      "equipment": [
+        {
+          "title": "Niveleuse N-02",
+          "detail": "Couche de base",
+          "meta": "Jusqu’au 20 novembre"
+        },
+        {
+          "title": "Compacteur HAMM HD12",
+          "detail": "Couche de base",
+          "meta": "Jusqu’au 24 novembre"
+        },
+        {
+          "title": "Camion benne Volvo FMX",
+          "detail": "Approvisionnement",
+          "meta": "En location"
+        }
+      ],
+      "purchases": [
+        {
+          "title": "Grave concassée 0/31,5",
+          "detail": "420 m³ prévus, 310 m³ reçus",
+          "meta": "Livré le 6 novembre"
+        },
+        {
+          "title": "Émulsion de bitume",
+          "detail": "18 t prévues, 0 t reçue",
+          "meta": "À commander"
+        }
+      ],
+      "notes": [
+        {
+          "title": "Mohamed Ayari, aujourd’hui",
+          "detail": "Livraison de grave retardée de deux jours.",
+          "meta": "Tâche : couche de base"
+        },
+        {
+          "title": "Conducteur de travaux, hier",
+          "detail": "Réunion avec le client mercredi à 9 h.",
+          "meta": "Projet"
+        }
+      ]
+    },
+    {
+      "id": "im4",
+      "code": "IMM-03",
+      "name": "Immeuble Les Oliviers, Sahloul",
+      "client": "SCI Les Oliviers",
+      "status": "late",
+      "delayDays": 6,
+      "plannedProgress": 70,
+      "spendPercent": 74,
+      "teamCount": 22,
+      "gearCount": 4,
+      "next": {
+        "when": "Lundi",
+        "label": "Essai de pression des canalisations"
+      },
+      "assignedEmails": [
+        "conducteur@chantia-demo.test"
+      ],
+      "phases": [
+        {
+          "label": "Préparation du chantier",
+          "startPercent": 0,
+          "durationPercent": 4,
+          "tasks": [
+            {
+              "label": "Préparation du chantier",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-0-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "im4-0-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "im4-0-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Infrastructure",
+          "startPercent": 3,
+          "durationPercent": 14,
+          "tasks": [
+            {
+              "label": "Infrastructure",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-1-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "im4-1-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "im4-1-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Superstructure",
+          "startPercent": 16,
+          "durationPercent": 38,
+          "tasks": [
+            {
+              "label": "Superstructure",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-2-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "im4-2-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "im4-2-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Lots techniques",
+          "startPercent": 35,
+          "durationPercent": 30,
+          "tasks": [
+            {
+              "label": "Lots techniques",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-3-0",
+                  "label": "Préparation",
+                  "progress": 40
+                },
+                {
+                  "id": "im4-3-1",
+                  "label": "Exécution",
+                  "progress": 40
+                },
+                {
+                  "id": "im4-3-2",
+                  "label": "Contrôle",
+                  "progress": 40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Finitions",
+          "startPercent": 48,
+          "durationPercent": 44,
+          "tasks": [
+            {
+              "label": "Finitions",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-4-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "im4-4-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "im4-4-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Abords et raccordements",
+          "startPercent": 84,
+          "durationPercent": 12,
+          "tasks": [
+            {
+              "label": "Abords et raccordements",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-5-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "im4-5-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "im4-5-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Réception",
+          "startPercent": 95,
+          "durationPercent": 5,
+          "tasks": [
+            {
+              "label": "Réception",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "im4-6-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "im4-6-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "im4-6-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "todo": [],
+      "team": [],
+      "equipment": [],
+      "purchases": [],
+      "notes": []
+    },
+    {
+      "id": "hg6",
+      "code": "HAN-01",
+      "name": "Hangar logistique, Enfidha",
+      "client": "Trans Sahel",
+      "status": "control",
+      "delayDays": null,
+      "plannedProgress": 40,
+      "spendPercent": 39,
+      "teamCount": 11,
+      "gearCount": 2,
+      "next": {
+        "when": "Aujourd’hui",
+        "label": "Contrôle du serrage et de l’aplomb"
+      },
+      "assignedEmails": [
+        "conducteur@chantia-demo.test",
+        "chef@chantia-demo.test"
+      ],
+      "phases": [
+        {
+          "label": "Préparation du chantier",
+          "startPercent": 0,
+          "durationPercent": 6,
+          "tasks": [
+            {
+              "label": "Préparation du chantier",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-0-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "hg6-0-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "hg6-0-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Terrassement et fondations",
+          "startPercent": 5,
+          "durationPercent": 14,
+          "tasks": [
+            {
+              "label": "Terrassement et fondations",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-1-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "hg6-1-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "hg6-1-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Charpente métallique",
+          "startPercent": 10,
+          "durationPercent": 40,
+          "tasks": [
+            {
+              "label": "Charpente métallique",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-2-0",
+                  "label": "Préparation",
+                  "progress": 60
+                },
+                {
+                  "id": "hg6-2-1",
+                  "label": "Exécution",
+                  "progress": 60
+                },
+                {
+                  "id": "hg6-2-2",
+                  "label": "Contrôle",
+                  "progress": 60
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Enveloppe",
+          "startPercent": 45,
+          "durationPercent": 18,
+          "tasks": [
+            {
+              "label": "Enveloppe",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-3-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-3-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-3-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Dallage industriel",
+          "startPercent": 58,
+          "durationPercent": 15,
+          "tasks": [
+            {
+              "label": "Dallage industriel",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-4-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-4-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-4-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Lots techniques et portes",
+          "startPercent": 62,
+          "durationPercent": 22,
+          "tasks": [
+            {
+              "label": "Lots techniques et portes",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-5-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-5-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-5-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Abords",
+          "startPercent": 80,
+          "durationPercent": 14,
+          "tasks": [
+            {
+              "label": "Abords",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-6-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-6-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-6-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Réception",
+          "startPercent": 95,
+          "durationPercent": 5,
+          "tasks": [
+            {
+              "label": "Réception",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "hg6-7-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-7-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "hg6-7-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "todo": [],
+      "team": [],
+      "equipment": [],
+      "purchases": [],
+      "notes": []
+    },
+    {
+      "id": "vl2",
+      "code": "VIL-07",
+      "name": "Villa R+1, Hammam Sousse",
+      "client": "M. Ben Salah",
+      "status": "control",
+      "delayDays": null,
+      "plannedProgress": 35,
+      "spendPercent": 34,
+      "teamCount": 8,
+      "gearCount": 2,
+      "next": {
+        "when": "Demain",
+        "label": "Contrôle du plancher avant coulage"
+      },
+      "assignedEmails": [
+        "chef@chantia-demo.test"
+      ],
+      "phases": [
+        {
+          "label": "Préparation du chantier",
+          "startPercent": 0,
+          "durationPercent": 6,
+          "tasks": [
+            {
+              "label": "Préparation du chantier",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-0-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "vl2-0-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "vl2-0-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Terrassement et fondations",
+          "startPercent": 5,
+          "durationPercent": 15,
+          "tasks": [
+            {
+              "label": "Terrassement et fondations",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-1-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "vl2-1-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "vl2-1-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Gros œuvre",
+          "startPercent": 18,
+          "durationPercent": 32,
+          "tasks": [
+            {
+              "label": "Gros œuvre",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-2-0",
+                  "label": "Préparation",
+                  "progress": 50
+                },
+                {
+                  "id": "vl2-2-1",
+                  "label": "Exécution",
+                  "progress": 50
+                },
+                {
+                  "id": "vl2-2-2",
+                  "label": "Contrôle",
+                  "progress": 50
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Corps d’état techniques",
+          "startPercent": 40,
+          "durationPercent": 25,
+          "tasks": [
+            {
+              "label": "Corps d’état techniques",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-3-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-3-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-3-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Enveloppe et finitions",
+          "startPercent": 50,
+          "durationPercent": 42,
+          "tasks": [
+            {
+              "label": "Enveloppe et finitions",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-4-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-4-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-4-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Aménagements extérieurs",
+          "startPercent": 80,
+          "durationPercent": 16,
+          "tasks": [
+            {
+              "label": "Aménagements extérieurs",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-5-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-5-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-5-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Réception",
+          "startPercent": 94,
+          "durationPercent": 6,
+          "tasks": [
+            {
+              "label": "Réception",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "vl2-6-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-6-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "vl2-6-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "todo": [],
+      "team": [],
+      "equipment": [],
+      "purchases": [],
+      "notes": []
+    },
+    {
+      "id": "ep3",
+      "code": "EP-12",
+      "name": "Réseau d’eau potable, Msaken",
+      "client": "SONEDE",
+      "status": "ok",
+      "delayDays": null,
+      "plannedProgress": 44,
+      "spendPercent": 41,
+      "teamCount": 9,
+      "gearCount": 3,
+      "next": {
+        "when": "Vendredi",
+        "label": "Essai de pression"
+      },
+      "assignedEmails": [
+        "conducteur@chantia-demo.test"
+      ],
+      "phases": [
+        {
+          "label": "Préparation du chantier",
+          "startPercent": 0,
+          "durationPercent": 8,
+          "tasks": [
+            {
+              "label": "Préparation du chantier",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-0-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "ep3-0-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "ep3-0-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Terrassement des tranchées",
+          "startPercent": 7,
+          "durationPercent": 25,
+          "tasks": [
+            {
+              "label": "Terrassement des tranchées",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-1-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "ep3-1-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "ep3-1-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pose des conduites",
+          "startPercent": 18,
+          "durationPercent": 30,
+          "tasks": [
+            {
+              "label": "Pose des conduites",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-2-0",
+                  "label": "Préparation",
+                  "progress": 50
+                },
+                {
+                  "id": "ep3-2-1",
+                  "label": "Exécution",
+                  "progress": 50
+                },
+                {
+                  "id": "ep3-2-2",
+                  "label": "Contrôle",
+                  "progress": 50
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Essais",
+          "startPercent": 46,
+          "durationPercent": 8,
+          "tasks": [
+            {
+              "label": "Essais",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-3-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-3-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-3-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Branchements",
+          "startPercent": 50,
+          "durationPercent": 14,
+          "tasks": [
+            {
+              "label": "Branchements",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-4-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-4-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-4-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Remblai et réfection",
+          "startPercent": 60,
+          "durationPercent": 24,
+          "tasks": [
+            {
+              "label": "Remblai et réfection",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-5-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-5-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-5-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Mise en service",
+          "startPercent": 82,
+          "durationPercent": 10,
+          "tasks": [
+            {
+              "label": "Mise en service",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-6-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-6-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-6-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Réception",
+          "startPercent": 93,
+          "durationPercent": 7,
+          "tasks": [
+            {
+              "label": "Réception",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "ep3-7-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-7-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "ep3-7-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "todo": [],
+      "team": [],
+      "equipment": [],
+      "purchases": [],
+      "notes": []
+    },
+    {
+      "id": "pr5",
+      "code": "PIS-02",
+      "name": "Piste rurale de Bembla",
+      "client": "Conseil régional",
+      "status": "ok",
+      "delayDays": null,
+      "plannedProgress": 26,
+      "spendPercent": 25,
+      "teamCount": 6,
+      "gearCount": 3,
+      "next": {
+        "when": "Jeudi",
+        "label": "Pose des buses"
+      },
+      "assignedEmails": [
+        "chef@chantia-demo.test"
+      ],
+      "phases": [
+        {
+          "label": "Préparation du chantier",
+          "startPercent": 0,
+          "durationPercent": 8,
+          "tasks": [
+            {
+              "label": "Préparation du chantier",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "pr5-0-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "pr5-0-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "pr5-0-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Terrassements",
+          "startPercent": 7,
+          "durationPercent": 25,
+          "tasks": [
+            {
+              "label": "Terrassements",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "pr5-1-0",
+                  "label": "Préparation",
+                  "progress": 100
+                },
+                {
+                  "id": "pr5-1-1",
+                  "label": "Exécution",
+                  "progress": 100
+                },
+                {
+                  "id": "pr5-1-2",
+                  "label": "Contrôle",
+                  "progress": 100
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Assainissement",
+          "startPercent": 28,
+          "durationPercent": 22,
+          "tasks": [
+            {
+              "label": "Assainissement",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "pr5-2-0",
+                  "label": "Préparation",
+                  "progress": 20
+                },
+                {
+                  "id": "pr5-2-1",
+                  "label": "Exécution",
+                  "progress": 20
+                },
+                {
+                  "id": "pr5-2-2",
+                  "label": "Contrôle",
+                  "progress": 20
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Chaussée",
+          "startPercent": 48,
+          "durationPercent": 34,
+          "tasks": [
+            {
+              "label": "Chaussée",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "pr5-3-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "pr5-3-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "pr5-3-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Équipements",
+          "startPercent": 80,
+          "durationPercent": 14,
+          "tasks": [
+            {
+              "label": "Équipements",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "pr5-4-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "pr5-4-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "pr5-4-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Réception",
+          "startPercent": 94,
+          "durationPercent": 6,
+          "tasks": [
+            {
+              "label": "Réception",
+              "durationPercent": 100,
+              "subtasks": [
+                {
+                  "id": "pr5-5-0",
+                  "label": "Préparation",
+                  "progress": 0
+                },
+                {
+                  "id": "pr5-5-1",
+                  "label": "Exécution",
+                  "progress": 0
+                },
+                {
+                  "id": "pr5-5-2",
+                  "label": "Contrôle",
+                  "progress": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "todo": [],
+      "team": [],
+      "equipment": [],
+      "purchases": [],
+      "notes": []
+    }
+  ]
+}
