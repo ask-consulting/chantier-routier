@@ -1,5 +1,9 @@
 import type {
+  IAssignTaskWorker,
   IEquipmentAssignment,
+  ITaskTeam,
+  ITaskWorker,
+  IWorker,
   IMyWorksite,
   IUser,
   IWorksiteMember,
@@ -44,5 +48,37 @@ export async function fetchAssignments(worksiteId: string): Promise<IEquipmentAs
   const page = await apiFetch<Paginated<IEquipmentAssignment>>(
     `/equipment-assignments?worksiteId=${worksiteId}&limit=100`,
   );
+  return page.items;
+}
+
+export function fetchTaskTeam(worksiteId: string): Promise<ITaskTeam> {
+  return apiFetch<ITaskTeam>(`/worksites/${worksiteId}/task-team`);
+}
+
+export function assignTaskWorker(taskId: string, payload: IAssignTaskWorker): Promise<ITaskWorker> {
+  return apiFetch<ITaskWorker>(`/worksite-tasks/${taskId}/workers`, {
+    method: 'POST',
+    data: payload,
+  });
+}
+
+export function removeTaskWorker(id: string): Promise<void> {
+  return apiFetch<void>(`/task-workers/${id}`, { method: 'DELETE' });
+}
+
+export function linkTaskEquipment(taskId: string, equipmentAssignmentId: string): Promise<void> {
+  return apiFetch<void>(`/worksite-tasks/${taskId}/equipment`, {
+    method: 'POST',
+    data: { equipmentAssignmentId },
+  });
+}
+
+export function unlinkTaskEquipment(id: string): Promise<void> {
+  return apiFetch<void>(`/task-equipment/${id}`, { method: 'DELETE' });
+}
+
+/** The workers still on the payroll: who can be put on a task. */
+export async function fetchActiveWorkers(): Promise<IWorker[]> {
+  const page = await apiFetch<Paginated<IWorker>>('/workers?paginated=false&active=true');
   return page.items;
 }

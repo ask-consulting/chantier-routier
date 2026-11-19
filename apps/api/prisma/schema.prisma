@@ -264,7 +264,8 @@ model Worker {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  timesheets Timesheet[]
+  timesheets  Timesheet[]
+  taskWorkers TaskWorker[]
 
   @@index([organizationId], map: "ix_workers_organization_id")
   @@map("workers")
@@ -546,8 +547,9 @@ model EquipmentAssignment {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: NoAction, map: "fk_equipment_assignments_equipment")
-  worksite  Worksite  @relation(fields: [worksiteId], references: [id], onDelete: NoAction, map: "fk_equipment_assignments_worksites")
+  equipment Equipment       @relation(fields: [equipmentId], references: [id], onDelete: NoAction, map: "fk_equipment_assignments_equipment")
+  worksite  Worksite        @relation(fields: [worksiteId], references: [id], onDelete: NoAction, map: "fk_equipment_assignments_worksites")
+  taskLinks TaskEquipment[]
 
   @@index([organizationId], map: "ix_equipment_assignments_organization_id")
   @@index([equipmentId, startDate], map: "ix_equipment_assignments_equipment_id_start_date")
@@ -821,9 +823,11 @@ model WorksiteTask {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  worksite Worksite       @relation(fields: [worksiteId], references: [id], onDelete: Cascade, map: "fk_worksite_tasks_worksites")
-  parent   WorksiteTask?  @relation("WorksiteTaskTree", fields: [parentId], references: [id], onDelete: Cascade, map: "fk_worksite_tasks_parent")
-  children WorksiteTask[] @relation("WorksiteTaskTree")
+  worksite  Worksite        @relation(fields: [worksiteId], references: [id], onDelete: Cascade, map: "fk_worksite_tasks_worksites")
+  parent    WorksiteTask?   @relation("WorksiteTaskTree", fields: [parentId], references: [id], onDelete: Cascade, map: "fk_worksite_tasks_parent")
+  children  WorksiteTask[]  @relation("WorksiteTaskTree")
+  workers   TaskWorker[]
+  equipment TaskEquipment[]
 
   @@index([organizationId], map: "ix_worksite_tasks_organization_id")
   @@index([worksiteId], map: "ix_worksite_tasks_worksite_id")
@@ -848,5 +852,57 @@ model WorksiteMember {
   @@index([organizationId], map: "ix_worksite_members_organization_id")
   @@index([userId], map: "ix_worksite_members_user_id")
   @@map("worksite_members")
+  @@schema("public")
+}
+
+enum PayMode {
+  task
+  day
+  hour
+
+  @@map("pay_mode")
+  @@schema("public")
+}
+
+/// A worker on a task, and how they are paid for it. The mode belongs here, not
+/// to the worker: the same person can be paid by the task on one and by the day
+/// on another. `rate` is frozen when assigned, in the currency's smallest unit:
+/// per hour, per day, or for the whole task.
+model TaskWorker {
+  id             String   @id(map: "pk_task_workers") @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  worksiteTaskId String   @map("worksite_task_id") @db.Uuid
+  workerId       String   @map("worker_id") @db.Uuid
+  payMode        PayMode  @map("pay_mode")
+  rate           BigInt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  task   WorksiteTask @relation(fields: [worksiteTaskId], references: [id], onDelete: Cascade, map: "fk_task_workers_worksite_tasks")
+  worker Worker       @relation(fields: [workerId], references: [id], onDelete: NoAction, map: "fk_task_workers_workers")
+
+  @@unique([worksiteTaskId, workerId], map: "uq_task_workers_worksite_task_id_worker_id")
+  @@index([organizationId], map: "ix_task_workers_organization_id")
+  @@index([workerId], map: "ix_task_workers_worker_id")
+  @@map("task_workers")
+  @@schema("public")
+}
+
+/// A machine booked on the worksite, put on one of its tasks. The booking keeps
+/// its dates and its cost: this only says what it is used for.
+model TaskEquipment {
+  id                    String   @id(map: "pk_task_equipment") @default(uuid()) @db.Uuid
+  organizationId        String   @map("organization_id") @db.Uuid
+  worksiteTaskId        String   @map("worksite_task_id") @db.Uuid
+  equipmentAssignmentId String   @map("equipment_assignment_id") @db.Uuid
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  task       WorksiteTask        @relation(fields: [worksiteTaskId], references: [id], onDelete: Cascade, map: "fk_task_equipment_worksite_tasks")
+  assignment EquipmentAssignment @relation(fields: [equipmentAssignmentId], references: [id], onDelete: Cascade, map: "fk_task_equipment_equipment_assignments")
+
+  @@unique([worksiteTaskId, equipmentAssignmentId], map: "uq_task_equipment_worksite_task_id_equipment_assignment_id")
+  @@index([organizationId], map: "ix_task_equipment_organization_id")
+  @@index([equipmentAssignmentId], map: "ix_task_equipment_equipment_assignment_id")
+  @@map("task_equipment")
   @@schema("public")
 }

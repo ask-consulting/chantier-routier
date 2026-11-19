@@ -1,12 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  Permission,
-  PlanNodeLevel,
-  type IMyWorksite,
-  type IWorksiteTask,
-} from '@chantia/shared';
+import { Permission, PlanNodeLevel, type IMyWorksite, type IWorksiteTask } from '@chantia/shared';
 import { apiClient } from '@/shared/api/http-client';
 import { renderWithProviders } from '@/test/render';
 import { MyWorksitePage } from './my-worksite-page';

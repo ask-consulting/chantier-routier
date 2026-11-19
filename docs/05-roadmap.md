@@ -19,8 +19,9 @@ qui en a besoin.
 1. Créer le planning d'un chantier depuis la bibliothèque, l'afficher en Gantt. *(fait)*
 2. Suivre l'avancement : saisi sur les sous-tâches, calculé au-dessus, pondéré par la durée.
    « Mes chantiers » en page d'accueil : l'admin voit tout, les autres les chantiers dont ils
-   sont membres. *(en cours)*
-3. Affecter le personnel et le matériel aux tâches.
+   sont membres. *(fait)*
+3. Affecter le personnel et le matériel aux tâches, avec le mode de paie propre à chaque
+   affectation (à la tâche, au jour, à l'heure) et un tarif figé. *(en cours)*
 4. Gérer les achats de matières premières.
 5. Prendre des notes sur le projet, les phases, les tâches et le personnel.
 
