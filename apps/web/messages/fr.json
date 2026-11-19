@@ -17,7 +17,8 @@
     "expand": "Déployer le menu",
     "open": "Ouvrir le menu",
     "close": "Fermer le menu",
-    "invitations": "Invitations"
+    "invitations": "Invitations",
+    "materials": "Matières"
   },
   "home": {
     "title": "Chantiers en cours",
@@ -557,7 +558,8 @@
       "progress": "Avancement",
       "tasks": "Tâches",
       "team": "Équipe",
-      "equipment": "Matériel"
+      "equipment": "Matériel",
+      "materials": "Matières"
     },
     "phase": "Phase",
     "progressHint": "Déplacez une sous-tâche : la tâche, la phase et le chantier se recalculent.",
@@ -600,6 +602,60 @@
       "already": "Déjà affecté à cette tâche.",
       "rateRequired": "Indiquez le montant de la tâche.",
       "notOnWorksite": "Cet engin n'est pas réservé sur ce chantier."
+    },
+    "materialTitle": "Matières · {label}",
+    "chooseCategory": "Choisir une famille",
+    "material": "Matière",
+    "chooseMaterial": "Choisir une matière",
+    "quantity": "Quantité",
+    "quantityIn": "Quantité ({unit})",
+    "unitPrice": "Prix unitaire prévu",
+    "unitPriceHint": "Facultatif : à compléter quand un fournisseur a répondu.",
+    "plannedCost": "Coût prévu : {amount}",
+    "planMaterial": "Prévoir",
+    "planMaterialFor": "Prévoir une matière pour {label}",
+    "editNeed": "Modifier {name} sur {label}",
+    "materialErrors": {
+      "already": "Cette matière est déjà prévue sur cette tâche."
+    },
+    "phaseMaterialsCost": "Matières prévues sur la phase :",
+    "materialsHint": "Les quantités prévues de chaque matière, tâche par tâche."
+  },
+  "materials": {
+    "title": "Matières",
+    "subtitle": "Le catalogue commun, et les matières que votre entreprise y ajoute.",
+    "create": "Ajouter une matière",
+    "createTitle": "Nouvelle matière",
+    "editTitle": "Modifier la matière",
+    "label": "Nom",
+    "category": "Famille",
+    "unit": "Unité",
+    "unitHint": "L’unité ne change plus une fois la matière prévue sur une tâche.",
+    "own": "Ajoutée",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "remove": "Retirer",
+    "editFor": "Modifier {label}",
+    "removeFor": "Retirer {label}",
+    "removeTitle": "Retirer la matière ?",
+    "removeDescription": "« {label} » ne sera plus proposée. Les tâches qui la prévoient la gardent.",
+    "loadError": "Impossible de charger les matières.",
+    "emptyTitle": "Aucune matière",
+    "errors": {
+      "labelTaken": "Une matière de votre entreprise porte déjà ce nom.",
+      "unitInUse": "Une tâche compte déjà cette matière dans son unité.",
+      "save": "L'enregistrement a échoué. Réessayez."
+    },
+    "units": {
+      "t": "t",
+      "m3": "m³",
+      "m2": "m²",
+      "m": "m",
+      "kg": "kg",
+      "l": "L",
+      "bag": "sac",
+      "piece": "u"
     }
   }
 }

@@ -76,6 +76,15 @@ describe('equipment permissions', () => {
   });
 });
 
+describe('material permissions', () => {
+  it('lets the office extend the catalog, and the foreman only read it', () => {
+    expect(roleHasPermission(UserRole.SITE_MANAGER, Permission.MATERIAL_MANAGE)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.MATERIAL_READ)).toBe(true);
+    expect(roleHasPermission(UserRole.FOREMAN, Permission.MATERIAL_MANAGE)).toBe(false);
+    expect(roleHasPermission(UserRole.WORKER, Permission.MATERIAL_READ)).toBe(false);
+  });
+});
+
 describe('roleHasEveryPermission', () => {
   it('requires all of the listed permissions', () => {
     expect(

@@ -21,6 +21,15 @@ import {
   RemoveTaskWorkerHandler,
   UnlinkTaskEquipmentHandler,
 } from './application/task-team.handlers';
+import {
+  GetTaskMaterialsHandler,
+  PlanTaskMaterialHandler,
+  RemoveTaskMaterialHandler,
+  UpdateTaskMaterialHandler,
+} from './application/task-materials.handlers';
+import { TASK_MATERIALS_PORT } from './domain/ports/task-materials.port';
+import { TaskMaterialsRepository } from './infrastructure/repositories/task-materials.repository';
+import { TaskMaterialsController } from './presentation/controllers/task-materials.controller';
 import { PLAN_SOURCE_PORT } from './domain/ports/plan-source.port';
 import { TASK_TEAM_PORT } from './domain/ports/task-team.port';
 import { WORKSITE_TEAM_PORT } from './domain/ports/worksite-team.port';
@@ -47,6 +56,7 @@ import {
     MyWorksitesController,
     WorksiteMembersController,
     TaskTeamController,
+    TaskMaterialsController,
   ],
   providers: [
     GetWorksitePlanHandler,
@@ -63,6 +73,11 @@ import {
     RemoveTaskWorkerHandler,
     LinkTaskEquipmentHandler,
     UnlinkTaskEquipmentHandler,
+    GetTaskMaterialsHandler,
+    PlanTaskMaterialHandler,
+    UpdateTaskMaterialHandler,
+    RemoveTaskMaterialHandler,
+    { provide: TASK_MATERIALS_PORT, useClass: TaskMaterialsRepository },
     { provide: WORKSITE_TEAM_PORT, useClass: WorksiteTeamRepository },
     { provide: TASK_TEAM_PORT, useClass: TaskTeamRepository },
     { provide: WORKSITE_PLAN_REPOSITORY_PORT, useClass: WorksitePlanRepository },

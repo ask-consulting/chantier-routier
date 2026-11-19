@@ -1,5 +1,8 @@
 import type {
   IAssignTaskWorker,
+  IPlanTaskMaterial,
+  ITaskMaterial,
+  IUpdateTaskMaterial,
   IEquipmentAssignment,
   ITaskTeam,
   ITaskWorker,
@@ -81,4 +84,20 @@ export function unlinkTaskEquipment(id: string): Promise<void> {
 export async function fetchActiveWorkers(): Promise<IWorker[]> {
   const page = await apiFetch<Paginated<IWorker>>('/workers?paginated=false&active=true');
   return page.items;
+}
+
+export function fetchTaskMaterials(worksiteId: string): Promise<ITaskMaterial[]> {
+  return apiFetch<ITaskMaterial[]>(`/worksites/${worksiteId}/task-materials`);
+}
+
+export function planTaskMaterial(taskId: string, data: IPlanTaskMaterial): Promise<ITaskMaterial> {
+  return apiFetch<ITaskMaterial>(`/worksite-tasks/${taskId}/materials`, { method: 'POST', data });
+}
+
+export function updateTaskMaterial(id: string, data: IUpdateTaskMaterial): Promise<ITaskMaterial> {
+  return apiFetch<ITaskMaterial>(`/task-materials/${id}`, { method: 'PATCH', data });
+}
+
+export function removeTaskMaterial(id: string): Promise<void> {
+  return apiFetch<void>(`/task-materials/${id}`, { method: 'DELETE' });
 }

@@ -1,11 +1,15 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IAssignTaskWorker } from '@chantia/shared';
+import type { IAssignTaskWorker, IPlanTaskMaterial, IUpdateTaskMaterial } from '@chantia/shared';
 import {
   assignTaskWorker,
   fetchActiveWorkers,
   fetchTaskTeam,
+  fetchTaskMaterials,
+  planTaskMaterial,
+  removeTaskMaterial,
+  updateTaskMaterial,
   linkTaskEquipment,
   removeTaskWorker,
   unlinkTaskEquipment,
@@ -94,5 +98,31 @@ export function useTaskTeamChanges(worksiteId: string) {
       onSuccess,
     }),
     unlinkEquipment: useMutation({ mutationFn: unlinkTaskEquipment, onSuccess }),
+  };
+}
+
+export const useTaskMaterials = (worksiteId: string) =>
+  useQuery({
+    queryKey: [...ROOT, worksiteId, 'task-materials'],
+    queryFn: () => fetchTaskMaterials(worksiteId),
+  });
+
+/** Every change to what a task needs: they all refresh the same list. */
+export function useTaskMaterialChanges(worksiteId: string) {
+  const queryClient = useQueryClient();
+  const onSuccess = () =>
+    queryClient.invalidateQueries({ queryKey: [...ROOT, worksiteId, 'task-materials'] });
+  return {
+    plan: useMutation({
+      mutationFn: ({ taskId, data }: { taskId: string; data: IPlanTaskMaterial }) =>
+        planTaskMaterial(taskId, data),
+      onSuccess,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, data }: { id: string; data: IUpdateTaskMaterial }) =>
+        updateTaskMaterial(id, data),
+      onSuccess,
+    }),
+    remove: useMutation({ mutationFn: removeTaskMaterial, onSuccess }),
   };
 }

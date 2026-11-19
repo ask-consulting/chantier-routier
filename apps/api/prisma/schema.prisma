@@ -828,6 +828,7 @@ model WorksiteTask {
   children  WorksiteTask[]  @relation("WorksiteTaskTree")
   workers   TaskWorker[]
   equipment TaskEquipment[]
+  materials TaskMaterial[]
 
   @@index([organizationId], map: "ix_worksite_tasks_organization_id")
   @@index([worksiteId], map: "ix_worksite_tasks_worksite_id")
@@ -904,5 +905,138 @@ model TaskEquipment {
   @@index([organizationId], map: "ix_task_equipment_organization_id")
   @@index([equipmentAssignmentId], map: "ix_task_equipment_equipment_assignment_id")
   @@map("task_equipment")
+  @@schema("public")
+}
+
+// ---------------------------------------------------------------------------
+// Materials — what a worksite consumes: zeft, 7jar, trab, sand, cement…
+// ---------------------------------------------------------------------------
+
+/// The unit a material is counted in. Mirrors `MaterialUnit` in @chantia/shared.
+enum MaterialUnit {
+  t
+  m3
+  m2
+  m
+  kg
+  l
+  bag
+  piece
+
+  @@map("material_unit")
+  @@schema("public")
+}
+
+/// The families of the material catalog. Global and written only by
+/// migrations, like the equipment categories; an organization's own
+/// materials are filed under them too.
+model MaterialCategory {
+  id        String @id(map: "pk_material_categories") @default(uuid()) @db.Uuid
+  /// Readable and stable; the primary key is the UUID.
+  code      String @unique(map: "uq_material_categories_code")
+  sortOrder Int    @map("sort_order")
+
+  materials    CatalogMaterial[]
+  ownMaterials Material[]
+  translations MaterialCategoryTranslation[]
+
+  @@map("material_categories")
+  @@schema("public")
+}
+
+/// The common material catalog. Global, no `organizationId`, written only by
+/// migrations. Its labels live in `catalog_material_translations`.
+model CatalogMaterial {
+  id         String       @id(map: "pk_catalog_materials") @default(uuid()) @db.Uuid
+  /// Readable and stable; the primary key is the UUID.
+  code       String       @unique(map: "uq_catalog_materials_code")
+  categoryId String       @map("category_id") @db.Uuid
+  unit       MaterialUnit
+  sortOrder  Int          @map("sort_order")
+
+  category     MaterialCategory             @relation(fields: [categoryId], references: [id], onDelete: NoAction, map: "fk_catalog_materials_material_categories")
+  translations CatalogMaterialTranslation[]
+  taskNeeds    TaskMaterial[]
+
+  @@index([categoryId], map: "ix_catalog_materials_category_id")
+  @@map("catalog_materials")
+  @@schema("public")
+}
+
+/// A category's label in one language — see `EquipmentCategoryTranslation`.
+model MaterialCategoryTranslation {
+  categoryId String @map("category_id") @db.Uuid
+  locale     String
+  label      String
+
+  category MaterialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "fk_material_category_translations_material_categories")
+
+  @@id([categoryId, locale], map: "pk_material_category_translations")
+  @@map("material_category_translations")
+  @@schema("public")
+}
+
+/// A catalog material's label in one language — see `EquipmentCategoryTranslation`.
+model CatalogMaterialTranslation {
+  materialId String @map("material_id") @db.Uuid
+  locale     String
+  label      String
+
+  material CatalogMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade, map: "fk_catalog_material_translations_catalog_materials")
+
+  @@id([materialId, locale], map: "pk_catalog_material_translations")
+  @@map("catalog_material_translations")
+  @@schema("public")
+}
+
+/// A material an organization added for itself, beside the common catalog:
+/// one label, in whatever words it was typed. Removed by `deletedAt`, never a
+/// real delete — the tasks that planned it keep it.
+model Material {
+  id             String       @id(map: "pk_materials") @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  categoryId     String       @map("category_id") @db.Uuid
+  label          String
+  unit           MaterialUnit
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  category  MaterialCategory @relation(fields: [categoryId], references: [id], onDelete: NoAction, map: "fk_materials_material_categories")
+  taskNeeds TaskMaterial[]
+
+  /// Partial in the database — `WHERE deleted_at IS NULL`, on `lower(label)`:
+  /// two live materials of one organization never share a name.
+  @@index([organizationId], map: "ix_materials_organization_id")
+  @@map("materials")
+  @@schema("public")
+}
+
+/// What a task is planned to need of one material: a quantity in the
+/// material's unit, and an expected price per unit. The material is either
+/// one of the catalog or one of the organization's own — exactly one of the
+/// two, checked by the database (`ck_task_materials_one_material`).
+model TaskMaterial {
+  id                String   @id(map: "pk_task_materials") @default(uuid()) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  worksiteTaskId    String   @map("worksite_task_id") @db.Uuid
+  catalogMaterialId String?  @map("catalog_material_id") @db.Uuid
+  materialId        String?  @map("material_id") @db.Uuid
+  quantity          Decimal  @db.Decimal(14, 3)
+  /// Expected, per unit, in the currency's smallest unit. Absent until asked.
+  unitPrice         BigInt?  @map("unit_price")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  task            WorksiteTask     @relation(fields: [worksiteTaskId], references: [id], onDelete: Cascade, map: "fk_task_materials_worksite_tasks")
+  catalogMaterial CatalogMaterial? @relation(fields: [catalogMaterialId], references: [id], onDelete: NoAction, map: "fk_task_materials_catalog_materials")
+  material        Material?        @relation(fields: [materialId], references: [id], onDelete: NoAction, map: "fk_task_materials_materials")
+
+  @@unique([worksiteTaskId, catalogMaterialId], map: "uq_task_materials_worksite_task_id_catalog_material_id")
+  @@unique([worksiteTaskId, materialId], map: "uq_task_materials_worksite_task_id_material_id")
+  @@index([organizationId], map: "ix_task_materials_organization_id")
+  @@index([catalogMaterialId], map: "ix_task_materials_catalog_material_id")
+  @@index([materialId], map: "ix_task_materials_material_id")
+  @@map("task_materials")
   @@schema("public")
 }

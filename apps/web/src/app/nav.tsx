@@ -7,6 +7,7 @@ import {
   AccountIcon,
   ClientIcon,
   HomeIcon,
+  MaterialIcon,
   RollerIcon,
   WorkerIcon,
   WorksiteIcon,
@@ -45,6 +46,12 @@ export const NAV = [
     key: 'equipment',
     Icon: RollerIcon,
     permission: Permission.EQUIPMENT_READ,
+  },
+  {
+    href: '/materials',
+    key: 'materials',
+    Icon: MaterialIcon,
+    permission: Permission.MATERIAL_READ,
   },
 ] as const;
 

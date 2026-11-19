@@ -75,7 +75,7 @@ export class TaskNotAssignableException extends DomainException {
   readonly kind: DomainErrorKind = 'invalid-input';
 
   constructor() {
-    const message = 'People and machines go on tasks, not on a phase';
+    const message = 'People, machines and materials go on tasks, not on a phase';
     super(message, [{ field: 'taskId', code: 'form.errors.taskNotAssignable', message }]);
   }
 }
@@ -92,7 +92,7 @@ export class WorkerNotAvailableException extends DomainException {
 export class AlreadyOnTaskException extends DomainException {
   readonly kind: DomainErrorKind = 'conflict';
 
-  constructor(field: 'workerId' | 'equipmentAssignmentId') {
+  constructor(field: 'workerId' | 'equipmentAssignmentId' | 'materialId') {
     const message = 'Already on this task';
     super(message, [{ field, code: 'form.errors.alreadyOnTask', message }]);
   }
@@ -116,5 +116,14 @@ export class EquipmentNotOnWorksiteException extends DomainException {
     super(message, [
       { field: 'equipmentAssignmentId', code: 'form.errors.equipmentNotOnWorksite', message },
     ]);
+  }
+}
+
+export class UnknownMaterialException extends DomainException {
+  readonly kind: DomainErrorKind = 'invalid-input';
+
+  constructor() {
+    const message = 'No such material in the catalog or among the organization’s own';
+    super(message, [{ field: 'materialId', code: 'form.errors.unknownMaterial', message }]);
   }
 }

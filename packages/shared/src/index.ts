@@ -7,6 +7,7 @@ export * from './enums/permission.enums';
 export * from './enums/locale.enums';
 export * from './enums/access-request.enums';
 export * from './enums/plan.enums';
+export * from './enums/material.enums';
 
 // Authorization (role → permissions matrix, shared by API, web and mobile)
 export * from './access/role-permissions';
@@ -27,6 +28,7 @@ export * from './interfaces/auth.interface';
 export * from './interfaces/access-request.interface';
 export * from './interfaces/plan.interface';
 export * from './interfaces/worksite-plan.interface';
+export * from './interfaces/material.interface';
 
 // Money: whole numbers of the smallest unit, formatted per currency
 export * from './money/money';
@@ -36,6 +38,7 @@ export * from './planning/schedule';
 export * from './planning/progress';
 export * from './planning/summary';
 export * from './planning/pay';
+export * from './planning/materials';
 
 // The public demonstration
 export * from './demo/demo';
