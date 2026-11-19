@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { randomUUID } from 'node:crypto';
-import { Locale, UserRole, checkPasswordPolicy } from '@chantia/shared';
+import { Locale, UserRole } from '@chantia/shared';
+import { checkPasswordPolicy } from '@chantia/shared/security';
 import { AppModule } from '../app/app.module';
 import { Organization } from '../identity/domain/entities/organization.entity';
 import { User } from '../identity/domain/entities/user.entity';

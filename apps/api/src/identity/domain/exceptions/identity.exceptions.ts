@@ -1,4 +1,4 @@
-import { PasswordRule } from '@chantia/shared';
+import { PasswordRule } from '@chantia/shared/security';
 import { DomainErrorKind, DomainException } from '@shared/domain/domain.exception';
 
 /**

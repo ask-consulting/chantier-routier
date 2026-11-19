@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { checkPasswordPolicy } from '@chantia/shared';
+import { checkPasswordPolicy } from '@chantia/shared/security';
 import { IdentityConfig } from '../../config/identity.config';
 import {
   INVITATION_REPOSITORY_PORT,
