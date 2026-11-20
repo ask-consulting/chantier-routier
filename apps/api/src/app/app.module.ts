@@ -16,6 +16,7 @@ import { PlanningModule } from './planning/planning.module';
 import { DemoModule } from './demo/demo.module';
 import { ClientModule } from './client/client.module';
 import { EquipmentModule } from './equipment/equipment.module';
+import { MaterialModule } from './material/material.module';
 import { HealthModule } from './health/health.module';
 import { NotificationModule } from './notification/notification.module';
 import { WorkerModule } from './worker/worker.module';
@@ -45,6 +46,7 @@ const ENV = process.env.NODE_ENV;
     WorkerModule,
     ClientModule,
     EquipmentModule,
+    MaterialModule,
     WorksiteModule,
     AccessRequestModule,
     PlanLibraryModule,

@@ -25,6 +25,7 @@ export {
   ListChecks as ChecklistIcon,
   StickyNote as NoteIcon,
   ShoppingCart as PurchaseIcon,
+  BrickWall as MaterialIcon,
   Receipt as ExpenseIcon,
   Wallet as BudgetIcon,
   Building2 as OrganizationIcon,

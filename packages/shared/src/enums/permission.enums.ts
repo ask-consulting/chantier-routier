@@ -38,6 +38,11 @@ export enum Permission {
    */
   EQUIPMENT_CORRECT_HISTORY = 'equipment:correct-history',
 
+  /** The material catalog, common and the organization's own additions. */
+  MATERIAL_READ = 'material:read',
+  /** Add the organization's own materials, rename or remove them. */
+  MATERIAL_MANAGE = 'material:manage',
+
   /** The reference project plans and the organization's own plans. */
   PLAN_READ = 'plan:read',
   /** Copy a reference plan, edit or delete the organization's own plans. */

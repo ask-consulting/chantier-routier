@@ -21,8 +21,12 @@ qui en a besoin.
    « Mes chantiers » en page d'accueil : l'admin voit tout, les autres les chantiers dont ils
    sont membres. *(fait)*
 3. Affecter le personnel et le matériel aux tâches, avec le mode de paie propre à chaque
-   affectation (à la tâche, au jour, à l'heure) et un tarif figé. *(en cours)*
-4. Gérer les achats de matières premières.
+   affectation (à la tâche, au jour, à l'heure) et un tarif figé. *(fait)*
+4. Gérer les matières premières :
+   - catalogue commun (zeft, 7jar, trab, sable, ciment…) et matières propres à chaque
+     entreprise, quantités prévues par tâche avec un prix unitaire attendu ; *(en cours)*
+   - puis les achats réels : fournisseurs, bons de commande, livraisons, rapprochés des
+     quantités prévues.
 5. Prendre des notes sur le projet, les phases, les tâches et le personnel.
 
 ## 1. Vue d'ensemble

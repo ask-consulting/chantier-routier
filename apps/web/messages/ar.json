@@ -17,7 +17,8 @@
     "expand": "توسيع القائمة",
     "open": "فتح القائمة",
     "close": "إغلاق القائمة",
-    "invitations": "الدعوات"
+    "invitations": "الدعوات",
+    "materials": "المواد"
   },
   "home": {
     "title": "الأوراش الجارية",
@@ -557,7 +558,8 @@
       "progress": "التقدم",
       "tasks": "المهام",
       "team": "الفريق",
-      "equipment": "المعدات"
+      "equipment": "المعدات",
+      "materials": "المواد"
     },
     "phase": "المرحلة",
     "progressHint": "حرّك مهمة فرعية: تُحسب المهمة والمرحلة والورش من جديد.",
@@ -600,6 +602,60 @@
       "already": "مخصص بالفعل لهذه المهمة.",
       "rateRequired": "أدخل مبلغ المهمة.",
       "notOnWorksite": "هذه المعدة غير محجوزة في هذا الورش."
+    },
+    "materialTitle": "المواد · {label}",
+    "chooseCategory": "اختر الصنف",
+    "material": "المادة",
+    "chooseMaterial": "اختر المادة",
+    "quantity": "الكمية",
+    "quantityIn": "الكمية ({unit})",
+    "unitPrice": "سعر الوحدة المتوقع",
+    "unitPriceHint": "اختياري: يُكمَّل عند ردّ المزوّد.",
+    "plannedCost": "الكلفة المتوقعة: {amount}",
+    "planMaterial": "توقّع",
+    "planMaterialFor": "توقّع مادة لـ {label}",
+    "editNeed": "تعديل {name} في {label}",
+    "materialErrors": {
+      "already": "هذه المادة متوقعة مسبقًا في هذه المهمة."
+    },
+    "phaseMaterialsCost": "المواد المتوقعة في المرحلة:",
+    "materialsHint": "الكميات المتوقعة من كل مادة، مهمة بمهمة."
+  },
+  "materials": {
+    "title": "المواد",
+    "subtitle": "الكتالوج المشترك، والمواد التي تضيفها مؤسستك.",
+    "create": "إضافة مادة",
+    "createTitle": "مادة جديدة",
+    "editTitle": "تعديل المادة",
+    "label": "الاسم",
+    "category": "الصنف",
+    "unit": "الوحدة",
+    "unitHint": "لا تتغير الوحدة بعد توقّع المادة في مهمة.",
+    "own": "مضافة",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "remove": "سحب",
+    "editFor": "تعديل {label}",
+    "removeFor": "سحب {label}",
+    "removeTitle": "سحب المادة؟",
+    "removeDescription": "لن تُقترح «{label}» بعد الآن. المهام التي تتوقعها تحتفظ بها.",
+    "loadError": "تعذّر تحميل المواد.",
+    "emptyTitle": "لا توجد مواد",
+    "errors": {
+      "labelTaken": "توجد مادة في مؤسستك بهذا الاسم.",
+      "unitInUse": "مهمة تحسب هذه المادة بوحدتها مسبقًا.",
+      "save": "فشل الحفظ. أعد المحاولة."
+    },
+    "units": {
+      "t": "طن",
+      "m3": "م³",
+      "m2": "م²",
+      "m": "م",
+      "kg": "كغ",
+      "l": "ل",
+      "bag": "كيس",
+      "piece": "وحدة"
     }
   }
 }

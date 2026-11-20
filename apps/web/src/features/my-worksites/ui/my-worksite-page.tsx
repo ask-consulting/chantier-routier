@@ -32,9 +32,10 @@ import {
   useUpdateProgress,
 } from '../api/my-worksites.queries';
 import { currentPhaseIndex, entryLines, HEALTH_TONE, span } from '../model/my-worksites';
+import { TaskMaterials } from './task-materials';
 import { TaskTeam } from './task-team';
 
-type Tab = 'overview' | 'progress' | 'tasks' | 'team' | 'equipment';
+type Tab = 'overview' | 'progress' | 'tasks' | 'materials' | 'team' | 'equipment';
 
 function Stat({
   label,
@@ -374,16 +375,18 @@ export function MyWorksitePage({ id }: { id: string }) {
   const query = useMyWorksite(id);
   const canRecord = usePermission(Permission.PROGRESS_RECORD);
   const seesEquipment = usePermission(Permission.EQUIPMENT_READ);
+  const seesMaterials = usePermission(Permission.MATERIAL_READ);
   const [tab, setTab] = useState<Tab>('overview');
   const tabs = useMemo<Tab[]>(
     () => [
       'overview',
       'progress',
       'tasks',
+      ...(seesMaterials ? (['materials'] as Tab[]) : []),
       'team',
       ...(seesEquipment ? (['equipment'] as Tab[]) : []),
     ],
-    [seesEquipment],
+    [seesEquipment, seesMaterials],
   );
 
   if (query.isPending) {
@@ -506,6 +509,7 @@ export function MyWorksitePage({ id }: { id: string }) {
           <CardBody>
             {tab === 'progress' && <ProgressEntry worksite={worksite} />}
             {tab === 'tasks' && <TaskTeam worksite={worksite} />}
+            {tab === 'materials' && <TaskMaterials worksite={worksite} />}
             {tab === 'team' && <Team worksiteId={worksite.id} />}
             {tab === 'equipment' && <Equipment worksiteId={worksite.id} />}
           </CardBody>
