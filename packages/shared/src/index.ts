@@ -12,8 +12,9 @@ export * from './enums/material.enums';
 // Authorization (role → permissions matrix, shared by API, web and mobile)
 export * from './access/role-permissions';
 
-// Password policy — same rules server-side and in the sign-up form
-export * from './security/password-policy';
+// Password policy: not here. It carries a 10,000-word blocklist that only the
+// API needs, and this package is CommonJS, so a bundler cannot drop what a
+// screen does not use. Import it from `@chantia/shared/security`.
 
 // Interfaces (shared transport contracts API <-> web <-> mobile)
 export * from './interfaces/worksite.interface';

@@ -10,3 +10,6 @@ export type { WorksitePicker, WorksitePickerProps } from './ui/assignments-drawe
 
 // For a worksite's page, handed over by the `/worksites/[id]` route.
 export { WorksiteEquipment } from './ui/worksite-equipment';
+
+// For other features caching equipment data: under these keys, a change here refreshes them.
+export { equipmentKeys } from './api/equipment.keys';
