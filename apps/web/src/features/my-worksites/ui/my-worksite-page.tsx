@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Permission, type IMyWorksite, type IWorksiteTask } from '@chantia/shared';
 import { ApiError } from '@/shared/api/http-client';
@@ -32,7 +32,6 @@ import {
   useUpdateProgress,
 } from '../api/my-worksites.queries';
 import { currentPhaseIndex, entryLines, HEALTH_TONE, span } from '../model/my-worksites';
-import { TaskMaterials } from './task-materials';
 import { TaskTeam } from './task-team';
 
 type Tab = 'overview' | 'progress' | 'tasks' | 'materials' | 'team' | 'equipment';
@@ -369,7 +368,17 @@ function Equipment({ worksiteId }: { worksiteId: string }) {
 }
 
 /** One worksite: where it stands, what to do next, its progress and its team. */
-export function MyWorksitePage({ id }: { id: string }) {
+/** A tab another feature draws, handed over by the route: features do not import each other. */
+export type WorksiteTab = ComponentType<{ worksiteId: string; initialPhaseIndex: number }>;
+
+export function MyWorksitePage({
+  id,
+  MaterialsTab,
+}: {
+  id: string;
+  /** The materials planned on the tasks — from the materials feature. */
+  MaterialsTab?: WorksiteTab;
+}) {
   const t = useTranslations('myWorksites');
   const locale = useLocale() as Locale;
   const query = useMyWorksite(id);
@@ -382,11 +391,11 @@ export function MyWorksitePage({ id }: { id: string }) {
       'overview',
       'progress',
       'tasks',
-      ...(seesMaterials ? (['materials'] as Tab[]) : []),
+      ...(seesMaterials && MaterialsTab ? (['materials'] as Tab[]) : []),
       'team',
       ...(seesEquipment ? (['equipment'] as Tab[]) : []),
     ],
-    [seesEquipment, seesMaterials],
+    [seesEquipment, seesMaterials, MaterialsTab],
   );
 
   if (query.isPending) {
@@ -509,7 +518,12 @@ export function MyWorksitePage({ id }: { id: string }) {
           <CardBody>
             {tab === 'progress' && <ProgressEntry worksite={worksite} />}
             {tab === 'tasks' && <TaskTeam worksite={worksite} />}
-            {tab === 'materials' && <TaskMaterials worksite={worksite} />}
+            {tab === 'materials' && MaterialsTab && (
+              <MaterialsTab
+                worksiteId={worksite.id}
+                initialPhaseIndex={currentPhaseIndex(worksite)}
+              />
+            )}
             {tab === 'team' && <Team worksiteId={worksite.id} />}
             {tab === 'equipment' && <Equipment worksiteId={worksite.id} />}
           </CardBody>

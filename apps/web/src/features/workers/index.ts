@@ -9,3 +9,6 @@ export { WorkerListPage } from './ui/worker-list-page';
 
 export { useWorkers } from './api/worker.queries';
 export type { WorkerListParams } from './api/worker.api';
+
+// For other features caching workers: under these keys, a change here refreshes them.
+export { workerKeys } from './api/worker.keys';

@@ -58,11 +58,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // effect below reconciles with what the init script already applied.
   const [preference, setPreferenceState] = useState<ThemePreference>('system');
   const [resolved, setResolved] = useState<ResolvedTheme>('light');
+  // False until the stored preference is read. Until then `resolved` is the
+  // server's guess, and writing it to <html> would undo the init script: a
+  // dark reader would see a light frame between hydration and the next render.
+  const [synced, setSynced] = useState(false);
 
   useEffect(() => {
     const initial = readPreference();
     setPreferenceState(initial);
     setResolved(initial === 'system' ? systemTheme() : initial);
+    setSynced(true);
   }, []);
 
   // Only while following the system: a user who picked a theme explicitly does
@@ -78,8 +83,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [preference]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = resolved;
-  }, [resolved]);
+    if (synced) {
+      document.documentElement.dataset.theme = resolved;
+    }
+  }, [resolved, synced]);
 
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);

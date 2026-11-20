@@ -1,4 +1,4 @@
-import { PasswordRule } from '@chantia/shared';
+import { PasswordRule } from '@chantia/shared/security';
 import { describe, expect, it } from 'vitest';
 import {
   AccountDisabledException,

@@ -5,7 +5,6 @@ import {
   MaterialUnit,
   Permission,
   PlanNodeLevel,
-  type IMyWorksite,
   type IWorksiteTask,
 } from '@chantia/shared';
 import { apiClient } from '@/shared/api/http-client';
@@ -19,21 +18,6 @@ vi.mock('@/features/auth', () => ({
 }));
 
 const ID = '11111111-1111-4111-8111-111111111111';
-const worksite: IMyWorksite = {
-  id: ID,
-  code: 'C',
-  name: 'Chantier',
-  client: null,
-  plannedStartDate: '2026-01-01',
-  plannedEndDate: '2026-01-31',
-  health: 'ok',
-  progress: 0,
-  plannedProgress: 0,
-  delayDays: 0,
-  phases: [{ label: 'Gros œuvre', plannedStart: null, plannedEnd: null, progress: 0 }],
-  nextSteps: [],
-  memberCount: 0,
-};
 const line = (
   id: string,
   label: string,
@@ -145,7 +129,7 @@ async function pick(task: string, categoryId: string, materialId: string, name: 
 
 describe('TaskMaterials', () => {
   it('shows what each task needs, in its unit, and what the phase costs', async () => {
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
 
     expect(await screen.findByText(/Ciment · 120 sac · 2\s220/)).toBeTruthy();
     expect(screen.getByText('Sable de oued · 2,5 t')).toBeTruthy();
@@ -158,7 +142,7 @@ describe('TaskMaterials', () => {
       200,
       needs.map(({ unitPrice: _p, plannedCost: _c, ...need }) => need),
     );
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
 
     expect(await screen.findByText('Ciment · 120 sac')).toBeTruthy();
     expect(screen.queryByText('Matières prévues sur la phase :')).toBeNull();
@@ -168,7 +152,7 @@ describe('TaskMaterials', () => {
 
   it('plans a catalog material by quantity, with a price in millimes', async () => {
     mock.onPost('/worksite-tasks/t/materials').reply(201, {});
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
     const dialog = await pick('Fondations', 'agg', 'sand', 'Sable');
 
     expect(within(dialog).getByLabelText('Quantité (m³)')).toBeTruthy();
@@ -191,7 +175,7 @@ describe('TaskMaterials', () => {
 
   it('offers the organization’s own materials beside the catalog, a price left out', async () => {
     mock.onPost('/worksite-tasks/s/materials').reply(201, {});
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
     const dialog = await pick('Coulage', 'agg', 'oued', 'Sable de oued · Ajoutée');
 
     fireEvent.change(within(dialog).getByLabelText('Quantité (t)'), { target: { value: '3' } });
@@ -210,7 +194,7 @@ describe('TaskMaterials', () => {
       message: 'x',
       errors: [{ field: 'materialId', code: 'form.errors.alreadyOnTask', message: 'x' }],
     });
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
     const dialog = await pick('Fondations', 'agg', 'sand', 'Sable');
     fireEvent.change(within(dialog).getByLabelText('Quantité (m³)'), { target: { value: '1' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Prévoir' }));
@@ -223,7 +207,7 @@ describe('TaskMaterials', () => {
   it('changes a quantity, takes a price away, and removes a line', async () => {
     mock.onPatch('/task-materials/n1').reply(200, {});
     mock.onDelete('/task-materials/n2').reply(204);
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Modifier Ciment sur Fondations' }));
     const dialog = await screen.findByRole('dialog');
@@ -245,7 +229,7 @@ describe('TaskMaterials', () => {
   });
 
   it('refuses a negative price', async () => {
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
     const dialog = await pick('Fondations', 'agg', 'sand', 'Sable');
     fireEvent.change(within(dialog).getByLabelText('Quantité (m³)'), { target: { value: '1' } });
     fireEvent.change(within(dialog).getByLabelText('Prix unitaire prévu'), {
@@ -259,7 +243,7 @@ describe('TaskMaterials', () => {
 
   it('points to the planning when there is none', async () => {
     mock.onGet(`/worksites/${ID}/plan`).reply(200, { tasks: [] });
-    renderWithProviders(<TaskMaterials worksite={worksite} />);
+    renderWithProviders(<TaskMaterials worksiteId={ID} initialPhaseIndex={0} />);
 
     expect(await screen.findByText("Ce chantier n'a pas encore de planning")).toBeTruthy();
   });

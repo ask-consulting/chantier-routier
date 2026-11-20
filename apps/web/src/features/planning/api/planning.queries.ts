@@ -11,7 +11,18 @@ import {
   updateWorksiteTask,
 } from './planning.api';
 
-const planKey = (worksiteId: string) => ['planning', 'worksite', worksiteId] as const;
+/**
+ * A worksite's plan. Exported: « Mes chantiers » reads the same plan, and must
+ * read it from the same cache entry, or a change made here leaves it stale.
+ */
+export const planKey = (worksiteId: string) => ['planning', 'worksite', worksiteId] as const;
+
+/**
+ * « Mes chantiers » sums the plan up (progress, phases, next steps): a change to
+ * the plan changes that too. A literal, not an import: that feature reads this
+ * one, and the two indexes must not import each other.
+ */
+const MY_WORKSITES = ['my-worksites'] as const;
 
 export function useWorksitePlan(worksiteId: string) {
   return useQuery({
@@ -38,7 +49,11 @@ export function useInitializeWorksitePlan(worksiteId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: IInitializeWorksitePlan) => initializeWorksitePlan(worksiteId, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKey(worksiteId) }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: planKey(worksiteId) }),
+        queryClient.invalidateQueries({ queryKey: MY_WORKSITES }),
+      ]),
   });
 }
 
@@ -46,7 +61,11 @@ export function useDeleteWorksitePlan(worksiteId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => deleteWorksitePlan(worksiteId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKey(worksiteId) }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: planKey(worksiteId) }),
+        queryClient.invalidateQueries({ queryKey: MY_WORKSITES }),
+      ]),
   });
 }
 
@@ -55,6 +74,10 @@ export function useUpdateWorksiteTask(worksiteId: string) {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: IUpdateWorksiteTask }) =>
       updateWorksiteTask(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKey(worksiteId) }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: planKey(worksiteId) }),
+        queryClient.invalidateQueries({ queryKey: MY_WORKSITES }),
+      ]),
   });
 }

@@ -1,4 +1,4 @@
-import { checkPasswordPolicy } from '@chantia/shared';
+import { checkPasswordPolicy } from '@chantia/shared/security';
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
