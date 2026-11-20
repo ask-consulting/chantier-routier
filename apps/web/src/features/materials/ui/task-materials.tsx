@@ -6,7 +6,6 @@ import {
   Permission,
   plannedMaterialCost,
   PlanNodeLevel,
-  type IMyWorksite,
   type ITaskMaterial,
   type IWorksiteTask,
 } from '@chantia/shared';
@@ -27,19 +26,13 @@ import { fromStoredAmount, toStoredAmount } from '@/shared/lib/currency';
 import { intlLocale, type Locale } from '@/shared/i18n/config';
 import { usePermission } from '@/features/auth';
 import {
-  choicesOf,
-  labelOf,
-  needLabel,
-  parseQuantity,
   useMaterialCatalog,
   useOwnMaterials,
-} from '@/features/materials';
-import {
-  usePlan,
   useTaskMaterialChanges,
   useTaskMaterials,
-} from '../api/my-worksites.queries';
-import { currentPhaseIndex } from '../model/my-worksites';
+  useWorksitePlan,
+} from '../api/materials.queries';
+import { choicesOf, labelOf, needLabel, parseQuantity } from '../model/materials';
 
 /** The message for a refusal of the API. */
 function errorKey(error: unknown): string {
@@ -287,14 +280,24 @@ function TaskRow({
   );
 }
 
-/** What each task of a phase is planned to need, material by material. */
-export function TaskMaterials({ worksite }: { worksite: IMyWorksite }) {
+/**
+ * What each task of a phase is planned to need, material by material. A tab of
+ * a worksite's page, handed to it by the route.
+ */
+export function TaskMaterials({
+  worksiteId,
+  initialPhaseIndex,
+}: {
+  worksiteId: string;
+  /** The phase to open on: the first one not finished. */
+  initialPhaseIndex: number;
+}) {
   const t = useTranslations('myWorksites');
   const locale = useLocale() as Locale;
   const seesMoney = usePermission(Permission.BUDGET_READ);
-  const plan = usePlan(worksite.id);
-  const needs = useTaskMaterials(worksite.id);
-  const [phaseIndex, setPhaseIndex] = useState(() => currentPhaseIndex(worksite));
+  const plan = useWorksitePlan(worksiteId);
+  const needs = useTaskMaterials(worksiteId);
+  const [phaseIndex, setPhaseIndex] = useState(initialPhaseIndex);
   const [editing, setEditing] = useState<{
     task: IWorksiteTask;
     need: ITaskMaterial | null;
@@ -309,7 +312,7 @@ export function TaskMaterials({ worksite }: { worksite: IMyWorksite }) {
       <EmptyState
         title={t('noPlanTitle')}
         description={t('noPlanDescription')}
-        action={<ButtonLink href={`/worksites/${worksite.id}`}>{t('openPlanning')}</ButtonLink>}
+        action={<ButtonLink href={`/worksites/${worksiteId}`}>{t('openPlanning')}</ButtonLink>}
       />
     );
   }
@@ -350,7 +353,7 @@ export function TaskMaterials({ worksite }: { worksite: IMyWorksite }) {
         {rows.map(({ task, depth }) => (
           <TaskRow
             key={task.id}
-            worksiteId={worksite.id}
+            worksiteId={worksiteId}
             task={task}
             depth={depth}
             needs={all.filter((need) => need.taskId === task.id)}
@@ -362,7 +365,7 @@ export function TaskMaterials({ worksite }: { worksite: IMyWorksite }) {
       {editing && (
         <NeedDialog
           key={editing.need?.id ?? editing.task.id}
-          worksiteId={worksite.id}
+          worksiteId={worksiteId}
           task={editing.task}
           need={editing.need}
           onClose={() => setEditing(null)}

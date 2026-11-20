@@ -51,9 +51,22 @@ navigateur contre un vrai serveur* ne se teste pas avec un double.
 
 1. **Une feature ne s'atteint que par son `index.ts`.** `@/features/worksites/api/…`
    est interdit.
-2. **Les features ne s'importent pas entre elles.** Seule exception, déclarée dans
-   la config ESLint : `auth`, parce que masquer ce qu'un rôle ne peut pas faire est
-   transverse.
+2. **Les features ne s'importent pas entre elles.** Deux exceptions, déclarées dans
+   la config ESLint :
+   - `auth`, parce que masquer ce qu'un rôle ne peut pas faire est transverse ;
+   - **les fabriques de clés de cache** (`planKey`, `equipmentKeys`, `workerKeys`,
+     `materialKeys`…), et rien d'autre. Deux features qui lisent la même donnée
+     doivent la lire dans la même entrée du cache. Avec chacune sa clé, une
+     modification faite dans l'une restait invisible dans l'autre jusqu'à
+     péremption : « Mes chantiers » montrait l'ancien plan pendant 30 s après un
+     changement dans le planning. Un nom traverse la frontière, jamais un hook, un
+     composant ou un appel à l'API.
+
+   Ce qu'une feature doit montrer chez une autre passe par la route, qui compose
+   les deux : l'onglet « Matières » de la page d'un chantier vient de `materials`,
+   remis à `my-worksites` par `app/my-worksites/[id]/page.tsx`. La liste des
+   features contrôlées est lue sur le disque : une feature ajoutée est contrôlée
+   dès sa création.
 3. **Un seul chemin d'écriture** : les mutations React Query, qui possèdent leur
    invalidation. Pas de server action ni de `fetch` manuel en parallèle.
 4. **Aucun DTO redéclaré.** Les types viennent de `@chantia/shared`.

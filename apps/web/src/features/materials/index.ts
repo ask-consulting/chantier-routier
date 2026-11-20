@@ -5,6 +5,8 @@
 
 export { MaterialsPage } from './ui/materials-page';
 
-// For a worksite's tasks: what a task can be planned to need.
-export { useMaterialCatalog, useOwnMaterials } from './api/materials.queries';
-export { choicesOf, labelOf, needLabel, parseQuantity, type MaterialChoice } from './model/materials';
+// For a worksite's page, handed over by the `/my-worksites/[id]` route.
+export { TaskMaterials } from './ui/task-materials';
+
+// For other features caching material data.
+export { materialKeys } from './api/materials.queries';

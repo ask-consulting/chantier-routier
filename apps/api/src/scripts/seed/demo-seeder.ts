@@ -9,10 +9,10 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import {
   Locale,
   PlanNodeLevel,
-  checkPasswordPolicy,
   proposeSchedule,
   toMinorUnits,
 } from '@chantia/shared';
+import { checkPasswordPolicy } from '@chantia/shared/security';
 import { ScryptPasswordHasher } from '../../identity/infrastructure/security/scrypt-password-hasher';
 import {
   DEMO_ORGANIZATION_ID,

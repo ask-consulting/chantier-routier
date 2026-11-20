@@ -1,8 +1,10 @@
-import { dirname } from 'node:path';
+import { readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FlatCompat } from '@eslint/eslintrc';
 
-const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) });
+const here = dirname(fileURLToPath(import.meta.url));
+const compat = new FlatCompat({ baseDirectory: here });
 
 /**
  * What holds the architecture together.
@@ -22,7 +24,23 @@ const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta
  * See `docs/13-architecture-front.md`.
  */
 
-const FEATURES = ['auth', 'clients', 'equipment', 'invitations', 'my-worksites', 'workers', 'worksites'];
+/**
+ * Every folder of `src/features`, read from the disk. A hand-written list was
+ * two features behind: `planning` and `materials` were never checked, and a
+ * feature added tomorrow would not be either.
+ */
+const FEATURES = readdirSync(join(here, 'src/features'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+
+/**
+ * The one thing a feature may take from another: its cache key factory —
+ * `planKey`, `equipmentKeys`, `workerKeys`… Reading the same data, two features
+ * must read it from the same cache entry, or a change made in one stays
+ * invisible in the other until the entry goes stale. A name, not a behaviour:
+ * no hook, no component, no fetcher crosses.
+ */
+const CACHE_KEY_NAMES = '^[a-z][A-Za-z]*Keys?$';
 
 /**
  * The one feature every other may import — through its index only.
@@ -66,10 +84,11 @@ const config = [
   // Rule 2, one entry per feature: worksites may not import auth's internals or
   // its index, and vice versa. Anything genuinely common belongs in `shared/`.
   //
-  // The exception below is deliberate and narrow: `auth` exposes `Can` and
-  // `usePermission`, which every feature needs to hide what a role cannot do.
-  // Permissions are a cross-cutting concern, so `auth`'s index — and only its
-  // index — stays reachable.
+  // Two exceptions, deliberate and narrow: `auth` exposes `Can` and
+  // `usePermission`, which every feature needs to hide what a role cannot do —
+  // permissions are a cross-cutting concern, so `auth`'s index stays reachable.
+  // And any feature's cache keys, so two features never cache the same data
+  // twice (see `CACHE_KEY_NAMES`).
   ...FEATURES.map((feature) => {
     const forbidden = FEATURES.filter(
       (other) => other !== feature && other !== CROSS_CUTTING,
@@ -91,8 +110,9 @@ const config = [
                 ? [
                     {
                       group: forbidden,
+                      allowImportNamePattern: CACHE_KEY_NAMES,
                       message:
-                        'A feature must not depend on another. Put the shared piece in shared/, or compose them in a route.',
+                        'A feature must not depend on another, apart from its cache keys. Put the shared piece in shared/, or compose them in a route.',
                     },
                   ]
                 : []),

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Permission, WorksiteStatus, type IWorksite } from '@chantia/shared';
@@ -141,6 +141,19 @@ describe('WorksitePage — one worksite', () => {
     expect(screen.getByText('machines of ws-1')).toBeTruthy();
     expect(screen.getByText('contacts of client-1')).toBeTruthy();
     expect(await screen.findByText('Matériel')).toBeTruthy();
+  });
+
+  it('starts the panels that need only the id without waiting for the worksite', async () => {
+    // The worksite never answers: its panels and its costs are asked for anyway.
+    mock.onGet('/worksites/ws-1').reply(() => new Promise(() => {}));
+    const Plan = ({ worksiteId }: { worksiteId: string }) => <p>Planning de {worksiteId}</p>;
+    renderWithProviders(<WorksitePage id="ws-1" Planning={Plan} Equipment={Machines} />);
+
+    expect(await screen.findByText('Planning de ws-1')).toBeTruthy();
+    await waitFor(() =>
+      expect(mock.history.get.map((request) => request.url)).toContain('/worksites/ws-1/costs'),
+    );
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
   });
 
   it('gives a foreman neither the costs nor the edit button', async () => {

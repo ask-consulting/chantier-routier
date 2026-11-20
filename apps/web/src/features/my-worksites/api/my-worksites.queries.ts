@@ -1,15 +1,11 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IAssignTaskWorker, IPlanTaskMaterial, IUpdateTaskMaterial } from '@chantia/shared';
+import type { IAssignTaskWorker } from '@chantia/shared';
 import {
   assignTaskWorker,
   fetchActiveWorkers,
   fetchTaskTeam,
-  fetchTaskMaterials,
-  planTaskMaterial,
-  removeTaskMaterial,
-  updateTaskMaterial,
   linkTaskEquipment,
   removeTaskWorker,
   unlinkTaskEquipment,
@@ -22,6 +18,9 @@ import {
   setMembers,
   updateTaskProgress,
 } from './my-worksites.api';
+import { equipmentKeys } from '@/features/equipment';
+import { planKey } from '@/features/planning';
+import { workerKeys } from '@/features/workers';
 
 const ROOT = ['my-worksites'] as const;
 /** The planning lives in the planning feature's cache too: both must refresh. */
@@ -32,8 +31,9 @@ export const useMyWorksites = () => useQuery({ queryKey: ROOT, queryFn: fetchMyW
 export const useMyWorksite = (id: string) =>
   useQuery({ queryKey: [...ROOT, id], queryFn: () => fetchMyWorksite(id) });
 
+/** The planning feature's cache entry: a change made there shows here at once. */
 export const usePlan = (worksiteId: string) =>
-  useQuery({ queryKey: [...ROOT, worksiteId, 'plan'], queryFn: () => fetchPlan(worksiteId) });
+  useQuery({ queryKey: planKey(worksiteId), queryFn: () => fetchPlan(worksiteId) });
 
 export const useMembers = (worksiteId: string) =>
   useQuery({
@@ -46,7 +46,8 @@ export const useAccounts = (enabled: boolean) =>
 
 export const useAssignments = (worksiteId: string, enabled: boolean) =>
   useQuery({
-    queryKey: [...ROOT, worksiteId, 'equipment'],
+    // Under the equipment feature's keys, so a booking made there refreshes this list.
+    queryKey: [...equipmentKeys.assignments(), 'worksite', worksiteId],
     queryFn: () => fetchAssignments(worksiteId),
     enabled,
   });
@@ -56,10 +57,11 @@ export function useUpdateProgress() {
   return useMutation({
     mutationFn: ({ taskId, progress }: { taskId: string; progress: number }) =>
       updateTaskProgress(taskId, progress),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ROOT });
-      await queryClient.invalidateQueries({ queryKey: PLANNING });
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ROOT }),
+        queryClient.invalidateQueries({ queryKey: PLANNING }),
+      ]),
   });
 }
 
@@ -78,7 +80,7 @@ export const useTaskTeam = (worksiteId: string) =>
   });
 
 export const useActiveWorkers = (enabled: boolean) =>
-  useQuery({ queryKey: [...ROOT, 'workers'], queryFn: fetchActiveWorkers, enabled });
+  useQuery({ queryKey: [...workerKeys.all, 'active'], queryFn: fetchActiveWorkers, enabled });
 
 /** Every change to who works on a task: they all refresh the same list. */
 export function useTaskTeamChanges(worksiteId: string) {
@@ -98,31 +100,5 @@ export function useTaskTeamChanges(worksiteId: string) {
       onSuccess,
     }),
     unlinkEquipment: useMutation({ mutationFn: unlinkTaskEquipment, onSuccess }),
-  };
-}
-
-export const useTaskMaterials = (worksiteId: string) =>
-  useQuery({
-    queryKey: [...ROOT, worksiteId, 'task-materials'],
-    queryFn: () => fetchTaskMaterials(worksiteId),
-  });
-
-/** Every change to what a task needs: they all refresh the same list. */
-export function useTaskMaterialChanges(worksiteId: string) {
-  const queryClient = useQueryClient();
-  const onSuccess = () =>
-    queryClient.invalidateQueries({ queryKey: [...ROOT, worksiteId, 'task-materials'] });
-  return {
-    plan: useMutation({
-      mutationFn: ({ taskId, data }: { taskId: string; data: IPlanTaskMaterial }) =>
-        planTaskMaterial(taskId, data),
-      onSuccess,
-    }),
-    update: useMutation({
-      mutationFn: ({ id, data }: { id: string; data: IUpdateTaskMaterial }) =>
-        updateTaskMaterial(id, data),
-      onSuccess,
-    }),
-    remove: useMutation({ mutationFn: removeTaskMaterial, onSuccess }),
   };
 }
