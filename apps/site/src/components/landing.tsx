@@ -1,18 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
 import { copy, type Lang } from '@/content/copy';
 import { config } from '@/lib/config';
+import { LANGS, STORAGE_KEY } from '@/lib/languages';
 import { Demo } from './demo';
 import { SignupForm } from './signup-form';
 
-const LANGS: { id: Lang; label: string; html: string }[] = [
-  { id: 'ar', label: 'تونسي', html: 'aeb' },
-  { id: 'la', label: 'Tounsi', html: 'aeb-Latn' },
-  { id: 'fr', label: 'Français', html: 'fr' },
-];
-const STORAGE_KEY = 'chantia-lang';
 
 function StoreBadge({ name, url, soon }: { name: string; url: string; soon: string }) {
   const body = (
@@ -37,26 +31,12 @@ function StoreBadge({ name, url, soon }: { name: string; url: string; soon: stri
   );
 }
 
-export function Landing() {
-  const [lang, setLang] = useState<Lang>('ar');
+/** The page in one language: each language is its own page, see `lib/languages`. */
+export function Landing({ lang }: { lang: Lang }) {
   const t = copy[lang];
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'ar' || saved === 'la' || saved === 'fr') setLang(saved);
-    } catch {
-      // Private browsing: the page simply opens in its default language.
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = LANGS.find((item) => item.id === lang)?.html ?? 'aeb';
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  }, [lang]);
-
+  /** Remembered, so that `/` brings the visitor back to it next time. */
   function chooseLang(next: Lang) {
-    setLang(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
@@ -79,15 +59,17 @@ export function Landing() {
         <div className="nav">
           <div className="langs" role="group" aria-label="Langue">
             {LANGS.map((item) => (
-              <button
+              <a
                 key={item.id}
-                type="button"
+                href={item.path}
+                hrefLang={item.html}
+                lang={item.html}
                 className="lang"
-                aria-pressed={lang === item.id}
+                aria-current={lang === item.id ? 'page' : undefined}
                 onClick={() => chooseLang(item.id)}
               >
                 {item.label}
-              </button>
+              </a>
             ))}
           </div>
           {config.appUrl && (
